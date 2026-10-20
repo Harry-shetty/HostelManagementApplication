@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load housing_tags %}
+
+{% block title %}Allocation Status | Nestora{% endblock %}
+{% block topbar_title %}Application Status{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-heading">
+        <div>
+            <span class="eyebrow">APPLICATION NST-25-10482</span>
+            <h1>Allocation status</h1>
+            <p>Track your application through review and authorised publication.</p>
+        </div>
+        <span class="tag tag-warning">Under review</span>
+    </div>
+
+    <!-- Status Banner -->
+    <div class="status-banner">
+        <span>{% icon 'clock' 28 %}</span>
+        <div>
+            <span class="tag tag-warning">UNDER REVIEW</span>
+            <h2>Your application is being assessed.</h2>
+            <p>Eligibility checks are complete. The housing team is preparing a draft allocation for authorised review.</p>
+        </div>
+        <div>
+            <small>EXPECTED UPDATE</small>
+            <strong>15 October 2025</strong>
+        </div>
+    </div>
+
+    <!-- Status Grid -->
+    <div class="status-grid">
+        <!-- Application Timeline -->
+        <section class="panel">
+            <div class="panel-head">
+                <h2>Application timeline</h2>
+                <span>Last updated today</span>
+            </div>
+            
+            <div class="timeline-item done">
+                <span>{% icon 'check' 14 %}</span>
+                <p>
+                    <strong>Application submitted</strong>
+                    <small>28 Sep · 4:32 PM</small>
+                </p>
+            </div>
+
+            <div class="timeline-item done">
+                <span>{% icon 'check' 14 %}</span>
+                <p>
+                    <strong>Eligibility verified</strong>
+                    <small>29 Sep · 10:42 AM</small>
+                </p>
+            </div>
+
+            <div class="timeline-item current">
+                <span><i></i></span>
+                <p>
+                    <strong>Draft allocation review</strong>
+                    <small>In progress</small>
+                </p>
+            </div>
+
+            <div class="timeline-item">
+                <span></span>
+                <p>
+                    <strong>Authorised publication</strong>
+                    <small>Pending</small>
+                </p>
+            </div>
+        </section>
+
+        <!-- Policy Panel -->
+        <section class="panel policy-panel">
+            <span class="policy-icon">{% icon 'shield' %}</span>
+            <h2>How allocation decisions work</h2>
+            <p>
+                Allocations follow approved university policy, considering eligibility, room constraints, ranked preferences, accessibility needs, and available inventory.
+            </p>
+            <button class="text-link" type="button" onclick="alert('University Housing Allocation Policy document v3.2');">
+                Read the allocation policy {% icon 'arrow' 15 %}
+            </button>
+            <div class="auth-note">
+                <strong>Not yet an allocation offer</strong>
+                <p>No placement is confirmed before authorised publication. We’ll notify you as soon as an official result is available.</p>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+

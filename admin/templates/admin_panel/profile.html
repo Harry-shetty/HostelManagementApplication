@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load housing_tags %}
+
+{% block title %}Warden Profile | Nestora Governance{% endblock %}
+{% block topbar_title %}Admin Profile · {{ admin_name }}{% endblock %}
+
+{% block content %}
+<div class="page narrow">
+    <div class="page-heading">
+        <div>
+            <span class="eyebrow">WARDEN WORKSPACE &middot; ADMINISTRATOR ACCOUNT</span>
+            <h1>Warden profile &amp; credentials</h1>
+            <p>Manage your staff contact information, administrative title, and account security.</p>
+        </div>
+        <a href="{% url 'admin-overview' %}" class="btn btn-secondary">
+            {% icon 'home' 16 %} Back to dashboard
+        </a>
+    </div>
+
+    {% if success_msg %}
+    <div style="padding: 14px 18px; border-radius: 12px; background: #e3f3e7; color: var(--forest); border: 1px solid #c0e6cb; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; animation: card-rise 0.3s ease;">
+        {% icon 'check' 18 %}
+        <strong>{{ success_msg }}</strong>
+    </div>
+    {% endif %}
+
+    {% if error_msg %}
+    <div style="padding: 14px 18px; border-radius: 12px; background: var(--danger-soft); color: var(--danger); border: 1px solid #f6c8c4; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; animation: card-rise 0.3s ease;">
+        <span>⚠</span>
+        <strong>{{ error_msg }}</strong>
+    </div>
+    {% endif %}
+
+    <!-- Admin Identity Header Card -->
+    <div class="panel" style="margin-bottom: 24px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+        <span class="avatar avatar-green avatar-xl" style="width: 64px; height: 64px; font-size: 22px; font-weight: 700; border-radius: 18px;">
+            {{ avatar }}
+        </span>
+        <div style="flex: 1; min-width: 220px;">
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px;">
+                <h2 style="margin: 0; font-size: 22px;">{{ admin_name }}</h2>
+                <span class="tag tag-success">{% icon 'shield' 12 %} Authorised Administrator</span>
+                <span class="tag tag-warning">Governance Authority</span>
+            </div>
+            <p style="margin: 0; font-size: 11.5px; color: var(--muted);">
+                {{ admin_role }} &middot; {{ admin_profile.department|default:'Residential Life & Housing Services' }}
+            </p>
+        </div>
+        <div>
+            <span class="tag" style="background: var(--soft); font-size: 10px; padding: 6px 10px;">
+                Username: <strong>{{ current_user.username }}</strong>
+            </span>
+        </div>
+    </div>
+
+    <!-- Edit Admin Profile Form -->
+    <form method="POST" action="{% url 'admin-profile' %}" class="panel" style="padding: 30px 28px;">
+        {% csrf_token %}
+
+        <h3 style="margin-bottom: 6px; font-size: 17px;">Staff Identification &amp; Title</h3>
+        <p style="font-size: 11px; margin-bottom: 20px;">Identity attached to official allocation approvals and system audit logs.</p>
+
+        <div class="fields-grid" style="margin-top: 0 !important; gap: 16px;">
+            <div>
+                <label for="id_first_name">First Name</label>
+                <input type="text" id="id_first_name" name="first_name" value="{{ current_user.first_name|default:'Sarah' }}" required>
+            </div>
+
+            <div>
+                <label for="id_last_name">Last Name</label>
+                <input type="text" id="id_last_name" name="last_name" value="{{ current_user.last_name|default:'Moore' }}" required>
+            </div>
+
+            <div>
+                <label for="id_title">Official Title / Role</label>
+                <input type="text" id="id_title" name="title" value="{{ admin_profile.title|default:'Head Warden' }}" required>
+            </div>
+
+            <div>
+                <label for="id_email">Staff Email Address</label>
+                <input type="email" id="id_email" name="email" value="{{ current_user.email|default:'sarah.moore@nestora.edu' }}" required>
+            </div>
+        </div>
+
+        <div style="margin: 28px 0; border-top: 1px solid var(--line);"></div>
+
+        <h3 style="margin-bottom: 6px; font-size: 17px;">Department &amp; Campus Office</h3>
+        <p style="font-size: 11px; margin-bottom: 20px;">Contact locations published in hall directory and student support records.</p>
+
+        <div class="fields-grid" style="margin-top: 0 !important; gap: 16px;">
+            <div>
+                <label for="id_phone">Official Telephone / Ext.</label>
+                <input type="tel" id="id_phone" name="phone" value="{{ admin_profile.phone|default:'+44 20 7946 0912' }}" placeholder="e.g. +44 20 7946 0912">
+            </div>
+
+            <div>
+                <label for="id_dept">Department / Division</label>
+                <input type="text" id="id_dept" name="department" value="{{ admin_profile.department|default:'Residential Services & Student Housing' }}">
+            </div>
+
+            <div class="full">
+                <label for="id_office">Office Location</label>
+                <input type="text" id="id_office" name="office_location" value="{{ admin_profile.office_location|default:'Warden Central Office, North Quad, Suite 102' }}" placeholder="Building, Room Number">
+            </div>
+        </div>
+
+        <div style="margin: 28px 0; border-top: 1px solid var(--line);"></div>
+
+        <h3 style="margin-bottom: 6px; font-size: 17px;">Account Security</h3>
+        <p style="font-size: 11px; margin-bottom: 20px;">Leave blank if you do not wish to change your password.</p>
+
+        <div class="fields-grid" style="margin-top: 0 !important; gap: 16px;">
+            <div>
+                <label for="id_curr_pwd">Current Password</label>
+                <input type="password" id="id_curr_pwd" name="current_password" placeholder="••••••••">
+            </div>
+
+            <div>
+                <label for="id_new_pwd">New Password</label>
+                <input type="password" id="id_new_pwd" name="new_password" placeholder="At least 6 characters">
+            </div>
+
+            <div class="full">
+                <label for="id_conf_pwd">Confirm New Password</label>
+                <input type="password" id="id_conf_pwd" name="confirm_password" placeholder="Repeat new password">
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; display: flex; align-items: center; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--line); padding-top: 20px;">
+            <a href="{% url 'admin-overview' %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary" style="min-width: 160px;">
+                {% icon 'check' 16 %} Save changes
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

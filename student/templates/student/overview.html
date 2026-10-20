@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load housing_tags %}
+
+{% block title %}Overview | Nestora Student Living{% endblock %}
+{% block topbar_title %}Student Overview{% endblock %}
+
+{% block content %}
+<div class="page">
+    <!-- Welcome section -->
+    <section class="welcome">
+        <div>
+            <span class="tag tag-success">2025/26 applications open</span>
+            <h1>Your next chapter<br>starts here.</h1>
+            <p>Complete your application and find a space that feels like home.</p>
+        </div>
+        <div class="deadline">
+            <span>{% icon 'clock' %}</span>
+            <div>
+                <small>APPLICATION DEADLINE</small>
+                <strong>18 days remaining</strong>
+                <p>30 September, 11:59 PM</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Progress Card -->
+    <section class="progress-card">
+        <div class="section-head">
+            <div>
+                <span class="eyebrow">YOUR APPLICATION</span>
+                <h2>Application progress</h2>
+            </div>
+            <strong>60% complete</strong>
+        </div>
+        <div class="step-track">
+            <div class="step done"><span>{% icon 'check' 15 %}</span><b>Profile</b></div>
+            <div class="step done"><span>{% icon 'check' 15 %}</span><b>Preferences</b></div>
+            <div class="step current"><span>3</span><b>Review</b></div>
+            <div class="step"><span>4</span><b>Submitted</b></div>
+            <div class="step"><span>5</span><b>Allocated</b></div>
+        </div>
+        <div class="progress-action">
+            <p>
+                <strong>Next: Review your application</strong><br>
+                <span>Check your details before submitting.</span>
+            </p>
+            <a href="{% url 'application' %}" class="btn btn-primary" style="color: var(--forest); background: var(--lime);">
+                Continue application {% icon 'arrow' 17 %}
+            </a>
+        </div>
+    </section>
+
+    <!-- Stats Grid -->
+    <section class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon lime">{% icon 'file' %}</div>
+            <div>
+                <span>APPLICATION STATUS</span>
+                <strong>In progress</strong>
+                <small>Last saved 12 mins ago</small>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">{% icon 'building' %}</div>
+            <div>
+                <span>TOP PREFERENCE</span>
+                <strong>Cedar House</strong>
+                <small>Single ensuite</small>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">{% icon 'bed' %}</div>
+            <div>
+                <span>ROOM PREFERENCE</span>
+                <strong>Single room</strong>
+                <small>3 hostels ranked</small>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon mint">{% icon 'check' %}</div>
+            <div>
+                <span>PROFILE</span>
+                <strong>Complete</strong>
+                <small>Eligibility verified</small>
+            </div>
+        </div>
+    </section>
+
+    <!-- Content Split -->
+    <div class="content-split">
+        <section>
+            <div class="section-head">
+                <div>
+                    <span class="eyebrow">EXPLORE</span>
+                    <h2>Spaces you might love</h2>
+                </div>
+                <a href="{% url 'hostels' %}" class="text-link">View all {% icon 'arrow' 16 %}</a>
+            </div>
+            <div class="hostel-grid">
+                {% for hostel in hostels %}
+                <article class="hostel-card">
+                    <div class="hostel-image">
+                        <img src="{{ hostel.image_url }}" alt="{{ hostel.name }} residence">
+                        <span class="tag tag-success">{{ hostel.beds_available }} beds left</span>
+                        <button class="heart" aria-label="Save {{ hostel.name }}" onclick="toggleHeart(this)">♡</button>
+                    </div>
+                    <div class="hostel-body">
+                        <div>
+                            <h3>{{ hostel.name }}</h3>
+                            <p>{% icon 'pin' 14 %} {{ hostel.location }}</p>
+                        </div>
+                        <div class="chips">
+                            {% for tag in hostel.tags %}
+                                <span>{{ tag }}</span>
+                            {% endfor %}
+                        </div>
+                        <div class="price">
+                            <span>From <strong>{{ hostel.formatted_price }}</strong> / semester</span>
+                            <a href="{% url 'hostels' %}" class="btn" style="width:32px; height:32px; padding:0; display:grid; place-items:center; background: var(--forest); color: white;" aria-label="View {{ hostel.name }}">
+                                {% icon 'arrow' 16 %}
+                            </a>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Right Stack -->
+        <aside class="right-stack">
+            <div class="panel checklist">
+                <div class="panel-head">
+                    <div>
+                        <span class="eyebrow">CHECKLIST</span>
+                        <h3>Ready to submit?</h3>
+                    </div>
+                    <span class="ring">3/5</span>
+                </div>
+                <button class="checked"><span>{% icon 'check' 14 %}</span>Profile details complete</button>
+                <button class="checked"><span>{% icon 'check' 14 %}</span>Eligibility verified</button>
+                <button class="checked"><span>{% icon 'check' 14 %}</span>Hostels ranked</button>
+                <button onclick="window.location.href='{% url 'roommate' %}'"><span>4</span>Roommate preferences {% icon 'chevron' 15 %}</button>
+                <button onclick="window.location.href='{% url 'application' %}'"><span>5</span>Review &amp; submit {% icon 'chevron' 15 %}</button>
+            </div>
+
+            <div class="panel notice">
+                <div class="panel-head">
+                    <h3>Latest updates</h3>
+                    <a href="{% url 'placeholder' 'notifications' %}" class="text-link">View all</a>
+                </div>
+                <div class="notice-item">
+                    <span class="notice-icon">{% icon 'bell' %}</span>
+                    <p>
+                        <strong>Your eligibility was verified</strong>
+                        <small>Today, 10:42 AM</small>
+                    </p>
+                </div>
+                <div class="notice-item">
+                    <span class="notice-icon cream">{% icon 'building' %}</span>
+                    <p>
+                        <strong>New rooms at Willow Hall</strong>
+                        <small>Yesterday</small>
+                    </p>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+{% endblock %}
+

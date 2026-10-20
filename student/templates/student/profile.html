@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load housing_tags %}
+
+{% block title %}My Profile | Nestora Student Living{% endblock %}
+{% block topbar_title %}Student Profile · {{ student_name }}{% endblock %}
+
+{% block content %}
+<div class="page narrow">
+    <div class="page-heading">
+        <div>
+            <span class="eyebrow">STUDENT PORTAL &middot; ACCOUNT SETTINGS</span>
+            <h1>My profile &amp; details</h1>
+            <p>Keep your personal records, contact information, and housing preferences up to date.</p>
+        </div>
+        <a href="{% url 'application' %}" class="btn btn-secondary">
+            {% icon 'file' 16 %} View application
+        </a>
+    </div>
+
+    {% if success_msg %}
+    <div style="padding: 14px 18px; border-radius: 12px; background: #e3f3e7; color: var(--forest); border: 1px solid #c0e6cb; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; animation: card-rise 0.3s ease;">
+        {% icon 'check' 18 %}
+        <strong>{{ success_msg }}</strong>
+    </div>
+    {% endif %}
+
+    {% if error_msg %}
+    <div style="padding: 14px 18px; border-radius: 12px; background: var(--danger-soft); color: var(--danger); border: 1px solid #f6c8c4; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; animation: card-rise 0.3s ease;">
+        <span>⚠</span>
+        <strong>{{ error_msg }}</strong>
+    </div>
+    {% endif %}
+
+    <!-- Student Identity Header Card -->
+    <div class="panel" style="margin-bottom: 24px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+        <span class="avatar avatar-xl" style="width: 64px; height: 64px; font-size: 22px; font-weight: 700; background: var(--lime); color: var(--forest-dark); border-radius: 18px;">
+            {{ avatar }}
+        </span>
+        <div style="flex: 1; min-width: 220px;">
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px;">
+                <h2 style="margin: 0; font-size: 22px;">{{ student.name|default:student_name }}</h2>
+                <span class="tag tag-success">{% icon 'check' 12 %} {{ student.eligibility_status|default:'Verified' }}</span>
+                <span class="tag tag-info">ID: {{ student.student_id|default:'STU-204810' }}</span>
+            </div>
+            <p style="margin: 0; font-size: 11.5px; color: var(--muted);">
+                {{ student.programme|default:'Computer Science' }} &middot; {{ student.year|default:'Year 2' }} &middot; Active Housing Cycle 2025/26
+            </p>
+        </div>
+        <div>
+            <span class="tag" style="background: var(--soft); font-size: 10px; padding: 6px 10px;">
+                Username: <strong>{{ current_user.username }}</strong>
+            </span>
+        </div>
+    </div>
+
+    <!-- Edit Profile Form -->
+    <form method="POST" action="{% url 'student-profile' %}" class="panel" style="padding: 30px 28px;">
+        {% csrf_token %}
+
+        <h3 style="margin-bottom: 6px; font-size: 17px;">Personal &amp; Contact Information</h3>
+        <p style="font-size: 11px; margin-bottom: 20px;">Official identity used for room allocations and university communications.</p>
+
+        <div class="fields-grid" style="margin-top: 0 !important; gap: 16px;">
+            <div>
+                <label for="id_name">Full Name</label>
+                <input type="text" id="id_name" name="name" value="{{ student.name|default:student_name }}" required>
+            </div>
+
+            <div>
+                <label for="id_email">Email Address</label>
+                <input type="email" id="id_email" name="email" value="{{ student.email|default:current_user.email }}" required>
+            </div>
+
+            <div>
+                <label for="id_phone">Phone Number</label>
+                <input type="tel" id="id_phone" name="phone" value="{{ student.phone|default:'+44 7700 900142' }}" placeholder="e.g. +44 7700 900142">
+            </div>
+
+            <div>
+                <label for="id_student_id">Student ID (Official)</label>
+                <input type="text" id="id_student_id" value="{{ student.student_id|default:'STU-204810' }}" disabled style="background: var(--soft); cursor: not-allowed; color: var(--muted);">
+            </div>
+        </div>
+
+        <div style="margin: 28px 0; border-top: 1px solid var(--line);"></div>
+
+        <h3 style="margin-bottom: 6px; font-size: 17px;">Academic &amp; Shared Living Details</h3>
+        <p style="font-size: 11px; margin-bottom: 20px;">Information used by the allocation algorithm and roommate compatibility matching.</p>
+
+        <div class="fields-grid" style="margin-top: 0 !important; gap: 16px;">
+            <div>
+                <label for="id_programme">Programme of Study</label>
+                <input type="text" id="id_programme" name="programme" value="{{ student.programme|default:'Computer Science' }}" required>
+            </div>
+
+            <div>
+                <label for="id_year">Academic Year</label>
+                <select id="id_year" name="year">
+                    <option value="Year 1" {% if student.year == 'Year 1' %}selected{% endif %}>Year 1 (Freshman)</option>
+                    <option value="Year 2" {% if student.year == 'Year 2' %}selected{% endif %}>Year 2 (Sophomore)</option>
+                    <option value="Year 3" {% if student.year == 'Year 3' %}selected{% endif %}>Year 3 (Junior)</option>
+                    <option value="Year 4" {% if student.year == 'Year 4' %}selected{% endif %}>Year 4 (Senior)</option>
+                    <option value="Postgraduate" {% if student.year == 'Postgraduate' %}selected{% endif %}>Postgraduate / Master's</option>
+                </select>
+            </div>
+
+            <div class="full">
+                <label for="id_emergency">Emergency Contact Person &amp; Phone</label>
+                <input type="text" id="id_emergency" name="emergency_contact" value="{{ student.emergency_contact|default:'Kofi Mensah · +44 7700 900981 (Parent)' }}" placeholder="Full Name, Relationship & Phone Number">
+            </div>
+
+            <div class="full">
+                <label for="id_bio">Living Habits &amp; Bio</label>
+                <textarea id="id_bio" name="bio" rows="3" placeholder="Tell potential roommates and wardens about your schedule, study habits, and living preferences.">{{ student.bio|default:'Second-year CS student interested in software engineering. Quiet during weeknights, prefer clean and friendly shared living.' }}</textarea>
+            </div>
+        </div>
+
+        <div style="margin: 28px 0; border-top: 1px solid var(--line);"></div>
+
+        <h3 style="margin-bottom: 6px; font-size: 17px;">Account Security</h3>
+        <p style="font-size: 11px; margin-bottom: 20px;">Leave blank if you do not wish to change your password.</p>
+
+        <div class="fields-grid" style="margin-top: 0 !important; gap: 16px;">
+            <div>
+                <label for="id_curr_pwd">Current Password</label>
+                <input type="password" id="id_curr_pwd" name="current_password" placeholder="••••••••">
+            </div>
+
+            <div>
+                <label for="id_new_pwd">New Password</label>
+                <input type="password" id="id_new_pwd" name="new_password" placeholder="At least 6 characters">
+            </div>
+
+            <div class="full">
+                <label for="id_conf_pwd">Confirm New Password</label>
+                <input type="password" id="id_conf_pwd" name="confirm_password" placeholder="Repeat new password">
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; display: flex; align-items: center; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--line); padding-top: 20px;">
+            <a href="{% url 'overview' %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary" style="min-width: 160px;">
+                {% icon 'check' 16 %} Save changes
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

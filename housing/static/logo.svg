@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Nestora">
+    <rect width="64" height="64" rx="16" fill="#24493B"/>
+    <path d="M11 30 L32 10 L53 30 V50 Q53 54 49 54 H15 Q11 54 11 50 Z" fill="#D4F56B" stroke="#D4F56B" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="25" cy="34" r="5" fill="#24493B"/>
+    <path d="M15.5 52 Q15.5 42.5 25 42.5 Q34.5 42.5 34.5 52 Z" fill="#24493B"/>
+    <circle cx="39.5" cy="34" r="5" fill="#24493B" stroke="#D4F56B" stroke-width="2.2"/>
+    <path d="M30 52 Q30 42.5 39.5 42.5 Q49 42.5 49 52 Z" fill="#24493B" stroke="#D4F56B" stroke-width="2.2" stroke-linejoin="round"/>
+</svg>

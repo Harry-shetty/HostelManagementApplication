@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% load housing_tags %}
+
+{% block title %}Find a Hostel | Nestora{% endblock %}
+{% block topbar_title %}Hostel Discovery{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-heading">
+        <div>
+            <span class="eyebrow">FIND YOUR SPACE</span>
+            <h1>Hostel discovery</h1>
+            <p>Compare residences, room types, and amenities across campus.</p>
+        </div>
+        <span class="tag tag-success">{{ total_available }} beds available</span>
+    </div>
+
+    <!-- Discovery Tools -->
+    <div class="discovery-tools">
+        <form method="GET" action="{% url 'hostels' %}" style="flex: 1; display: flex;">
+            <label class="search-field" style="width: 100%;">
+                {% icon 'search' %}
+                <input type="text" name="q" value="{{ search_query }}" id="hostel-search-input" placeholder="Search by hostel or location" onkeyup="filterHostelsClient(this.value)">
+                <kbd>⌘ K</kbd>
+            </label>
+        </form>
+        <button class="btn btn-secondary" type="button">
+            {% icon 'filter' %} Filters <span class="count">2</span>
+        </button>
+        <select aria-label="Sort hostels" onchange="sortHostels(this.value)">
+            <option value="recommended">Recommended</option>
+            <option value="price-asc">Price: low to high</option>
+            <option value="beds-desc">Most availability</option>
+        </select>
+        <div class="view-toggle">
+            <button class="selected" type="button" aria-label="Grid view">{% icon 'grid' %}</button>
+            <button type="button" aria-label="List view">{% icon 'list' %}</button>
+        </div>
+    </div>
+
+    <!-- Active Filter Row -->
+    <div class="filter-row">
+        <span>Active filters:</span>
+        <button type="button" onclick="this.remove()">Up to ₹25,000 ×</button>
+        <button type="button" onclick="this.remove()">Wi-Fi ×</button>
+        <button class="clear" type="button" onclick="clearAllFilters()">Clear all</button>
+    </div>
+
+    <!-- Discovery Grid -->
+    <div class="discovery-grid" id="hostels-grid">
+        {% for hostel in hostels %}
+        <article class="discover-card" data-name="{{ hostel.name|lower }}" data-price="{{ hostel.price_per_semester }}" data-beds="{{ hostel.beds_available }}">
+            <div class="discover-image">
+                <img src="{{ hostel.image_url }}" alt="{{ hostel.name }} exterior">
+                <span class="tag tag-success">{{ hostel.beds_available }} beds available</span>
+            </div>
+            <div class="discover-copy">
+                <div class="discover-title">
+                    <div>
+                        <h2>{{ hostel.name }}</h2>
+                        <p>{% icon 'pin' 15 %} {{ hostel.location }}</p>
+                    </div>
+                    <button class="heart" aria-label="Save {{ hostel.name }}" onclick="toggleHeart(this)">♡</button>
+                </div>
+                <div class="chips">
+                    {% for tag in hostel.tags %}
+                        <span>{{ tag }}</span>
+                    {% endfor %}
+                </div>
+                <p class="room-line">{% icon 'bed' %} {{ hostel.room_summary }}</p>
+                <div class="discover-foot">
+                    <p>
+                        From <strong>{{ hostel.formatted_price }}</strong><small> per semester</small>
+                    </p>
+                    <div>
+                        <button class="btn btn-secondary add-pref-btn" type="button" onclick="togglePreference(this, '{{ hostel.name }}')">
+                            Add preference
+                        </button>
+                        <a href="{% url 'application' %}" class="btn btn-primary">
+                            View rooms {% icon 'arrow' 15 %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </article>
+        {% empty %}
+        <div class="empty-state" style="grid-column: 1 / -1;">
+            <span>{% icon 'search' 30 %}</span>
+            <h2>No hostels found</h2>
+            <p>Try searching for a different name or location.</p>
+            <a href="{% url 'hostels' %}" class="btn btn-secondary">Clear filters</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function toggleHeart(btn) {
+        if (btn.classList.contains('saved')) {
+            btn.classList.remove('saved');
+            btn.textContent = '♡';
+        } else {
+            btn.classList.add('saved');
+            btn.textContent = '♥';
+        }
+    }
+
+    function togglePreference(btn, name) {
+        if (btn.classList.contains('btn-primary')) {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-secondary');
+            btn.textContent = 'Add preference';
+        } else {
+            btn.classList.remove('btn-secondary');
+            btn.classList.add('btn-primary');
+            btn.textContent = 'Added';
+        }
+    }
+
+    function filterHostelsClient(val) {
+        const query = val.toLowerCase().trim();
+        const cards = document.querySelectorAll('#hostels-grid .discover-card');
+        cards.forEach(card => {
+            const name = card.dataset.name;
+            if (!query || name.includes(query)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    function sortHostels(criteria) {
+        const grid = document.getElementById('hostels-grid');
+        const cards = Array.from(grid.querySelectorAll('.discover-card'));
+        if (criteria === 'price-asc') {
+            cards.sort((a, b) => parseInt(a.dataset.price) - parseInt(b.dataset.price));
+        } else if (criteria === 'beds-desc') {
+            cards.sort((a, b) => parseInt(b.dataset.beds) - parseInt(a.dataset.beds));
+        }
+        cards.forEach(card => grid.appendChild(card));
+    }
+
+    function clearAllFilters() {
+        document.querySelectorAll('.filter-row button:not(.clear)').forEach(b => b.remove());
+        const input = document.getElementById('hostel-search-input');
+        if (input) {
+            input.value = '';
+            filterHostelsClient('');
+        }
+    }
+</script>
+{% endblock %}
+

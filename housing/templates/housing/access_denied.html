@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load housing_tags %}
+
+{% block title %}Access Denied | Nestora{% endblock %}
+{% block topbar_title %}Access Restricted{% endblock %}
+
+{% block content %}
+<div class="page narrow">
+    <div class="empty-state" style="background: white; border: 1px solid var(--line);">
+        <span style="background: var(--danger-soft); color: var(--danger);">
+            {% icon 'shield' 34 %}
+        </span>
+        <span class="tag tag-danger" style="margin-bottom: 12px;">RESTRICTED AREA</span>
+        <h1>Administrator Access Required</h1>
+        <p style="margin-bottom: 24px;">
+            The page you are trying to reach is restricted to <strong>{{ required_role }}</strong> staff.
+            Your current account (<strong>{{ current_user.username }}</strong>) does not have administrative privileges.
+        </p>
+        <div style="display: flex; gap: 12px;">
+            <a href="{% url 'overview' %}" class="btn btn-primary">
+                {% icon 'home' 16 %} Return to Student Portal
+            </a>
+            <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-secondary">
+                Login with Admin Account
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

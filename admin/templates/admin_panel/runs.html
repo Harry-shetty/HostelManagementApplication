@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load housing_tags %}
+
+{% block title %}Allocation Runs | Nestora Governance{% endblock %}
+{% block topbar_title %}Allocation Governance{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-heading">
+        <div>
+            <span class="eyebrow">ALLOCATION GOVERNANCE</span>
+            <h1>Allocation runs</h1>
+            <p>Every run creates a reviewable draft. Publication requires authorised approval.</p>
+        </div>
+        <button class="btn btn-primary" type="button" onclick="alert('Simulation: Started a new allocation run with random seed.');">
+            {% icon 'plus' %} Create draft run
+        </button>
+    </div>
+
+    <!-- Governance Workflow -->
+    <div class="workflow">
+        <div class="done">
+            <span>{% icon 'check' %}</span>
+            <p>
+                <strong>Run completed</strong>
+                <small>Seed and inputs locked</small>
+            </p>
+        </div>
+        <div class="active">
+            <span>2</span>
+            <p>
+                <strong>Draft review</strong>
+                <small>8 exceptions remain</small>
+            </p>
+        </div>
+        <div>
+            <span>3</span>
+            <p>
+                <strong>Warden approval</strong>
+                <small>Authorised role required</small>
+            </p>
+        </div>
+        <div>
+            <span>4</span>
+            <p>
+                <strong>Publish</strong>
+                <small>Becomes immutable</small>
+            </p>
+        </div>
+    </div>
+
+    <!-- Run Card -->
+    <section class="panel run-card">
+        <div class="run-card-head">
+            <div>
+                <span class="tag tag-warning">DRAFT v4</span>
+                <h2>AR-2025-04 · Main allocation</h2>
+                <p>Created 6 Oct 2025 at 09:42 by Allocation Engine</p>
+            </div>
+            <a href="{% url 'draft' %}" class="btn btn-primary">
+                Open draft review {% icon 'arrow' 17 %}
+            </a>
+        </div>
+
+        <div class="run-details">
+            <span>
+                <small>REPRODUCIBILITY SEED</small>
+                <code>{{ run.reproducibility_seed }}</code>
+            </span>
+            <span>
+                <small>VALIDATION</small>
+                <span class="tag tag-success">Passed</span>
+            </span>
+            <span>
+                <small>EXCEPTIONS</small>
+                <strong class="warning-text">8 open</strong>
+            </span>
+            <span>
+                <small>APPROVAL</small>
+                <strong>Not requested</strong>
+            </span>
+        </div>
+
+        <div class="review-checklist">
+            <h3>Publication readiness</h3>
+            <div>
+                <span class="checked">{% icon 'check' 13 %}</span>
+                <span>Hard constraints validated</span>
+                <span class="tag tag-success">Complete</span>
+            </div>
+            <div>
+                <span class="checked">{% icon 'check' 13 %}</span>
+                <span>Inventory snapshot locked</span>
+                <span class="tag tag-success">Complete</span>
+            </div>
+            <div>
+                <span></span>
+                <span>Exceptions reviewed</span>
+                <span class="tag tag-warning">Pending</span>
+            </div>
+            <div>
+                <span></span>
+                <span>Approval record complete</span>
+                <span class="tag tag-warning">Pending</span>
+            </div>
+        </div>
+    </section>
+
+    <div class="immutable-note">
+        {% icon 'shield' %}
+        <p>
+            <strong>Published allocations are immutable.</strong><br>
+            Any correction after publication must use the documented correction workflow and creates a linked audit record.
+        </p>
+    </div>
+</div>
+{% endblock %}
+

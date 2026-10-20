@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+{% load housing_tags %}
+
+{% block title %}Roommate Match | Nestora{% endblock %}
+{% block topbar_title %}Roommate Matching{% endblock %}
+
+{% block content %}
+<!-- Mode 1: Intro -->
+<div id="roommate-intro" class="page narrow">
+    <div class="match-hero">
+        <span class="hero-icon">{% icon 'spark' 28 %}</span>
+        <span class="tag tag-info">PRIVATE BY DESIGN</span>
+        <h1>Find someone you’ll<br>feel at home with.</h1>
+        <p>A short lifestyle questionnaire helps us suggest compatible roommates—not identical ones.</p>
+        <div class="privacy-note">
+            {% icon 'shield' %}
+            <p>
+                <strong>Your answers are voluntary and private.</strong><br>
+                We only show compatibility themes. Your raw answers are never shared with other students.
+            </p>
+        </div>
+        <button class="btn btn-primary" type="button" onclick="startQuiz()">
+            Start questionnaire · 4 min {% icon 'arrow' 17 %}
+        </button>
+        <button class="text-link centered" type="button" onclick="showMatches()">
+            Preview sample matches
+        </button>
+    </div>
+    <div class="match-features">
+        <div>
+            {% icon 'clock' %}
+            <strong>Quick to complete</strong>
+            <span>About 4 minutes</span>
+        </div>
+        <div>
+            {% icon 'shield' %}
+            <strong>Consent-led</strong>
+            <span>Update or withdraw anytime</span>
+        </div>
+        <div>
+            {% icon 'spark' %}
+            <strong>Thoughtful matching</strong>
+            <span>Based on shared living habits</span>
+        </div>
+    </div>
+</div>
+
+<!-- Mode 2: Quiz -->
+<div id="roommate-quiz" class="page narrow" style="display: none;">
+    <div class="quiz-top">
+        <button class="back-link" type="button" onclick="quizBack()">← Back</button>
+        <span id="quiz-question-counter">Question 1 of 3</span>
+        <button class="text-link" type="button" onclick="showMatches()">Save &amp; exit</button>
+    </div>
+    <div class="mini-progress">
+        <span id="quiz-progress-bar" style="width: 33.33%;"></span>
+    </div>
+    <section class="quiz-card">
+        <span class="eyebrow">YOUR LIFESTYLE</span>
+        <h1 id="quiz-question-text">When do you usually go to sleep?</h1>
+        <p id="quiz-hint-text">Choose the option closest to your typical weekday.</p>
+        <div class="option-list" id="quiz-options-container">
+            <!-- Rendered by JS -->
+        </div>
+        <div class="quiz-actions">
+            <span>Your answers save automatically</span>
+            <button class="btn btn-primary" id="quiz-next-btn" type="button" disabled onclick="quizNext()">
+                Continue {% icon 'arrow' 17 %}
+            </button>
+        </div>
+    </section>
+    <p class="privacy-footer">
+        {% icon 'shield' 15 %} Answers are encrypted and used only to calculate compatibility.
+    </p>
+</div>
+
+<!-- Mode 3: Matches -->
+<div id="roommate-matches" class="page" style="display: none;">
+    <div class="page-heading">
+        <div>
+            <span class="eyebrow">ROOMMATE MATCH</span>
+            <h1>Your compatibility matches</h1>
+            <p>Based on the preferences you chose. Only compatibility themes are shown.</p>
+        </div>
+        <button class="btn btn-secondary" type="button" onclick="startQuiz()">
+            Update preferences
+        </button>
+    </div>
+
+    <div class="match-summary">
+        <span>{% icon 'spark' %}</span>
+        <p>
+            <strong>Great news—there are 12 strong matches for you.</strong><br>
+            Your top matches share your quiet study style and approach to shared spaces.
+        </p>
+    </div>
+
+    <div class="match-grid">
+        {% for match in matches %}
+        <article class="match-card">
+            {% if match.is_best_match %}
+                <span class="best">BEST MATCH</span>
+            {% endif %}
+            <div class="match-person">
+                <span class="avatar avatar-xl {{ match.suggested_student.avatar_color }}">
+                    {{ match.suggested_student.avatar_initials }}
+                </span>
+                <div>
+                    <h2>{{ match.suggested_student.name }}</h2>
+                    <p>{{ match.suggested_student.programme }} · {{ match.suggested_student.year }}</p>
+                    <small>Photography · Cooking · Afrobeats</small>
+                </div>
+                <div class="score">
+                    <strong>{{ match.compatibility_score }}%</strong>
+                    <span>compatible</span>
+                </div>
+            </div>
+            <div class="compat-bar">
+                <span style="width: {{ match.compatibility_score }}%;"></span>
+            </div>
+            <div class="habit-grid">
+                <div>
+                    <small>YOU ALIGN ON</small>
+                    {% for item in match.align_items %}
+                        <span>{% icon 'check' 14 %} {{ item }}</span>
+                    {% endfor %}
+                </div>
+                <div>
+                    <small>ONE DIFFERENCE</small>
+                    <span class="difference">↔ {{ match.difference }}</span>
+                </div>
+            </div>
+            <p class="explain">
+                You’re likely to share a calm, considerate room with clear routines for studying and downtime.
+            </p>
+            <div class="match-actions">
+                <button class="btn btn-secondary" type="button">View compatibility</button>
+                <button class="btn {% if match.is_saved %}btn-primary{% else %}btn-dark{% endif %}" type="button" onclick="toggleSaveMatch(this, {{ match.id }})">
+                    {% if match.is_saved %}Match saved{% else %}Save match{% endif %}
+                </button>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const quizQuestions = [
+        {
+            q: 'When do you usually go to sleep?',
+            hint: 'Choose the option closest to your typical weekday.',
+            options: ['Before 10 PM', '10 PM – 12 AM', '12 AM – 2 AM', 'After 2 AM']
+        },
+        {
+            q: 'How do you prefer shared spaces?',
+            hint: 'There are no right or wrong answers.',
+            options: ['Very tidy', 'Generally tidy', 'Relaxed', 'Flexible']
+        },
+        {
+            q: 'What noise level works for you?',
+            hint: 'Think about studying and relaxing in your room.',
+            options: ['Very quiet', 'Low background noise', 'Music is okay', 'Flexible']
+        }
+    ];
+
+    let currentStep = 0;
+    let selectedAnswers = [];
+
+    function startQuiz() {
+        currentStep = 0;
+        selectedAnswers = [];
+        document.getElementById('roommate-intro').style.display = 'none';
+        document.getElementById('roommate-matches').style.display = 'none';
+        document.getElementById('roommate-quiz').style.display = 'block';
+        renderQuestion();
+    }
+
+    function showMatches() {
+        document.getElementById('roommate-intro').style.display = 'none';
+        document.getElementById('roommate-quiz').style.display = 'none';
+        document.getElementById('roommate-matches').style.display = 'block';
+    }
+
+    function renderQuestion() {
+        const q = quizQuestions[currentStep];
+        document.getElementById('quiz-question-counter').textContent = `Question ${currentStep + 1} of ${quizQuestions.length}`;
+        document.getElementById('quiz-progress-bar').style.width = `${((currentStep + 1) / quizQuestions.length) * 100}%`;
+        document.getElementById('quiz-question-text').textContent = q.q;
+        document.getElementById('quiz-hint-text').textContent = q.hint;
+
+        const nextBtn = document.getElementById('quiz-next-btn');
+        if (currentStep === quizQuestions.length - 1) {
+            nextBtn.innerHTML = `See my matches <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14m-5-5 5 5-5 5"/></svg>`;
+        } else {
+            nextBtn.innerHTML = `Continue <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14m-5-5 5 5-5 5"/></svg>`;
+        }
+        nextBtn.disabled = (selectedAnswers[currentStep] === undefined);
+
+        const container = document.getElementById('quiz-options-container');
+        container.innerHTML = '';
+        q.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = (selectedAnswers[currentStep] === idx) ? 'selected' : '';
+            btn.innerHTML = `<span>${String.fromCharCode(65 + idx)}</span>${opt}<i>${(selectedAnswers[currentStep] === idx) ? '✓' : ''}</i>`;
+            btn.onclick = () => {
+                selectedAnswers[currentStep] = idx;
+                renderQuestion();
+            };
+            container.appendChild(btn);
+        });
+    }
+
+    function quizNext() {
+        if (currentStep < quizQuestions.length - 1) {
+            currentStep++;
+            renderQuestion();
+        } else {
+            showMatches();
+        }
+    }
+
+    function quizBack() {
+        if (currentStep > 0) {
+            currentStep--;
+            renderQuestion();
+        } else {
+            document.getElementById('roommate-quiz').style.display = 'none';
+            document.getElementById('roommate-intro').style.display = 'block';
+        }
+    }
+
+    function toggleSaveMatch(btn, matchId) {
+        if (btn.classList.contains('btn-primary')) {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-dark');
+            btn.textContent = 'Save match';
+        } else {
+            btn.classList.remove('btn-dark');
+            btn.classList.add('btn-primary');
+            btn.textContent = 'Match saved';
+        }
+
+        // Send AJAX request
+        fetch(`/api/matches/${matchId}/save/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        }).catch(err => console.log(err));
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}
+

@@ -1,0 +1,441 @@
+{% extends 'base.html' %}
+{% load housing_tags %}
+
+{% block title %}My Application | Nestora{% endblock %}
+{% block topbar_title %}Hostel Application{% endblock %}
+
+{% block content %}
+<!-- Confirmation Screen (Shown after submit) -->
+<div id="application-confirmation" class="page narrow" style="display: none;">
+    <div class="confirmation">
+        <span class="confirm-icon">{% icon 'check' 32 %}</span>
+        <span class="tag tag-success">APPLICATION SUBMITTED</span>
+        <h1>You’re all set, Amara.</h1>
+        <p>Your application has been securely submitted for the 2025/26 housing cycle.</p>
+        
+        <div class="application-id">
+            <div>
+                <small>APPLICATION ID</small>
+                <strong>NST-25-10482</strong>
+            </div>
+            <button type="button" onclick="navigator.clipboard.writeText('NST-25-10482'); alert('Copied to clipboard!');">Copy</button>
+        </div>
+
+        <div class="next-steps">
+            <h3>What happens next?</h3>
+            <div>
+                <span>1</span>
+                <p>
+                    <strong>Eligibility review</strong>
+                    <small>We’ll verify your details and documents.</small>
+                </p>
+                <b>1–2 days</b>
+            </div>
+            <div>
+                <span>2</span>
+                <p>
+                    <strong>Allocation processing</strong>
+                    <small>Policy rules and preferences are applied.</small>
+                </p>
+                <b>Early October</b>
+            </div>
+            <div>
+                <span>3</span>
+                <p>
+                    <strong>Authorised publication</strong>
+                    <small>You’ll be notified when results are official.</small>
+                </p>
+                <b>15 October</b>
+            </div>
+        </div>
+
+        <div class="confirmation-actions">
+            <button class="btn btn-secondary" type="button">{% icon 'download' %} Download receipt</button>
+            <a href="{% url 'status' %}" class="btn btn-primary">Track application {% icon 'arrow' 16 %}</a>
+        </div>
+    </div>
+</div>
+
+<!-- Main Wizard Screen -->
+<div id="application-wizard" class="page wizard-page">
+    <div class="page-heading compact">
+        <div>
+            <span class="eyebrow">2025/26 HOSTEL APPLICATION</span>
+            <h1>Complete your application</h1>
+        </div>
+        <span class="autosave"><i></i> Saved just now</span>
+    </div>
+
+    <div class="wizard-layout">
+        <aside class="wizard-steps">
+            <button type="button" class="done" onclick="goToStep(0)">
+                <span>{% icon 'check' 14 %}</span>
+                <p><small>STEP 1</small><strong>Profile</strong></p>
+            </button>
+            <button type="button" class="done" onclick="goToStep(1)">
+                <span>{% icon 'check' 14 %}</span>
+                <p><small>STEP 2</small><strong>Eligibility</strong></p>
+            </button>
+            <button type="button" class="active" id="step-tab-2" onclick="goToStep(2)">
+                <span>3</span>
+                <p><small>STEP 3</small><strong>Preferences</strong></p>
+            </button>
+            <button type="button" id="step-tab-3" onclick="goToStep(3)">
+                <span>4</span>
+                <p><small>STEP 4</small><strong>Room type</strong></p>
+            </button>
+            <button type="button" id="step-tab-4" onclick="goToStep(4)">
+                <span>5</span>
+                <p><small>STEP 5</small><strong>Documents</strong></p>
+            </button>
+            <button type="button" id="step-tab-5" onclick="goToStep(5)">
+                <span>6</span>
+                <p><small>STEP 6</small><strong>Review</strong></p>
+            </button>
+
+            <div class="help-card">
+                {% icon 'help' %}
+                <strong>Need help?</strong>
+                <p>Our housing team typically replies in under 2 hours.</p>
+                <button type="button" onclick="alert('Housing support is available at support@nestora.edu');">Contact support</button>
+            </div>
+        </aside>
+
+        <!-- Form Card -->
+        <section class="form-card">
+            <!-- Step 0: Profile -->
+            <div class="wizard-form-step" id="form-step-0" style="display: none;">
+                <div class="form-heading">
+                    <span class="eyebrow">STEP 1 OF 6</span>
+                    <h2>Student profile</h2>
+                    <p>Confirm the details we received from your student record.</p>
+                </div>
+                <div class="fields-grid">
+                    <label>Legal first name<input type="text" value="Amara" placeholder="Enter details"></label>
+                    <label>Legal last name<input type="text" value="Mensah" placeholder="Enter details"></label>
+                    <label>Student ID<input type="text" value="STU-204810" readonly></label>
+                    <label>Programme
+                        <select>
+                            <option selected>Computer Science</option>
+                            <option>Economics</option>
+                            <option>Architecture</option>
+                        </select>
+                    </label>
+                    <label class="full">Additional information
+                        <textarea placeholder="Add any information our housing team should consider"></textarea>
+                    </label>
+                </div>
+                <div class="consent-row">
+                    <input type="checkbox" id="consent-0" checked>
+                    <label for="consent-0">I confirm these details are accurate and may be used to assess my hostel application.</label>
+                </div>
+            </div>
+
+            <!-- Step 1: Eligibility -->
+            <div class="wizard-form-step" id="form-step-1" style="display: none;">
+                <div class="form-heading">
+                    <span class="eyebrow">STEP 2 OF 6</span>
+                    <h2>Eligibility details</h2>
+                    <p>Help us apply the correct housing policies to your application.</p>
+                </div>
+                <div class="fields-grid">
+                    <label>Academic Year<input type="text" value="2025/26" readonly></label>
+                    <label>Study Mode
+                        <select><option>Full-time student</option><option>Exchange student</option></select>
+                    </label>
+                    <label class="full">Special Requirements
+                        <textarea placeholder="List any medical, accessibility, or dietary requirements"></textarea>
+                    </label>
+                </div>
+                <div class="consent-row">
+                    <input type="checkbox" id="consent-1" checked>
+                    <label for="consent-1">I confirm that all eligibility criteria have been declared truthfully.</label>
+                </div>
+            </div>
+
+            <!-- Step 2: Preferences -->
+            <div class="wizard-form-step" id="form-step-2">
+                <div class="form-heading">
+                    <span class="eyebrow">STEP 3 OF 6</span>
+                    <h2>Rank your hostel preferences</h2>
+                    <p>We’ll consider these in order. Ranking does not guarantee placement, but the allocation engine prioritises your choices where policy allows.</p>
+                </div>
+                <div class="info-box">
+                    {% icon 'spark' %}
+                    <p>
+                        <strong>How ranking works</strong><br>
+                        Your highest-ranked eligible option is considered first. You can reorder until the application deadline.
+                    </p>
+                </div>
+                <label class="field-label">Your ranked preferences <span>Required</span></label>
+                
+                <div class="rank-list" id="rank-items-list">
+                    <div class="rank-item" data-hostel="Cedar House">
+                        <span class="drag">⠿</span>
+                        <b class="rank-num">1</b>
+                        <span class="rank-thumb thumb-1"></span>
+                        <p>
+                            <strong>Cedar House</strong>
+                            <small>North Campus · Single ensuite</small>
+                        </p>
+                        <span class="tag tag-success">Best fit</span>
+                        <span class="rank-controls">
+                            <button type="button" onclick="moveRank(this, -1)" disabled>↑</button>
+                            <button type="button" onclick="moveRank(this, 1)">↓</button>
+                        </span>
+                    </div>
+
+                    <div class="rank-item" data-hostel="Maple Court">
+                        <span class="drag">⠿</span>
+                        <b class="rank-num">2</b>
+                        <span class="rank-thumb thumb-2"></span>
+                        <p>
+                            <strong>Maple Court</strong>
+                            <small>Central Campus · Single room</small>
+                        </p>
+                        <span class="tag">11 beds</span>
+                        <span class="rank-controls">
+                            <button type="button" onclick="moveRank(this, -1)">↑</button>
+                            <button type="button" onclick="moveRank(this, 1)">↓</button>
+                        </span>
+                    </div>
+
+                    <div class="rank-item" data-hostel="Willow Hall">
+                        <span class="drag">⠿</span>
+                        <b class="rank-num">3</b>
+                        <span class="rank-thumb thumb-3"></span>
+                        <p>
+                            <strong>Willow Hall</strong>
+                            <small>East Campus · Twin room</small>
+                        </p>
+                        <span class="tag">26 beds</span>
+                        <span class="rank-controls">
+                            <button type="button" onclick="moveRank(this, -1)">↑</button>
+                            <button type="button" onclick="moveRank(this, 1)" disabled>↓</button>
+                        </span>
+                    </div>
+                </div>
+
+                <button class="btn btn-secondary" type="button">
+                    {% icon 'plus' %} Add another hostel
+                </button>
+
+                <div class="form-section">
+                    <h3>Room occupancy preference</h3>
+                    <p>Choose your first choice. You can add alternatives on the next step.</p>
+                    <div class="choice-cards">
+                        <label>
+                            <input type="radio" name="room_pref" checked>
+                            <span>
+                                {% icon 'bed' %}
+                                <strong>Single room</strong>
+                                <small>Private bedroom</small>
+                            </span>
+                        </label>
+                        <label>
+                            <input type="radio" name="room_pref">
+                            <span>
+                                {% icon 'users' %}
+                                <strong>Twin room</strong>
+                                <small>Share with 1 student</small>
+                            </span>
+                        </label>
+                        <label>
+                            <input type="radio" name="room_pref">
+                            <span>
+                                {% icon 'users' %}
+                                <strong>Triple room</strong>
+                                <small>Share with 2 students</small>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Room type -->
+            <div class="wizard-form-step" id="form-step-3" style="display: none;">
+                <div class="form-heading">
+                    <span class="eyebrow">STEP 4 OF 6</span>
+                    <h2>Room requirements</h2>
+                    <p>Choose room types and tell us about accessibility requirements.</p>
+                </div>
+                <div class="fields-grid">
+                    <label>Preferred Floor
+                        <select><option>No preference</option><option>Ground floor</option><option>Upper floor</option></select>
+                    </label>
+                    <label>Bathroom Type
+                        <select><option>Private Ensuite</option><option>Shared Bathroom</option></select>
+                    </label>
+                    <label class="full">Accessibility Requirements
+                        <textarea placeholder="Accessible bathroom, elevator access, strobe smoke alarm, etc."></textarea>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Step 4: Documents -->
+            <div class="wizard-form-step" id="form-step-4" style="display: none;">
+                <div class="form-heading">
+                    <span class="eyebrow">STEP 5 OF 6</span>
+                    <h2>Document checklist</h2>
+                    <p>Upload clear copies of the required supporting documents.</p>
+                </div>
+                <div class="option-list" style="margin: 20px 0;">
+                    <button type="button" class="selected">
+                        <span>A</span>
+                        Student Identification Card (Verified)
+                        <i>{% icon 'check' %}</i>
+                    </button>
+                    <button type="button" class="selected">
+                        <span>B</span>
+                        Proof of Enrollment 2025/26 (Verified)
+                        <i>{% icon 'check' %}</i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 5: Review & Submit -->
+            <div class="wizard-form-step" id="form-step-5" style="display: none;">
+                <div class="form-heading">
+                    <span class="eyebrow">FINAL STEP</span>
+                    <h2>Review and submit</h2>
+                    <p>Check your answers carefully. You can edit any section before submission.</p>
+                </div>
+                
+                <div class="review-row">
+                    <span class="review-icon">{% icon 'check' %}</span>
+                    <p><strong>Student profile</strong><small>Complete and verified</small></p>
+                    <span class="tag tag-success">Complete</span>
+                    <button type="button" onclick="goToStep(0)">Edit</button>
+                </div>
+                <div class="review-row">
+                    <span class="review-icon">{% icon 'check' %}</span>
+                    <p><strong>Eligibility details</strong><small>Complete and verified</small></p>
+                    <span class="tag tag-success">Complete</span>
+                    <button type="button" onclick="goToStep(1)">Edit</button>
+                </div>
+                <div class="review-row">
+                    <span class="review-icon">{% icon 'building' %}</span>
+                    <p><strong>Hostel preferences</strong><small>1. Cedar House · 2. Maple Court · 3. Willow Hall</small></p>
+                    <span class="tag tag-success">Complete</span>
+                    <button type="button" onclick="goToStep(2)">Edit</button>
+                </div>
+                <div class="review-row">
+                    <span class="review-icon">{% icon 'bed' %}</span>
+                    <p><strong>Room &amp; accessibility</strong><small>Single room · No accessibility requirements</small></p>
+                    <span class="tag tag-success">Complete</span>
+                    <button type="button" onclick="goToStep(3)">Edit</button>
+                </div>
+                <div class="review-row">
+                    <span class="review-icon">{% icon 'file' %}</span>
+                    <p><strong>Documents</strong><small>2 documents verified</small></p>
+                    <span class="tag tag-success">Complete</span>
+                    <button type="button" onclick="goToStep(4)">Edit</button>
+                </div>
+                <div class="review-row">
+                    <span class="review-icon">{% icon 'users' %}</span>
+                    <p><strong>Roommate questionnaire</strong><small>Completed with consent</small></p>
+                    <span class="tag tag-success">Complete</span>
+                    <button type="button" onclick="goToStep(2)">Edit</button>
+                </div>
+
+                <div class="consent-row submit-consent">
+                    <input type="checkbox" id="final-consent" checked>
+                    <label for="final-consent">
+                        <strong>I confirm this application is complete and accurate.</strong><br>
+                        <small>I understand allocation is not guaranteed until authorised results are officially published.</small>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Form Footer -->
+            <div class="form-footer">
+                <button class="btn btn-secondary" id="form-back-btn" type="button" onclick="prevStep()">Back</button>
+                <span id="form-step-indicator">Step 3 of 6</span>
+                <button class="btn btn-primary" id="form-next-btn" type="button" onclick="nextStep()">
+                    Save &amp; continue {% icon 'arrow' 17 %}
+                </button>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let activeStep = 2;
+    const totalSteps = 6;
+
+    function goToStep(step) {
+        activeStep = step;
+        renderWizard();
+    }
+
+    function nextStep() {
+        if (activeStep < totalSteps - 1) {
+            activeStep++;
+            renderWizard();
+        } else {
+            // Submit application
+            document.getElementById('application-wizard').style.display = 'none';
+            document.getElementById('application-confirmation').style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
+    function prevStep() {
+        if (activeStep > 0) {
+            activeStep--;
+            renderWizard();
+        }
+    }
+
+    function renderWizard() {
+        for (let i = 0; i < totalSteps; i++) {
+            const el = document.getElementById(`form-step-${i}`);
+            if (el) el.style.display = (i === activeStep) ? 'block' : 'none';
+
+            const tab = document.getElementById(`step-tab-${i}`);
+            if (tab) {
+                tab.className = (i === activeStep) ? 'active' : (i < activeStep ? 'done' : '');
+            }
+        }
+
+        document.getElementById('form-step-indicator').textContent = `Step ${activeStep + 1} of ${totalSteps}`;
+        const nextBtn = document.getElementById('form-next-btn');
+        if (activeStep === totalSteps - 1) {
+            nextBtn.innerHTML = `Submit application <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14m-5-5 5 5-5 5"/></svg>`;
+        } else {
+            nextBtn.innerHTML = `Save & continue <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14m-5-5 5 5-5 5"/></svg>`;
+        }
+    }
+
+    function moveRank(btn, direction) {
+        const item = btn.closest('.rank-item');
+        const list = document.getElementById('rank-items-list');
+        const items = Array.from(list.querySelectorAll('.rank-item'));
+        const index = items.indexOf(item);
+        const targetIndex = index + direction;
+
+        if (targetIndex >= 0 && targetIndex < items.length) {
+            if (direction === -1) {
+                list.insertBefore(item, items[targetIndex]);
+            } else {
+                list.insertBefore(items[targetIndex], item);
+            }
+            updateRankNumbers();
+        }
+    }
+
+    function updateRankNumbers() {
+        const items = document.querySelectorAll('#rank-items-list .rank-item');
+        items.forEach((item, idx) => {
+            item.querySelector('.rank-num').textContent = idx + 1;
+            const upBtn = item.querySelectorAll('.rank-controls button')[0];
+            const downBtn = item.querySelectorAll('.rank-controls button')[1];
+            upBtn.disabled = (idx === 0);
+            downBtn.disabled = (idx === items.length - 1);
+        });
+    }
+</script>
+{% endblock %}
+

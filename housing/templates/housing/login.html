@@ -1,0 +1,271 @@
+{% load static %}
+{% load housing_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In | Nestora Student Housing</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}?v=4">
+    <link rel="shortcut icon" type="image/svg+xml" href="{% static 'favicon.svg' %}?v=4">
+    <link rel="apple-touch-icon" href="{% static 'favicon.svg' %}?v=4">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .login-wrap {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #f4f6f2 0%, #e9efe9 100%);
+        }
+        .login-box {
+            width: 100%;
+            max-width: 440px;
+            background: white;
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            padding: 36px 32px;
+            box-shadow: 0 16px 40px rgba(23, 76, 60, 0.08);
+            animation: card-rise 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .login-brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .login-brand .brand-mark {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            font-size: 20px;
+        }
+        .login-brand strong {
+            font-size: 22px;
+            display: block;
+            color: var(--charcoal);
+            line-height: 1.1;
+        }
+        .login-brand small {
+            display: block;
+            color: var(--muted);
+            font-size: 10px;
+            font-weight: 500;
+        }
+        .role-switch {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            padding: 4px;
+            background: var(--soft);
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        .role-switch button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px;
+            border: 0;
+            border-radius: 9px;
+            background: transparent;
+            font-size: 11px;
+            font-weight: 650;
+            color: var(--muted);
+            transition: 0.18s ease;
+        }
+        .role-switch button.active {
+            background: white;
+            color: var(--forest);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+        }
+        .form-group {
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .form-group label {
+            font-size: 11px;
+            font-weight: 650;
+            color: var(--charcoal);
+        }
+        .form-group input {
+            height: 44px;
+            padding: 0 14px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            font-size: 12px;
+            background: #fafbfa;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus {
+            border-color: var(--forest);
+            background: white;
+            outline: none;
+        }
+        .demo-bar {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--line);
+        }
+        .demo-bar small {
+            display: block;
+            color: var(--muted);
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .demo-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 10px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--soft);
+            text-align: left;
+            transition: 0.18s;
+        }
+        .demo-btn:hover {
+            border-color: var(--forest);
+            background: white;
+        }
+        .demo-btn strong {
+            font-size: 10px;
+            color: var(--forest);
+        }
+        .demo-btn span {
+            font-size: 8px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+        .alert-error {
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: var(--danger-soft);
+            color: var(--danger);
+            font-size: 11px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        @media (max-width: 480px) {
+            .login-wrap {
+                padding: 16px 12px;
+            }
+            .login-box {
+                padding: 24px 18px;
+                border-radius: 16px;
+            }
+            .role-switch button {
+                font-size: 10px;
+                padding: 8px 6px;
+            }
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-group input {
+                font-size: 16px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrap">
+        <div class="login-box">
+            <div class="login-brand">
+                {% logo_icon 44 %}
+                <div>
+                    <strong>Nestora</strong>
+                    <small>University Student Housing</small>
+                </div>
+            </div>
+
+            <!-- Role Selector Tabs -->
+            <div class="role-switch">
+                <button type="button" id="role-btn-student" class="active" onclick="selectRole('student')">
+                    {% icon 'users' 16 %} Student Portal
+                </button>
+                <button type="button" id="role-btn-admin" onclick="selectRole('admin')">
+                    {% icon 'shield' 16 %} Warden Admin
+                </button>
+            </div>
+
+            {% if error %}
+            <div class="alert-error">
+                <span>⚠</span> {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="POST" action="{% url 'login' %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ next_url }}">
+                <input type="hidden" name="selected_role" id="selected-role-input" value="student">
+
+                <div class="form-group">
+                    <label for="username">Username or Student ID</label>
+                    <input type="text" id="username" name="username" placeholder="e.g. student or STU-204810" required autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required>
+                </div>
+
+                <button class="btn btn-primary" type="submit" style="width: 100%; height: 46px; margin-top: 8px;">
+                    Sign in to Nestora {% icon 'arrow' 17 %}
+                </button>
+            </form>
+
+            <!-- Quick Demo Accounts -->
+            <div class="demo-bar">
+                <small>ONE-CLICK DEMO CREDENTIALS</small>
+                <div class="demo-grid">
+                    <button type="button" class="demo-btn" onclick="fillCredentials('student', 'student123', 'student')">
+                        <strong>Student Portal</strong>
+                        <span>Amara Mensah · CS Year 2</span>
+                    </button>
+                    <button type="button" class="demo-btn" onclick="fillCredentials('admin', 'admin123', 'admin')">
+                        <strong>Warden Admin</strong>
+                        <span>Dr. Sarah Moore · Head Warden</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function selectRole(role) {
+            document.getElementById('selected-role-input').value = role;
+            if (role === 'student') {
+                document.getElementById('role-btn-student').classList.add('active');
+                document.getElementById('role-btn-admin').classList.remove('active');
+                document.getElementById('username').placeholder = 'e.g. student or STU-204810';
+            } else {
+                document.getElementById('role-btn-admin').classList.add('active');
+                document.getElementById('role-btn-student').classList.remove('active');
+                document.getElementById('username').placeholder = 'e.g. admin';
+            }
+        }
+
+        function fillCredentials(user, pass, role) {
+            selectRole(role);
+            document.getElementById('username').value = user;
+            document.getElementById('password').value = pass;
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load housing_tags %}
+
+{% block title %}Warden Overview | Nestora Housing Governance{% endblock %}
+{% block topbar_title %}Warden Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-heading">
+        <div>
+            <span class="eyebrow">MONDAY, 6 OCTOBER</span>
+            <h1>Good morning, Dr. Moore.</h1>
+            <p>Here’s today’s housing operations overview.</p>
+        </div>
+        <a href="{% url 'runs' %}" class="btn btn-primary">
+            {% icon 'spark' %} New allocation run
+        </a>
+    </div>
+
+    <!-- Admin Stats Grid (5 items) -->
+    <div class="admin-stats">
+        <div class="stat-card">
+            <div class="stat-icon">{% icon 'bed' %}</div>
+            <div>
+                <span>TOTAL BEDS</span>
+                <strong>{{ total_beds }}</strong>
+                <small>Across 8 hostels</small>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon mint">{% icon 'users' %}</div>
+            <div>
+                <span>OCCUPIED</span>
+                <strong>{{ occupied_beds }}</strong>
+                <small>{{ occupancy_pct }}% occupancy</small>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon lime">{% icon 'check' %}</div>
+            <div>
+                <span>AVAILABLE</span>
+                <strong>{{ available_beds }}</strong>
+                <small>42 accessible</small>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">{% icon 'file' %}</div>
+            <div>
+                <span>APPLICATIONS</span>
+                <strong>{{ applications_count }}</strong>
+                <small>+84 this week</small>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange">{% icon 'clock' %}</div>
+            <div>
+                <span>PENDING REVIEW</span>
+                <strong>{{ pending_review }}</strong>
+                <small>Requires attention</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Grid -->
+    <div class="admin-grid">
+        <!-- Occupancy Chart Panel -->
+        <section class="panel chart-panel">
+            <div class="panel-head">
+                <div>
+                    <span class="eyebrow">OCCUPANCY</span>
+                    <h2>Occupancy by hostel</h2>
+                </div>
+                <select aria-label="Cycle selection">
+                    <option>Current cycle 2025/26</option>
+                </select>
+            </div>
+            <div class="bars">
+                {% for hostel in hostels %}
+                <div>
+                    <span>{{ hostel.name }}</span>
+                    <div><i style="width: {{ hostel.occupancy_percent }}%;"></i></div>
+                    <b>{{ hostel.occupancy_percent }}%</b>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Requires Attention Panel -->
+        <section class="panel action-panel">
+            <div class="panel-head">
+                <h2>Requires attention</h2>
+                <span class="tag tag-danger">12 items</span>
+            </div>
+            <button type="button" onclick="window.location.href='{% url 'draft' %}'">
+                <span class="action-icon warning">{% icon 'clipboard' %}</span>
+                <p>
+                    <strong>Draft run ready for review</strong>
+                    <small>Run AR-2025-04 · 8 exceptions</small>
+                </p>
+                {% icon 'chevron' %}
+            </button>
+            <button type="button" onclick="window.location.href='{% url 'placeholder' 'applications' %}'">
+                <span class="action-icon blue">{% icon 'file' %}</span>
+                <p>
+                    <strong>36 applications need review</strong>
+                    <small>12 missing documentation</small>
+                </p>
+                {% icon 'chevron' %}
+            </button>
+            <button type="button" onclick="window.location.href='{% url 'bedmap' %}'">
+                <span class="action-icon green">{% icon 'bed' %}</span>
+                <p>
+                    <strong>3 inventory conflicts</strong>
+                    <small>Reserved beds need attention</small>
+                </p>
+                {% icon 'chevron' %}
+            </button>
+        </section>
+
+        <!-- Recent Activity Audit Log Panel -->
+        <section class="panel recent">
+            <div class="panel-head">
+                <h2>Recent activity</h2>
+                <a href="{% url 'placeholder' 'audit' %}" class="text-link">View audit log</a>
+            </div>
+            {% for log in recent_logs %}
+            <div>
+                <span class="activity-dot dot-{{ forloop.counter0 }}"></span>
+                <p>
+                    <strong>{{ log.action }}</strong>
+                    <small>{{ log.actor }} · {{ log.timestamp|timesince }} ago</small>
+                </p>
+            </div>
+            {% endfor %}
+        </section>
+    </div>
+</div>
+{% endblock %}
+

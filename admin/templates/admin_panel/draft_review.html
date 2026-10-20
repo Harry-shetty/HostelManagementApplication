@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+{% load housing_tags %}
+
+{% block title %}Draft Allocation Review | Nestora Admin{% endblock %}
+{% block topbar_title %}Draft Review · AR-2025-04{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="breadcrumb">
+        <a href="{% url 'runs' %}">Allocation runs</a>
+        {% icon 'chevron' 14 %}
+        <span>AR-2025-04</span>
+    </div>
+
+    <div class="page-heading compact">
+        <div>
+            <div class="title-with-tag">
+                <h1>Draft allocation review</h1>
+                <span class="tag tag-warning">DRAFT v4</span>
+            </div>
+            <p>Generated 6 Oct 2025 at 09:42 · Seed <code>{{ run.reproducibility_seed }}</code></p>
+        </div>
+        <div class="heading-actions">
+            <button class="btn btn-secondary" type="button">{% icon 'download' %} Export</button>
+            <a href="{% url 'runs' %}" class="btn btn-primary">Review &amp; approve</a>
+        </div>
+    </div>
+
+    <div class="draft-warning">
+        {% icon 'shield' %}
+        <p>
+            <strong>This is a draft—no students have been notified.</strong><br>
+            Authorised approval and a complete audit record are required before publication.
+        </p>
+    </div>
+
+    <!-- Run Metrics -->
+    <div class="run-metrics">
+        <div>
+            <small>ALLOCATED</small>
+            <strong>1,942</strong>
+            <span>92.3% of applicants</span>
+        </div>
+        <div>
+            <small>TOP PREFERENCE</small>
+            <strong>78.4%</strong>
+            <span>+2.1% vs previous</span>
+        </div>
+        <div>
+            <small>WAITLISTED</small>
+            <strong>162</strong>
+            <span>7.7% of applicants</span>
+        </div>
+        <div class="metric-warning">
+            <small>EXCEPTIONS</small>
+            <strong>8</strong>
+            <span>Requires review</span>
+        </div>
+        <div>
+            <small>VALIDATION</small>
+            <strong class="success-text">Passed</strong>
+            <span>0 hard constraints</span>
+        </div>
+    </div>
+
+    <!-- Review Table -->
+    <section class="panel review-table">
+        <div class="table-tools">
+            <div class="tabs">
+                <a href="{% url 'draft' %}?filter=all" class="{% if filter_status == 'all' %}active{% endif %}">
+                    All allocations 1,942
+                </a>
+                <a href="{% url 'draft' %}?filter=clear" class="{% if filter_status == 'clear' %}active{% endif %}">
+                    Clear 1,934
+                </a>
+                <a href="{% url 'draft' %}?filter=exception" class="{% if filter_status == 'exception' %}active{% endif %}">
+                    Exceptions 8
+                </a>
+            </div>
+            <form method="GET" action="{% url 'draft' %}" style="display: flex; gap: 8px;">
+                <input type="hidden" name="filter" value="{{ filter_status }}">
+                <label class="mini-search">
+                    {% icon 'search' %}
+                    <input type="text" name="q" value="{{ search_query }}" placeholder="Search students or rooms">
+                </label>
+                <button class="btn btn-secondary" type="submit">{% icon 'filter' %} Filter</button>
+            </form>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" aria-label="Select all"></th>
+                        <th>STUDENT</th>
+                        <th>ASSIGNED BED</th>
+                        <th>PREFERENCE</th>
+                        <th>ELIGIBILITY</th>
+                        <th>EXPLANATION</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rec in records %}
+                    <tr id="row-record-{{ rec.id }}">
+                        <td><input type="checkbox" aria-label="Select {{ rec.student.name }}"></td>
+                        <td>
+                            <div class="student-cell">
+                                <span class="avatar {{ rec.student.avatar_color }}">{{ rec.student.avatar_initials }}</span>
+                                <p>
+                                    <strong>{{ rec.student.name }}</strong>
+                                    <small>{{ rec.student.student_id }}</small>
+                                </p>
+                            </div>
+                        </td>
+                        <td>
+                            <strong class="rec-bed-label">{{ rec.assigned_bed_label }}</strong>
+                            <small>Single room</small>
+                        </td>
+                        <td>
+                            <span class="tag {% if '1st' in rec.preference_matched %}tag-success{% elif 'Outside' in rec.preference_matched %}tag-warning{% else %}tag-neutral{% endif %}">
+                                {{ rec.preference_matched }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="tag {% if rec.eligibility_status == 'Verified' %}tag-success{% else %}tag-warning{% endif %}">
+                                {{ rec.eligibility_status }}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="text-link" type="button" onclick="alert('Allocation matched based on priority ranking and room inventory constraints.');">
+                                View reasons
+                            </button>
+                        </td>
+                        <td>
+                            <button class="more-btn" type="button" onclick="openOverrideModal({{ rec.id }}, '{{ rec.student.name }}', '{{ rec.assigned_bed_label }}')">
+                                {% icon 'more' %}
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 24px;">No allocation records found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination">
+            <span>Showing {{ records|length }} of 1,942 allocations</span>
+            <div>
+                <button type="button" disabled>‹</button>
+                <button type="button" class="current">1</button>
+                <button type="button">2</button>
+                <button type="button">3</button>
+                <button type="button">…</button>
+                <button type="button">389</button>
+                <button type="button">›</button>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Override Allocation Modal -->
+<div id="override-modal" class="modal-layer" style="display: none;">
+    <div class="modal">
+        <div class="modal-head">
+            <span class="warning-icon">!</span>
+            <div>
+                <h2>Override allocation</h2>
+                <p id="override-student-title">Student · Current draft assignment</p>
+            </div>
+            <button type="button" onclick="closeOverrideModal()">{% icon 'close' %}</button>
+        </div>
+        <div class="modal-body">
+            <div class="warning-box">
+                <strong>Overrides are permanently recorded.</strong>
+                <p>Provide a specific policy or operational reason. This action will appear in the audit log.</p>
+            </div>
+            <label>New bed assignment
+                <select id="override-bed-select">
+                    <option value="Cedar House · C-216A">Cedar House · C-216A</option>
+                    <option value="Maple Court · M-108A">Maple Court · M-108A</option>
+                    <option value="Willow Hall · W-102A">Willow Hall · W-102A</option>
+                </select>
+            </label>
+            <label>Mandatory reason
+                <textarea id="override-reason-text" placeholder="Explain why this override is necessary..." required></textarea>
+            </label>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-secondary" type="button" onclick="closeOverrideModal()">Cancel</button>
+            <button class="btn btn-danger" type="button" onclick="applyOverride()">Apply override</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let activeOverrideRecordId = null;
+
+    function openOverrideModal(recordId, studentName, bedLabel) {
+        activeOverrideRecordId = recordId;
+        document.getElementById('override-student-title').textContent = `${studentName} · Current: ${bedLabel}`;
+        document.getElementById('override-reason-text').value = '';
+        document.getElementById('override-modal').style.display = 'grid';
+    }
+
+    function closeOverrideModal() {
+        document.getElementById('override-modal').style.display = 'none';
+    }
+
+    function applyOverride() {
+        const reason = document.getElementById('override-reason-text').value.trim();
+        if (!reason) {
+            alert('A mandatory policy reason is required to apply an override.');
+            return;
+        }
+
+        const newBed = document.getElementById('override-bed-select').value;
+        fetch('/api/draft/override/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                record_id: activeOverrideRecordId,
+                new_bed: newBed,
+                reason: reason
+            })
+        }).then(r => r.json()).then(data => {
+            if (data.success) {
+                alert(`Override successfully applied! Reassigned to ${data.new_bed}.`);
+                const row = document.getElementById(`row-record-${activeOverrideRecordId}`);
+                if (row) {
+                    row.querySelector('.rec-bed-label').textContent = data.new_bed;
+                }
+                closeOverrideModal();
+            } else {
+                alert('Error applying override.');
+            }
+        });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}
+

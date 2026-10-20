@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% load housing_tags %}
+
+{% block title %}Interactive Bed Map | Nestora Admin{% endblock %}
+{% block topbar_title %}Interactive Bed Map · Cedar House{% endblock %}
+
+{% block content %}
+<div class="page bed-page">
+    <div class="page-heading compact">
+        <div>
+            <span class="eyebrow">INVENTORY · CEDAR HOUSE</span>
+            <h1>Interactive bed map</h1>
+            <p>View live room inventory and manage draft assignments.</p>
+        </div>
+        <div class="heading-actions">
+            <select id="floor-select" onchange="changeFloor(this.value)">
+                <option value="Floor 1" {% if floor == 'Floor 1' %}selected{% endif %}>Floor 1</option>
+                <option value="Floor 2" {% if floor == 'Floor 2' %}selected{% endif %}>Floor 2</option>
+                <option value="Floor 3" {% if floor == 'Floor 3' %}selected{% endif %}>Floor 3</option>
+            </select>
+            <button class="btn btn-secondary" type="button">
+                {% icon 'filter' %} Filters
+            </button>
+        </div>
+    </div>
+
+    <!-- Bed Summary Indicators -->
+    <div class="bed-summary">
+        <span><i class="available"></i> Available <b>{{ available_count }}</b></span>
+        <span><i class="occupied"></i> Occupied <b>{{ occupied_count }}</b></span>
+        <span><i class="reserved"></i> Reserved <b>{{ reserved_count }}</b></span>
+        <span><i class="accessible"></i> Accessible <b>{{ accessible_count }}</b></span>
+        <small>{{ total_beds }} beds · <span id="summary-floor-label">{{ floor }}</span></small>
+    </div>
+
+    <!-- Map Layout -->
+    <div class="map-layout">
+        <!-- Floor Panel -->
+        <section class="floor-panel">
+            <div class="floor-header">
+                <div>
+                    <h2>Cedar House · <span id="floor-title">{{ floor }}</span></h2>
+                    <p>North wing</p>
+                </div>
+                <span>Updated 2 min ago</span>
+            </div>
+            
+            <div class="floor-map">
+                <div class="corridor-label">NORTH CORRIDOR</div>
+                <div class="room-grid" id="rooms-grid">
+                    {% for room in rooms %}
+                    <button type="button" 
+                            class="room-btn {% if room.room_number == 'C-214' %}selected{% endif %}"
+                            data-room="{{ room.room_number }}"
+                            data-floor="{{ room.floor }}"
+                            data-wing="{{ room.wing }}"
+                            data-gender="{{ room.gender }}"
+                            data-access="{{ room.access_type }}"
+                            data-type="{{ room.room_type }}"
+                            onclick="selectRoom(this)">
+                        <span>
+                            <strong>{{ room.room_number }}</strong>
+                            <small>{{ room.room_type }} room</small>
+                        </span>
+                        <div>
+                            {% for bed in room.beds.all %}
+                            <i class="{{ bed.status }}">{{ bed.bed_letter }}</i>
+                            {% endfor %}
+                        </div>
+                    </button>
+                    {% endfor %}
+                </div>
+
+                <div class="map-utilities">
+                    <span>STAIRS</span>
+                    <span>LOUNGE</span>
+                    <span>LIFT</span>
+                    <span>LAUNDRY</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Room Details Panel -->
+        <aside class="room-panel">
+            <div class="room-panel-head">
+                <div>
+                    <span class="eyebrow">ROOM DETAILS</span>
+                    <h2 id="panel-room-number">C-214</h2>
+                    <p id="panel-room-meta">Floor 2 · North wing · Twin</p>
+                </div>
+                <button type="button">{% icon 'more' %}</button>
+            </div>
+
+            <div class="room-meta">
+                <span>
+                    <small>GENDER</small>
+                    <strong id="panel-room-gender">Female</strong>
+                </span>
+                <span>
+                    <small>ACCESS</small>
+                    <strong id="panel-room-access">Standard</strong>
+                </span>
+            </div>
+
+            <div class="beds">
+                <h3>Bed assignments</h3>
+                <div class="bed-person">
+                    <span class="bed-letter occupied">A</span>
+                    <p>
+                        <strong id="bed-a-student">Amara Mensah</strong>
+                        <small>STU-204810 · Draft</small>
+                    </p>
+                    <span class="tag tag-success">Assigned</span>
+                </div>
+                <div class="bed-person">
+                    <span class="bed-letter available">B</span>
+                    <p>
+                        <strong>Available</strong>
+                        <small>Standard bed</small>
+                    </p>
+                    <span class="tag">Open</span>
+                </div>
+            </div>
+
+            <div class="assignment">
+                <h3>Reassign bed A</h3>
+                <p>Drag a student here or use the accessible selection below.</p>
+                <label>Move student to
+                    <select id="reassign-target-select">
+                        <option value="">Select an available bed</option>
+                        <option value="C-216A · Single">C-216A · Single</option>
+                        <option value="C-208B · Twin">C-208B · Twin</option>
+                    </select>
+                </label>
+                <button class="btn btn-primary" type="button" onclick="openReassignModal()">
+                    Review reassignment
+                </button>
+            </div>
+
+            <div class="constraint-ok">
+                {% icon 'shield' %}
+                <p>
+                    <strong>No hard constraint violations</strong><br>
+                    Proposed options match eligibility rules.
+                </p>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<!-- Reassignment Modal -->
+<div id="reassign-modal" class="modal-layer" style="display: none;">
+    <div class="modal small">
+        <div class="modal-head">
+            <span class="confirm-mini">{% icon 'bed' %}</span>
+            <div>
+                <h2>Confirm reassignment</h2>
+                <p>This updates draft AR-2025-04 only.</p>
+            </div>
+            <button type="button" onclick="closeReassignModal()">{% icon 'close' %}</button>
+        </div>
+        <div class="modal-body" style="padding: 0;">
+            <div class="move-visual">
+                <div>
+                    <small>FROM</small>
+                    <strong id="modal-from-bed">Cedar · C-214A</strong>
+                </div>
+                {% icon 'arrow' %}
+                <div>
+                    <small>TO</small>
+                    <strong id="modal-to-bed">Cedar · C-216A</strong>
+                </div>
+            </div>
+            <label class="modal-check">
+                <input type="checkbox" id="reassign-constraint-check" checked>
+                I have reviewed eligibility and room constraints.
+            </label>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-secondary" type="button" onclick="closeReassignModal()">Cancel</button>
+            <button class="btn btn-primary" type="button" onclick="executeReassignment()">Confirm reassignment</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let selectedRoomNumber = 'C-214';
+
+    function changeFloor(floor) {
+        window.location.href = `{% url 'bedmap' %}?floor=${encodeURIComponent(floor)}`;
+    }
+
+    function selectRoom(btn) {
+        document.querySelectorAll('#rooms-grid .room-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+
+        selectedRoomNumber = btn.dataset.room;
+        document.getElementById('panel-room-number').textContent = btn.dataset.room;
+        document.getElementById('panel-room-meta').textContent = `${btn.dataset.floor} · ${btn.dataset.wing} · ${btn.dataset.type}`;
+        document.getElementById('panel-room-gender').textContent = btn.dataset.gender;
+        document.getElementById('panel-room-access').textContent = btn.dataset.access;
+    }
+
+    function openReassignModal() {
+        const targetBed = document.getElementById('reassign-target-select').value || 'C-216A · Single';
+        document.getElementById('modal-from-bed').textContent = `Cedar · ${selectedRoomNumber}A`;
+        document.getElementById('modal-to-bed').textContent = `Cedar · ${targetBed}`;
+        document.getElementById('reassign-modal').style.display = 'grid';
+    }
+
+    function closeReassignModal() {
+        document.getElementById('reassign-modal').style.display = 'none';
+    }
+
+    function executeReassignment() {
+        const targetBed = document.getElementById('reassign-target-select').value || 'C-216A · Single';
+        fetch('/api/bedmap/reassign/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                student_id: 'STU-204810',
+                target_bed: targetBed
+            })
+        }).then(r => r.json()).then(data => {
+            alert(`Reassigned successfully to ${data.target_bed}! Audit record created.`);
+            closeReassignModal();
+        });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}
+

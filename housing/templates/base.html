@@ -1,0 +1,296 @@
+{% load static %}
+{% load housing_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Nestora | Student Living & Housing Allocation{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}?v=4">
+    <link rel="shortcut icon" type="image/svg+xml" href="{% static 'favicon.svg' %}?v=4">
+    <link rel="apple-touch-icon" href="{% static 'favicon.svg' %}?v=4">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="app {% if is_admin %}admin{% endif %}">
+        <!-- Scrim for mobile sidebar -->
+        <button id="mobile-scrim" class="scrim" aria-label="Close navigation" onclick="closeSidebar()" style="display: none;"></button>
+
+        <!-- Sidebar Navigation -->
+        <aside id="main-sidebar" class="sidebar">
+            <div class="sidebar-header-row">
+                <div class="brand" onclick="window.location.href='{% if is_admin %}{% url 'admin-overview' %}{% else %}{% url 'overview' %}{% endif %}'" role="button" tabindex="0">
+                    {% logo_icon 32 %}
+                    <span>Nestora<small>Student living, simplified</small></span>
+                </div>
+                <button type="button" class="sidebar-close-btn" onclick="closeSidebar()" aria-label="Close navigation">
+                    {% icon 'close' 18 %}
+                </button>
+            </div>
+
+            <div class="workspace-label">
+                {% if is_admin %}ADMIN WORKSPACE{% else %}STUDENT PORTAL{% endif %}
+            </div>
+
+            <nav aria-label="Main navigation">
+                {% if is_admin %}
+                    <a href="{% url 'admin-overview' %}" class="nav-item {% if active_view == 'admin-overview' %}active{% endif %}">
+                        {% icon 'home' %}<span>Overview</span>
+                    </a>
+
+                    <!-- Inventory Dropdown -->
+                    <div class="nav-dropdown">
+                        <a href="{% url 'bedmap' %}" class="nav-item has-dropdown {% if active_view in 'bedmap applications waiting' %}active{% endif %}">
+                            {% icon 'bed' %}<span>Inventory</span>
+                            <span class="dropdown-chevron">{% icon 'chevron-down' 12 %}</span>
+                        </a>
+                        <div class="nav-dropdown-menu">
+                            <a href="{% url 'bedmap' %}" class="dropdown-link {% if active_view == 'bedmap' %}active{% endif %}">
+                                <span class="dropdown-icon">{% icon 'bed' 16 %}</span>
+                                <div>
+                                    <strong>Bed &amp; Room Map</strong>
+                                    <small>Visual floorplan &amp; occupancy status</small>
+                                </div>
+                            </a>
+                            <a href="{% url 'placeholder' 'applications' %}" class="dropdown-link {% if active_view == 'applications' %}active{% endif %}">
+                                <span class="dropdown-icon">{% icon 'file' 16 %}</span>
+                                <div>
+                                    <strong>Applications</strong>
+                                    <small>Review student submissions &amp; quotas</small>
+                                </div>
+                            </a>
+                            <a href="{% url 'placeholder' 'waiting' %}" class="dropdown-link {% if active_view == 'waiting' %}active{% endif %}">
+                                <span class="dropdown-icon">{% icon 'list' 16 %}</span>
+                                <div>
+                                    <strong>Waiting List</strong>
+                                    <small>Priority waitlist &amp; pending offers</small>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Allocations Dropdown -->
+                    <div class="nav-dropdown">
+                        <a href="{% url 'runs' %}" class="nav-item has-dropdown {% if active_view in 'runs draft audit' %}active{% endif %}">
+                            {% icon 'spark' %}<span>Allocations</span>
+                            <span class="dropdown-chevron">{% icon 'chevron-down' 12 %}</span>
+                        </a>
+                        <div class="nav-dropdown-menu">
+                            <a href="{% url 'runs' %}" class="dropdown-link {% if active_view == 'runs' %}active{% endif %}">
+                                <span class="dropdown-icon">{% icon 'spark' 16 %}</span>
+                                <div>
+                                    <strong>Allocation Runs</strong>
+                                    <small>Algorithmic batches &amp; seed locks</small>
+                                </div>
+                            </a>
+                            <a href="{% url 'draft' %}" class="dropdown-link {% if active_view == 'draft' %}active{% endif %}">
+                                <span class="dropdown-icon">{% icon 'clipboard' 16 %}</span>
+                                <div>
+                                    <strong>Draft Review</strong>
+                                    <small>Audit exceptions &amp; overrides</small>
+                                </div>
+                            </a>
+                            <a href="{% url 'placeholder' 'audit' %}" class="dropdown-link {% if active_view == 'audit' %}active{% endif %}">
+                                <span class="dropdown-icon">{% icon 'shield' 16 %}</span>
+                                <div>
+                                    <strong>Audit Log</strong>
+                                    <small>Immutable governance trail</small>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Operations Dropdown -->
+                    <div class="nav-dropdown">
+                        <a href="{% url 'placeholder' 'reports' %}" class="nav-item has-dropdown {% if active_view in 'reports settings admin-profile' %}active{% endif %}">
+                            {% icon 'chart' %}<span>Operations</span>
+                            <span class="dropdown-chevron">{% icon 'chevron-down' 12 %}</span>
+                        </a>
+                        <div class="nav-dropdown-menu">
+                            <a href="{% url 'admin-profile' %}" class="dropdown-link {% if active_view == 'admin-profile' %}active{% endif %}">
+                                <span class="dropdown-icon">{% icon 'shield' 16 %}</span>
+                                <div>
+                                    <strong>Warden Profile</strong>
+                                    <small>Staff credentials &amp; contact info</small>
+                                </div>
+                            </a>
+                            <a href="{% url 'placeholder' 'reports' %}" class="dropdown-link {% if active_view == 'reports' %}active{% endif %}">
+                                <span class="dropdown-icon">{% icon 'chart' 16 %}</span>
+                                <div>
+                                    <strong>Reports &amp; Analytics</strong>
+                                    <small>Occupancy metrics &amp; stats</small>
+                                </div>
+                            </a>
+                            <a href="{% url 'placeholder' 'settings' %}" class="dropdown-link {% if active_view == 'settings' %}active{% endif %}">
+                                <span class="dropdown-icon">{% icon 'settings' 16 %}</span>
+                                <div>
+                                    <strong>System Settings</strong>
+                                    <small>Rules &amp; allocation cycle config</small>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{% url 'overview' %}" class="nav-item {% if active_view == 'overview' %}active{% endif %}">
+                        {% icon 'home' %}<span>Overview</span>
+                    </a>
+
+                    <!-- Hostels & Roommates Dropdown -->
+                    <div class="nav-dropdown">
+                        <a href="{% url 'hostels' %}" class="nav-item has-dropdown {% if active_view in 'hostels roommate' %}active{% endif %}">
+                            {% icon 'building' %}<span>Explore</span>
+                            <span class="dropdown-chevron">{% icon 'chevron-down' 12 %}</span>
+                        </a>
+                        <div class="nav-dropdown-menu">
+                            <a href="{% url 'hostels' %}" class="dropdown-link {% if active_view == 'hostels' %}active{% endif %}">
+                                <span class="dropdown-icon">{% icon 'building' 16 %}</span>
+                                <div>
+                                    <strong>Find a Hostel</strong>
+                                    <small>Explore campus residences, rooms &amp; fees</small>
+                                </div>
+                            </a>
+                            <a href="{% url 'roommate' %}" class="dropdown-link {% if active_view == 'roommate' %}active{% endif %}">
+                                <span class="dropdown-icon">{% icon 'users' 16 %}</span>
+                                <div>
+                                    <strong>Roommate Matching</strong>
+                                    <small>Compatibility quiz &amp; match profiles</small>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Application Dropdown -->
+                    <div class="nav-dropdown">
+                        <a href="{% url 'application' %}" class="nav-item has-dropdown {% if active_view in 'application status' %}active{% endif %}">
+                            {% icon 'file' %}<span>My Housing</span>
+                            <span class="dropdown-chevron">{% icon 'chevron-down' 12 %}</span>
+                        </a>
+                        <div class="nav-dropdown-menu">
+                            <a href="{% url 'application' %}" class="dropdown-link {% if active_view == 'application' %}active{% endif %}">
+                                <span class="dropdown-icon">{% icon 'file' 16 %}</span>
+                                <div>
+                                    <strong>My Application</strong>
+                                    <small>Rank hostel &amp; room preferences</small>
+                                </div>
+                            </a>
+                            <a href="{% url 'status' %}" class="dropdown-link {% if active_view == 'status' %}active{% endif %}">
+                                <span class="dropdown-icon">{% icon 'check' 16 %}</span>
+                                <div>
+                                    <strong>Allocation Status</strong>
+                                    <small>Track timeline &amp; authorised publication</small>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Support Dropdown -->
+                    <div class="nav-dropdown">
+                        <a href="{% url 'placeholder' 'help' %}" class="nav-item has-dropdown {% if active_view in 'help notifications student-profile' %}active{% endif %}">
+                            {% icon 'help' %}<span>Support</span>
+                            <span class="dropdown-chevron">{% icon 'chevron-down' 12 %}</span>
+                        </a>
+                        <div class="nav-dropdown-menu">
+                            <a href="{% url 'student-profile' %}" class="dropdown-link {% if active_view == 'student-profile' %}active{% endif %}">
+                                <span class="dropdown-icon">{% icon 'users' 16 %}</span>
+                                <div>
+                                    <strong>My Profile</strong>
+                                    <small>Personal details &amp; preferences</small>
+                                </div>
+                            </a>
+                            <a href="{% url 'placeholder' 'help' %}" class="dropdown-link {% if active_view == 'help' %}active{% endif %}">
+                                <span class="dropdown-icon">{% icon 'help' 16 %}</span>
+                                <div>
+                                    <strong>Help &amp; FAQ</strong>
+                                    <small>Policies, guidelines &amp; contacts</small>
+                                </div>
+                            </a>
+                            <a href="{% url 'placeholder' 'notifications' %}" class="dropdown-link {% if active_view == 'notifications' %}active{% endif %}">
+                                <span class="dropdown-icon">{% icon 'bell' 16 %}</span>
+                                <div>
+                                    <strong>Notifications</strong>
+                                    <small>3 unread cycle updates</small>
+                                </div>
+                                <b>3</b>
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </nav>
+
+            <div class="sidebar-bottom">
+                <div class="profile-row" style="cursor: pointer;" onclick="window.location.href='{% if is_admin %}{% url 'admin-profile' %}{% else %}{% url 'student-profile' %}{% endif %}';" title="My Profile & Settings">
+                    <span class="avatar {% if is_admin %}avatar-green{% endif %}">
+                        {{ avatar }}
+                    </span>
+                    <span>
+                        <strong>{% if is_admin %}{{ admin_name }}{% else %}{{ student_name }}{% endif %}</strong>
+                        <small>{% if is_admin %}{{ admin_role }}{% else %}{{ student_meta }}{% endif %}</small>
+                    </span>
+                    <a href="{% if is_admin %}{% url 'admin-profile' %}{% else %}{% url 'student-profile' %}{% endif %}" style="margin-left: auto; color: #a5b9b1; text-decoration: none; font-size: 11px; padding: 4px;" title="Profile Settings">
+                        {% icon 'settings' 15 %}
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Wrapper -->
+        <main>
+            <header class="topbar">
+                <button class="mobile-menu" onclick="toggleSidebar()" aria-label="Toggle navigation">
+                    {% icon 'menu' %}
+                </button>
+                <div class="topbar-title" style="display: flex; align-items: center; gap: 9px;">
+                    {% logo_icon 22 %}
+                    <span>{% block topbar_title %}Nestora Portal{% endblock %}</span>
+                </div>
+                <div class="top-actions">
+                    <button class="icon-btn" aria-label="Search">{% icon 'search' %}</button>
+                    <a href="{% url 'placeholder' 'notifications' %}" class="icon-btn has-dot" aria-label="Notifications">
+                        {% icon 'bell' %}
+                    </a>
+                    <a href="{% if is_admin %}{% url 'admin-profile' %}{% else %}{% url 'student-profile' %}{% endif %}" title="My Profile" style="text-decoration: none; display: flex; align-items: center;">
+                        <span class="avatar {% if is_admin %}avatar-green{% endif %}">{{ avatar }}</span>
+                    </a>
+                    <a href="{% url 'logout' %}" class="btn btn-secondary" style="min-height: 34px; padding: 0 10px; font-size: 10px;" title="Sign out">
+                        Logout
+                    </a>
+                </div>
+            </header>
+
+            <div class="page-transition">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Global Modals container -->
+    <div id="modal-container"></div>
+
+    <script>
+        function openSidebar() {
+            const sidebar = document.getElementById('main-sidebar');
+            const scrim = document.getElementById('mobile-scrim');
+            if (sidebar) sidebar.classList.add('sidebar-open');
+            if (scrim) scrim.style.display = 'block';
+            document.body.classList.add('drawer-open');
+        }
+        function closeSidebar() {
+            const sidebar = document.getElementById('main-sidebar');
+            const scrim = document.getElementById('mobile-scrim');
+            if (sidebar) sidebar.classList.remove('sidebar-open');
+            if (scrim) scrim.style.display = 'none';
+            document.body.classList.remove('drawer-open');
+        }
+        function toggleSidebar() {
+            if (document.body.classList.contains('drawer-open')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        }
+    </script>
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
+

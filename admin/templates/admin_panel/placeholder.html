@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load housing_tags %}
+
+{% block title %}{{ section_name }} | Nestora{% endblock %}
+{% block topbar_title %}{{ section_name }}{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-heading">
+        <div>
+            <span class="eyebrow">NESTORA</span>
+            <h1>{{ section_name }}</h1>
+            <p>Manage, review, and export information for the current housing cycle.</p>
+        </div>
+        <button class="btn btn-secondary" type="button">
+            {% icon 'download' %} Export
+        </button>
+    </div>
+
+    <div class="empty-state">
+        <span>
+            {% if active_view == 'reports' %}
+                {% icon 'chart' 30 %}
+            {% elif active_view == 'waiting' %}
+                {% icon 'list' 30 %}
+            {% elif active_view == 'notifications' %}
+                {% icon 'bell' 30 %}
+            {% elif active_view == 'help' %}
+                {% icon 'help' 30 %}
+            {% elif active_view == 'audit' %}
+                {% icon 'shield' 30 %}
+            {% elif active_view == 'settings' %}
+                {% icon 'settings' 30 %}
+            {% else %}
+                {% icon 'clipboard' 30 %}
+            {% endif %}
+        </span>
+        <h2>
+            {% if active_view == 'waiting' %}
+                No students match these filters
+            {% else %}
+                Everything is up to date
+            {% endif %}
+        </h2>
+        <p>
+            {% if active_view == 'waiting' %}
+                Try clearing filters or selecting another eligibility group.
+            {% else %}
+                There are no new items requiring your attention right now.
+            {% endif %}
+        </p>
+        <button class="btn btn-secondary" type="button">Clear filters</button>
+    </div>
+</div>
+{% endblock %}
+
