@@ -22,6 +22,7 @@ ICON_PATHS = {
     'shield': '<path d="M12 2 4 5v6c0 5 3.4 9 8 11 4.6-2 8-6 8-11V5z"/><path d="m8 12 3 3 5-6"/>',
     'menu': '<path d="M4 7h16M4 12h16M4 17h16"/>',
     'close': '<path d="m6 6 12 12M18 6 6 18"/>',
+    'logout': '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9"/>',
     'download': '<path d="M12 3v12m-4-4 4 4 4-4"/><path d="M4 19h16"/>',
     'filter': '<path d="M3 5h18l-7 8v6l-4 2v-8z"/>',
     'spark': '<path d="m12 3 1.2 4.2L17 9l-3.8 1.8L12 15l-1.2-4.2L7 9l3.8-1.8z"/><path d="m19 15 .7 2.3L22 18l-2.3.7L19 21l-.7-2.3L16 18l2.3-.7z"/>',

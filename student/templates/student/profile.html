@@ -12,9 +12,14 @@
             <h1>My profile &amp; details</h1>
             <p>Keep your personal records, contact information, and housing preferences up to date.</p>
         </div>
-        <a href="{% url 'application' %}" class="btn btn-secondary">
-            {% icon 'file' 16 %} View application
-        </a>
+        <div class="heading-actions" style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a href="{% url 'application' %}" class="btn btn-secondary">
+                {% icon 'file' 16 %} View application
+            </a>
+            <a href="{% url 'logout' %}" class="btn btn-danger" onclick="return confirm('Are you sure you want to log out?');" title="Sign out of student portal">
+                {% icon 'logout' 15 %} Log out
+            </a>
+        </div>
     </div>
 
     {% if success_msg %}
@@ -137,11 +142,16 @@
             </div>
         </div>
 
-        <div style="margin-top: 30px; display: flex; align-items: center; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--line); padding-top: 20px;">
-            <a href="{% url 'overview' %}" class="btn btn-secondary">Cancel</a>
-            <button type="submit" class="btn btn-primary" style="min-width: 160px;">
-                {% icon 'check' 16 %} Save changes
-            </button>
+        <div style="margin-top: 30px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line); padding-top: 20px; flex-wrap: wrap;">
+            <a href="{% url 'logout' %}" class="btn btn-secondary" style="color: var(--danger); border-color: #f6c8c4;" onclick="return confirm('Are you sure you want to log out?');">
+                {% icon 'logout' 15 %} Log out
+            </a>
+            <div style="display: flex; align-items: center; gap: 10px; margin-left: auto;">
+                <a href="{% url 'overview' %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary" style="min-width: 150px;">
+                    {% icon 'check' 16 %} Save changes
+                </button>
+            </div>
         </div>
     </form>
 </div>
