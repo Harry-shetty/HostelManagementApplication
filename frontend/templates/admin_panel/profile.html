@@ -59,7 +59,7 @@
     </div>
 
     <!-- Edit Admin Profile Form -->
-    <form method="POST" action="{% url 'admin-profile' %}" class="panel" style="padding: 30px 28px;">
+    <form method="POST" action="{% url 'admin-profile' %}" class="panel profile-form-panel">
         {% csrf_token %}
 
         <h3 style="margin-bottom: 6px; font-size: 17px;">Staff Identification &amp; Title</h3>
@@ -131,13 +131,13 @@
             </div>
         </div>
 
-        <div style="margin-top: 30px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line); padding-top: 20px; flex-wrap: wrap;">
-            <a href="{% url 'logout' %}" class="btn btn-secondary" style="color: var(--danger); border-color: #f6c8c4;" onclick="return confirm('Are you sure you want to log out?');">
+        <div class="profile-form-actions">
+            <a href="{% url 'logout' %}" class="btn btn-secondary profile-logout-btn" style="color: var(--danger); border-color: #f6c8c4;" onclick="return confirm('Are you sure you want to log out?');">
                 {% icon 'logout' 15 %} Log out
             </a>
-            <div style="display: flex; align-items: center; gap: 10px; margin-left: auto;">
+            <div class="profile-form-actions-right">
                 <a href="{% url 'admin-overview' %}" class="btn btn-secondary">Cancel</a>
-                <button type="submit" class="btn btn-primary" style="min-width: 160px;">
+                <button type="submit" class="btn btn-primary profile-save-btn">
                     {% icon 'check' 16 %} Save changes
                 </button>
             </div>

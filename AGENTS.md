@@ -19,36 +19,46 @@ python3 manage.py runserver 8000
 
 ```text
 Django_project/
-├── manage.py                  # Django CLI entrypoint
+├── manage.py                  # Root Django CLI entrypoint (adds backend/ to sys.path)
 ├── db.sqlite3                 # SQLite database
 ├── requirements.txt           # Python dependencies
 │
-├── nestora/                   # Project configuration
-│   ├── settings.py            # Global settings & installed apps
-│   ├── urls.py                # Main URL router
-│   ├── wsgi.py / asgi.py      # WSGI/ASGI gateways
+├── backend/                   # Backend: Django Project Configuration & Apps
+│   ├── nestora/               # Project configuration
+│   │   ├── settings.py        # Global settings, frontend paths & installed apps
+│   │   ├── urls.py            # Main URL router
+│   │   ├── test_runner.py     # Custom test runner for backend/ discovery
+│   │   └── wsgi.py / asgi.py  # WSGI/ASGI gateways
+│   │
+│   ├── student/               # Dedicated Student Portal App
+│   │   ├── views.py           # Student views (overview, discovery, quiz, wizard, status, profile)
+│   │   ├── urls.py            # Student routes
+│   │   └── tests.py           # Student test suite
+│   │
+│   ├── admin/                 # Dedicated Warden Admin Workspace App
+│   │   ├── apps.py            # Admin AppConfig (label='admin_portal')
+│   │   ├── views.py           # Admin views (overview, bedmap, draft review, runs, profile)
+│   │   ├── urls.py            # Admin routes
+│   │   └── tests.py           # Admin test suite
+│   │
+│   └── housing/               # Core Housing Domain & Shared Logic
+│       ├── models.py          # Housing & UserProfile models
+│       ├── admin.py           # Django admin registrations
+│       ├── decorators.py      # Role guards (@student_required, @admin_required)
+│       ├── views.py           # Authentication views (login, logout, context)
+│       ├── management/        # Custom commands (seed_data)
+│       └── templatetags/      # Custom SVG icon template tags
 │
-├── student/                   # Dedicated Student Portal App
-│   ├── views.py               # Student views (overview, discovery, quiz, wizard, status)
-│   ├── urls.py                # Student routes
-│   ├── tests.py               # Student test suite
-│   └── templates/student/     # Student portal HTML templates
-│
-├── admin/                     # Dedicated Warden Admin Workspace App
-│   ├── apps.py                # Admin AppConfig (label='admin_portal')
-│   ├── views.py               # Admin views (overview, bedmap, draft review, runs)
-│   ├── urls.py                # Admin routes
-│   ├── tests.py               # Admin test suite
-│   └── templates/admin_panel/ # Admin workspace HTML templates
-│
-└── housing/                   # Core Housing Domain & Common Assets
-    ├── models.py              # Housing & UserProfile models
-    ├── admin.py               # Django admin registrations
-    ├── decorators.py          # Role guards (@student_required, @admin_required)
-    ├── views.py               # Authentication views (login, logout, context)
-    ├── templatetags/          # Custom SVG icon template tags
-    ├── static/                # CSS styling, JS interactions, favicon
-    └── templates/             # Base layouts, login, and access denied screens
+└── frontend/                  # Frontend: Templates, Styling, Scripts & Static Assets
+    ├── templates/             # HTML templates (configured in TEMPLATES['DIRS'])
+    │   ├── base.html          # Shared base layout & navigation
+    │   ├── housing/           # Login & access denied screens
+    │   ├── student/           # Student portal HTML templates
+    │   └── admin_panel/       # Admin workspace HTML templates
+    └── static/                # Static files (configured in STATICFILES_DIRS)
+        ├── css/               # Stylesheets
+        ├── js/                # Client-side scripts
+        └── *.svg / *.png      # Brand logos & favicon
 ```
 
 ## User Roles & Credentials

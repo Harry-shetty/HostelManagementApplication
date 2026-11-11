@@ -6,20 +6,22 @@ Nestora is a university student housing and allocation management system built o
 
 ## Architecture & App Separation
 
-The codebase is organized into dedicated, self-contained apps:
+The codebase separates **backend** logic from **frontend** presentation into dedicated top-level directories:
 
-- **`student/`** - Dedicated Student Portal app:
-  - Views, URLs, and templates for Hostel Discovery, Roommate Matching quiz, Multi-step Application Wizard, and Allocation Status.
-- **`admin/`** - Dedicated Warden Admin Workspace app:
-  - Views, URLs, and templates for Administrative Overview, Interactive Bed Map, Draft Allocation Review, and Governance Runs.
-- **`housing/`** - Shared domain models, authentication controllers, role guards, SVG template tags, and common assets.
-- **`nestora/`** - Main Django project configuration package (`settings.py`, `urls.py`).
+- **`backend/`** - Django project & application logic:
+  - **`backend/student/`** - Views, URLs, and tests for Hostel Discovery, Roommate Matching quiz, Multi-step Application Wizard, Allocation Status, and Student Profile.
+  - **`backend/admin/`** - Views, URLs, and tests for Administrative Overview, Interactive Bed Map, Draft Allocation Review, Governance Runs, and Warden Profile.
+  - **`backend/housing/`** - Shared domain models, authentication controllers, role guards, management commands, and SVG template tags.
+  - **`backend/nestora/`** - Main Django project configuration package (`settings.py`, `urls.py`, `test_runner.py`, `wsgi.py`, `asgi.py`).
+- **`frontend/`** - All UI templates and static assets:
+  - **`frontend/templates/`** - Base layout, authentication screens (`housing/`), student portal (`student/`), and admin workspace (`admin_panel/`).
+  - **`frontend/static/`** - CSS stylesheets, client-side JavaScript, brand logos, and favicon.
 
-Root directory contains only essential project files:
+Root directory contains only essential entrypoints and project metadata:
 - `manage.py`
 - `db.sqlite3`
 - `requirements.txt`
-- App packages: `nestora/`, `student/`, `admin/`, `housing/`
+- `backend/` and `frontend/` directories
 
 ---
 

@@ -16,7 +16,7 @@
             The page you are trying to reach is restricted to <strong>{{ required_role }}</strong> staff.
             Your current account (<strong>{{ current_user.username }}</strong>) does not have administrative privileges.
         </p>
-        <div style="display: flex; gap: 12px;">
+        <div class="access-actions">
             <a href="{% url 'overview' %}" class="btn btn-primary">
                 {% icon 'home' 16 %} Return to Student Portal
             </a>
