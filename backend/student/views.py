@@ -1,12 +1,13 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from django.urls import reverse
 from django.contrib.auth import update_session_auth_hash
+from django.contrib import messages
 
 from housing.models import (
-    Hostel, Student, Room, Bed, Application, ApplicationPreference,
-    RoommateProfile, RoommateSuggestion, Notification, UserProfile
+    Hostel, Student, Application,
+    RoommateSuggestion, Notification,
+    AllocationLetter, RoomChangeRequest, AllocationRun, AuditLog
 )
 from housing.decorators import student_required
 from housing.views import get_base_context
@@ -65,18 +66,130 @@ def application_view(request):
 
 @student_required
 def status_view(request):
-    student = Student.objects.filter(student_id='STU-204810').first()
+    profile = getattr(request.user, 'profile', None)
+    student = profile.student_profile if (profile and profile.student_profile) else Student.objects.filter(student_id='STU-204810').first()
     app = Application.objects.filter(student=student).first() if student else None
+
+    letter = AllocationLetter.objects.filter(student=student).order_by('-generated_at').first() if student else None
+    published_run = AllocationRun.objects.filter(status='published').order_by('-created_at').first()
+    
+    is_allocated = (app and app.status == 'allocated') or (letter is not None) or (published_run is not None)
+
+    if is_allocated and not letter and student:
+        letter = AllocationLetter.objects.create(
+            letter_id=f"LET-2025-{student.student_id.split('-')[-1]}",
+            student=student,
+            run=published_run,
+            hostel_name="Cedar House",
+            room_number="C-214",
+            bed_letter="A",
+            room_type="Single Ensuite",
+            fee_category="Standard Academic",
+            move_in_date="20 October 2025"
+        )
 
     ctx = get_base_context(request, 'status', is_admin=False)
     ctx.update({
         'student': student,
         'application': app,
+        'letter': letter,
+        'is_allocated': is_allocated,
     })
     return render(request, 'student/status.html', ctx)
 
 @student_required
+def student_letter_view(request):
+    profile = getattr(request.user, 'profile', None)
+    student = profile.student_profile if (profile and profile.student_profile) else Student.objects.filter(student_id='STU-204810').first()
+    letter = AllocationLetter.objects.filter(student=student).order_by('-generated_at').first() if student else None
+    if not letter and student:
+        run = AllocationRun.objects.filter(status='published').order_by('-created_at').first() or AllocationRun.objects.first()
+        letter = AllocationLetter.objects.create(
+            letter_id=f"LET-2025-{student.student_id.split('-')[-1]}",
+            student=student,
+            run=run,
+            hostel_name="Cedar House",
+            room_number="C-214",
+            bed_letter="A",
+            room_type="Single Ensuite",
+            fee_category="Standard Academic",
+            move_in_date="20 October 2025"
+        )
+    return render(request, 'student/allocation_letter.html', {'letter': letter, 'student': student})
+
+@student_required
+@require_POST
+def submit_room_change_view(request):
+    profile = getattr(request.user, 'profile', None)
+    student = profile.student_profile if (profile and profile.student_profile) else Student.objects.filter(student_id='STU-204810').first()
+    reason_cat = request.POST.get('reason_category', 'other')
+    preferred_hostel = request.POST.get('preferred_hostel', 'Maple Court')
+    details = request.POST.get('details', '').strip()
+
+    if student:
+        RoomChangeRequest.objects.create(
+            student=student,
+            current_bed_label="Cedar House · Room C-214A",
+            preferred_hostel=preferred_hostel,
+            reason_category=reason_cat,
+            details=details,
+            status='pending'
+        )
+        actor_name = request.user.get_full_name() or student.name
+        AuditLog.objects.create(
+            action=f"Room change request submitted by {student.name} ({student.student_id}) for {preferred_hostel} ({reason_cat})",
+            actor=actor_name
+        )
+        messages.success(request, "Your room change request has been submitted for Warden review.")
+    return redirect('status')
+
+@student_required
+def applications_view(request):
+    current_filter = request.GET.get('filter', 'all')
+    search_query = request.GET.get('q', '').strip()
+    from housing.views import get_mock_applications
+    apps_list = get_mock_applications(filter_val=current_filter, search_query=search_query)
+
+    profile = getattr(request.user, 'profile', None)
+    is_admin = request.user.is_staff or (profile and profile.is_admin())
+    ctx = get_base_context(request, 'applications', is_admin=is_admin)
+    ctx.update({
+        'applications_list': apps_list,
+        'current_filter': current_filter,
+        'search_query': search_query,
+    })
+    return render(request, 'admin_panel/applications.html', ctx)
+
+@student_required
+def waiting_list_view(request):
+    current_filter = request.GET.get('filter', 'all')
+    search_query = request.GET.get('q', '').strip()
+    from housing.views import get_mock_waitlist
+    waitlist_items = get_mock_waitlist(filter_val=current_filter, search_query=search_query)
+
+    profile = getattr(request.user, 'profile', None)
+    is_admin = request.user.is_staff or (profile and profile.is_admin())
+    ctx = get_base_context(request, 'waiting', is_admin=is_admin)
+    ctx.update({
+        'waitlist_items': waitlist_items,
+        'current_filter': current_filter,
+        'search_query': search_query,
+    })
+    return render(request, 'admin_panel/waiting_list.html', ctx)
+
+@student_required
 def placeholder_view(request, section):
+    if section == 'applications':
+        return applications_view(request)
+    elif section in ('waiting', 'waitlist'):
+        return waiting_list_view(request)
+    elif section == 'reports':
+        from admin.views import reports_view
+        return reports_view(request)
+    elif section == 'audit':
+        from admin.views import audit_view
+        return audit_view(request)
+
     profile = getattr(request.user, 'profile', None)
     is_admin = request.user.is_staff or (profile and profile.is_admin())
     ctx = get_base_context(request, section, is_admin=is_admin)

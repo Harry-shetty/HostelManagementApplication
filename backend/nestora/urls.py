@@ -4,7 +4,6 @@ URL configuration for nestora project.
 from django.contrib import admin as django_admin
 from django.urls import path, include
 from django.views.generic.base import RedirectView
-from housing import views as auth_views
 
 urlpatterns = [
     # Favicon for browser tab
@@ -13,9 +12,8 @@ urlpatterns = [
     # Django Admin Site
     path('django-admin/', django_admin.site.urls),
 
-    # Authentication
-    path('login/', auth_views.login_view, name='login'),
-    path('logout/', auth_views.logout_view, name='logout'),
+    # Authentication (login / logout)
+    path('', include('housing.urls')),
 
     # Admin Workspace App
     path('admin-workspace/', include('admin.urls')),

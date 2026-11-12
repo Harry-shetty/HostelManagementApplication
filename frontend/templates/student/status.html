@@ -6,28 +6,104 @@
 
 {% block content %}
 <div class="page">
+    {% if messages %}
+    <div style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;">
+        {% for message in messages %}
+        <div style="padding: 14px 18px; border-radius: 12px; background: #e3f3e7; color: var(--forest); border: 1px solid #c0e6cb; display: flex; align-items: center; gap: 10px; animation: card-rise 0.3s ease;">
+            {% icon 'check' 18 %}
+            <strong>{{ message }}</strong>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <div class="page-heading">
         <div>
-            <span class="eyebrow">APPLICATION NST-25-10482</span>
+            <span class="eyebrow">APPLICATION {{ application.application_id|default:'NST-25-10482' }}</span>
             <h1>Allocation status</h1>
-            <p>Track your application through review and authorised publication.</p>
+            <p>Track your housing application through algorithmic review, authorized approval, and letter release.</p>
         </div>
-        <span class="tag tag-warning">Under review</span>
+        {% if is_allocated or letter %}
+            <span class="tag tag-success" style="font-size: 12px; font-weight: 700; padding: 6px 12px;">Allocated &amp; Published</span>
+        {% else %}
+            <span class="tag tag-warning" style="font-size: 12px; font-weight: 700; padding: 6px 12px;">Under review</span>
+        {% endif %}
     </div>
 
-    <!-- Status Banner -->
+    {% if is_allocated or letter %}
+    <!-- Allocated Confirmed Banner -->
+    <div class="status-banner" style="background: linear-gradient(105deg, var(--forest) 0%, #174c3c 100%); color: white; border: 1px solid #236450;">
+        <span style="background: var(--lime); color: var(--forest); border-radius: 50%; width: 56px; height: 56px; display: grid; place-items: center;">
+            {% icon 'check' 32 %}
+        </span>
+        <div>
+            <span class="tag tag-success" style="background: var(--lime); color: var(--forest); font-weight: 750;">ALLOCATION CONFIRMED</span>
+            <h2 style="color: white; margin: 8px 0 6px 0;">Congratulations! Your room assignment is published.</h2>
+            <p style="color: #b9d7cc;">Your placement has completed full constraint verification and was formally approved by the Head Warden. Your official allocation letter has been generated.</p>
+        </div>
+        <div style="background: rgba(255,255,255,0.08); padding: 14px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); text-align: right;">
+            <small style="color: var(--lime); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; display: block;">OFFICIAL MOVE-IN</small>
+            <strong style="color: white; font-size: 17px; display: block;">{{ letter.move_in_date|default:'20 October 2025' }}</strong>
+        </div>
+    </div>
+
+    <!-- Confirmed Placement Details Card -->
+    <section class="panel" style="margin-bottom: 24px; padding: 24px; border: 1px solid var(--forest);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <span class="eyebrow">CONFIRMED RESIDENTIAL ASSIGNMENT</span>
+                <h2 style="margin: 0; font-size: 20px; color: var(--forest);">{{ letter.hostel_name|default:'Cedar House' }} &middot; Room {{ letter.room_number|default:'C-214' }}{{ letter.bed_letter|default:'A' }}</h2>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a href="{% url 'student-letter' %}" class="btn btn-primary" target="_blank" style="padding: 0 20px;">
+                    {% icon 'download' 16 %} View Official Allocation Letter
+                </a>
+                <button type="button" class="btn btn-secondary" onclick="openRoomChangeModal()">
+                    Request Room Change
+                </button>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; background: #fafbf9; padding: 18px; border-radius: 12px; border: 1px solid var(--line); margin-bottom: 20px;">
+            <div>
+                <small style="display: block; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Assigned Bed</small>
+                <strong style="font-size: 15px; color: var(--forest);">Bed {{ letter.bed_letter|default:'A' }} · {{ letter.room_type|default:'Single room' }}</strong>
+            </div>
+            <div>
+                <small style="display: block; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Matched Roommate</small>
+                <strong style="font-size: 15px; color: var(--ink);">Maya Okafor</strong>
+                <small style="color: var(--muted); display: block; font-size: 11px;">Architecture · 92% Compatibility</small>
+            </div>
+            <div>
+                <small style="display: block; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Residential Fee</small>
+                <strong style="font-size: 15px; color: var(--forest);">₹18,500 / semester</strong>
+            </div>
+            <div>
+                <small style="display: block; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Letter Reference</small>
+                <code style="font-size: 13px; font-weight: 700; color: var(--forest);">{{ letter.letter_id|default:'LET-2025-204810' }}</code>
+            </div>
+        </div>
+
+        <p style="margin: 0; font-size: 12px; color: var(--muted); line-height: 1.5;">
+            <strong>Check-In Instructions:</strong> Present your student ID and the printed/downloaded Allocation Letter at the hall reception on move-in day. Room keys and inventory checklists will be issued upon physical verification.
+        </p>
+    </section>
+
+    {% else %}
+    <!-- Under Review Banner -->
     <div class="status-banner">
         <span>{% icon 'clock' 28 %}</span>
         <div>
             <span class="tag tag-warning">UNDER REVIEW</span>
             <h2>Your application is being assessed.</h2>
-            <p>Eligibility checks are complete. The housing team is preparing a draft allocation for authorised review.</p>
+            <p>Eligibility checks are complete. The housing team is running draft allocation algorithms for authorized warden review.</p>
         </div>
         <div>
             <small>EXPECTED UPDATE</small>
             <strong>15 October 2025</strong>
         </div>
     </div>
+    {% endif %}
 
     <!-- Status Grid -->
     <div class="status-grid">
@@ -35,7 +111,7 @@
         <section class="panel">
             <div class="panel-head">
                 <h2>Application timeline</h2>
-                <span>Last updated today</span>
+                <span>Academic Year 2025/26</span>
             </div>
             
             <div class="timeline-item done">
@@ -54,19 +130,19 @@
                 </p>
             </div>
 
-            <div class="timeline-item current">
-                <span><i></i></span>
+            <div class="timeline-item {% if is_allocated or letter %}done{% else %}current{% endif %}">
+                <span>{% if is_allocated or letter %}{% icon 'check' 14 %}{% else %}<i></i>{% endif %}</span>
                 <p>
                     <strong>Draft allocation review</strong>
-                    <small>In progress</small>
+                    <small>{% if is_allocated or letter %}Completed &amp; validated{% else %}In progress{% endif %}</small>
                 </p>
             </div>
 
-            <div class="timeline-item">
-                <span></span>
+            <div class="timeline-item {% if is_allocated or letter %}done{% endif %}">
+                <span>{% if is_allocated or letter %}{% icon 'check' 14 %}{% endif %}</span>
                 <p>
                     <strong>Authorised publication</strong>
-                    <small>Pending</small>
+                    <small>{% if is_allocated or letter %}Published &amp; letters released{% else %}Pending warden approval{% endif %}</small>
                 </p>
             </div>
         </section>
@@ -76,17 +152,84 @@
             <span class="policy-icon">{% icon 'shield' %}</span>
             <h2>How allocation decisions work</h2>
             <p>
-                Allocations follow approved university policy, considering eligibility, room constraints, ranked preferences, accessibility needs, and available inventory.
+                Allocations strictly follow university housing policy, honoring capacity, quota distribution, accessibility requirements, gender restrictions, and consented lifestyle compatibility scoring.
             </p>
-            <button class="text-link" type="button" onclick="alert('University Housing Allocation Policy document v3.2');">
-                Read the allocation policy {% icon 'arrow' 15 %}
-            </button>
+            <div style="margin: 16px 0; padding: 12px 14px; border-radius: 10px; background: #fafbf9; border: 1px solid var(--line); font-size: 12px; line-height: 1.5;">
+                <strong style="color: var(--forest); display: block; margin-bottom: 4px;">Governance Guarantee:</strong>
+                Draft allocations are generated by algorithmic engines and remain locked until verified by the Head Warden. Every override produces an immutable audit record.
+            </div>
             <div class="auth-note">
-                <strong>Not yet an allocation offer</strong>
-                <p>No placement is confirmed before authorised publication. We’ll notify you as soon as an official result is available.</p>
+                <strong>Official Allocation Support</strong>
+                <p>Need accommodation support or accessible ground-floor assistance? Contact the Warden Office at <a href="mailto:housing@nestora.edu" style="color: var(--forest); font-weight: 600;">housing@nestora.edu</a>.</p>
             </div>
         </section>
     </div>
 </div>
-{% endblock %}
 
+<!-- Room Change Request Modal -->
+<div id="room-change-modal" class="modal-layer" style="display: none; z-index: 2000;">
+    <div class="modal small" style="max-width: 500px; width: 100%; border-radius: 18px; background: #ffffff; box-shadow: 0 25px 70px rgba(11,29,23,.28); overflow: hidden; display: flex; flex-direction: column;">
+        <form method="POST" action="{% url 'student-room-change' %}">
+            {% csrf_token %}
+            <div class="modal-head" style="display: flex; align-items: center; gap: 14px; padding: 20px 24px; border-bottom: 1px solid var(--line); background: #ffffff;">
+                <span class="confirm-mini" style="width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex-shrink: 0; background: var(--lime-soft); color: var(--forest);">
+                    {% icon 'arrow' 20 %}
+                </span>
+                <div style="flex: 1; min-width: 0;">
+                    <h2 style="margin: 0 0 4px 0; font-size: 18px; font-weight: 700; color: var(--forest); line-height: 1.25;">Request Room Change</h2>
+                    <p style="margin: 0; font-size: 12px; color: var(--muted); line-height: 1.4;">Submit a documented transfer request for warden review.</p>
+                </div>
+                <button type="button" onclick="closeRoomChangeModal()" style="cursor: pointer; background: transparent; border: none; width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); padding: 0;" title="Close">
+                    {% icon 'close' 18 %}
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 24px; display: flex; flex-direction: column; gap: 16px; background: #ffffff;">
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-size: 11px; font-weight: 700; color: var(--forest); text-transform: uppercase;">Primary Reason Category</label>
+                    <select name="reason_category" required style="width: 100%; height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; background: white;">
+                        <option value="medical">Medical or Accessibility Need</option>
+                        <option value="academic">Academic / Proximity to Department</option>
+                        <option value="compatibility">Roommate Compatibility Adjustment</option>
+                        <option value="financial">Financial / Room Type Preference</option>
+                        <option value="other">Other Personal Extenuating Circumstances</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-size: 11px; font-weight: 700; color: var(--forest); text-transform: uppercase;">Preferred Alternative Residence</label>
+                    <select name="preferred_hostel" required style="width: 100%; height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; background: white;">
+                        <option value="Maple Court">Maple Court (Central Campus · Ensuite)</option>
+                        <option value="Willow Hall">Willow Hall (East Campus · Accessible)</option>
+                        <option value="Oak Residence">Oak Residence (West Campus · Quiet Zone)</option>
+                        <option value="Pine Lodge">Pine Lodge (South Campus)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-size: 11px; font-weight: 700; color: var(--forest); text-transform: uppercase;">Detailed Statement / Extenuating Reasons</label>
+                    <textarea name="details" required placeholder="Explain why a room transfer is required. Attach supporting medical or academic documents if applicable..." style="width: 100%; min-height: 90px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; font-family: inherit;"></textarea>
+                </div>
+            </div>
+            <div class="modal-foot" style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding: 18px 24px; border-top: 1px solid var(--line); background: #fafbf9;">
+                <button type="button" class="btn btn-secondary" onclick="closeRoomChangeModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Submit Transfer Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openRoomChangeModal() {
+    document.getElementById('room-change-modal').style.display = 'grid';
+}
+
+function closeRoomChangeModal() {
+    document.getElementById('room-change-modal').style.display = 'none';
+}
+
+window.addEventListener('click', function(e) {
+    const modal = document.getElementById('room-change-modal');
+    if (e.target === modal) closeRoomChangeModal();
+});
+</script>
+{% endblock %}

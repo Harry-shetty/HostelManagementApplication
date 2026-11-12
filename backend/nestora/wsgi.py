@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 
 from django.core.wsgi import get_wsgi_application
+import socketio
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 if str(BACKEND_DIR) not in sys.path:
@@ -19,4 +20,8 @@ if str(BACKEND_DIR) not in sys.path:
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'nestora.settings')
 
-application = get_wsgi_application()
+django_application = get_wsgi_application()
+
+# Wrap Django WSGI app with Socket.IO server middleware
+from housing.sockets import sio
+application = socketio.WSGIApp(sio, django_application)

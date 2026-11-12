@@ -3,7 +3,15 @@ Django settings for nestora project.
 """
 
 from pathlib import Path
+import os
 import sys
+
+# Load environment variables from .env file if present
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).resolve().parent.parent.parent / '.env')
+except ImportError:
+    pass
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 BACKEND_DIR = BASE_DIR / 'backend'
@@ -101,3 +109,7 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = 'login'
 
 TEST_RUNNER = 'nestora.test_runner.BackendDiscoverRunner'
+
+# MongoDB Atlas Configuration
+MONGODB_URI = os.getenv('MONGODB_URI', '')
+MONGODB_DB_NAME = os.getenv('MONGODB_DB_NAME', 'nestora')

@@ -218,6 +218,71 @@ class Command(BaseCommand):
         ApplicationPreference.objects.create(application=app, hostel=maple, rank=2)
         ApplicationPreference.objects.create(application=app, hostel=willow, rank=3)
 
+        app_maya = Application.objects.create(
+            application_id='NST-25-10483',
+            student=maya,
+            academic_year='2025/26',
+            status='submitted',
+            progress_percentage=100,
+            current_step=4,
+            room_type_preference='Ensuite room',
+            additional_notes='Near Architecture design labs.'
+        )
+        ApplicationPreference.objects.create(application=app_maya, hostel=maple, rank=1)
+        ApplicationPreference.objects.create(application=app_maya, hostel=cedar, rank=2)
+
+        app_daniel = Application.objects.create(
+            application_id='NST-25-10484',
+            student=daniel,
+            academic_year='2025/26',
+            status='under_review',
+            progress_percentage=80,
+            current_step=4,
+            room_type_preference='Ground floor accessible',
+            additional_notes='Medical accommodation: mobility restriction ground floor required.'
+        )
+        ApplicationPreference.objects.create(application=app_daniel, hostel=willow, rank=1)
+        ApplicationPreference.objects.create(application=app_daniel, hostel=cedar, rank=2)
+
+        app_leila = Application.objects.create(
+            application_id='NST-25-10485',
+            student=leila,
+            academic_year='2025/26',
+            status='allocated',
+            progress_percentage=100,
+            current_step=4,
+            room_type_preference='Single room',
+            additional_notes='Final year economics research scholar.'
+        )
+        ApplicationPreference.objects.create(application=app_leila, hostel=cedar, rank=1)
+        ApplicationPreference.objects.create(application=app_leila, hostel=oak, rank=2)
+
+        app_jon = Application.objects.create(
+            application_id='NST-25-10486',
+            student=jon,
+            academic_year='2025/26',
+            status='waitlisted',
+            progress_percentage=100,
+            current_step=4,
+            room_type_preference='Twin room',
+            additional_notes='Waitlisted priority band 2.'
+        )
+        ApplicationPreference.objects.create(application=app_jon, hostel=pine, rank=1)
+        ApplicationPreference.objects.create(application=app_jon, hostel=willow, rank=2)
+
+        app_zara = Application.objects.create(
+            application_id='NST-25-10487',
+            student=zara,
+            academic_year='2025/26',
+            status='submitted',
+            progress_percentage=100,
+            current_step=4,
+            room_type_preference='Single room',
+            additional_notes='Clinical rotation schedule.'
+        )
+        ApplicationPreference.objects.create(application=app_zara, hostel=pine, rank=1)
+        ApplicationPreference.objects.create(application=app_zara, hostel=cedar, rank=2)
+
         # 5. Roommate Profile and Suggestions
         RoommateProfile.objects.create(
             student=amara,

@@ -66,3 +66,42 @@ Run unit and integration tests across all apps:
 ```bash
 python3 manage.py test
 ```
+
+---
+
+## Real-Time Live Sync (Socket.IO)
+
+Nestora integrates **Socket.IO** (`python-socketio` + client-side `socket.io.min.js`) for instant bi-directional updates:
+
+- **Live Bed Inventory Sync**: Bed reassignments and occupancy updates reflect instantly on the Bed Map without page refreshes.
+- **Real-Time Notification Toasts**: Floating animated alerts broadcast in-app notifications to student and warden portals.
+- **Warden Activity Feeds**: Live audit logs and allocation overrides update the administrative timeline in real time.
+- **Connection Indicator**: Visible `LIVE` status pill indicates real-time socket connectivity state.
+
+---
+
+## MongoDB Atlas Integration
+
+Nestora includes a MongoDB Atlas client and seeder for document-based storage in the `nestora` database:
+
+1. **Configure Connection**: Add your Atlas URI to a `.env` file (or pass `--uri` directly):
+   ```env
+   MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/nestora?retryWrites=true&w=majority
+   MONGODB_DB_NAME=nestora
+   ```
+
+2. **Seed Collections & Mock Data**:
+   ```bash
+   python3 manage.py seed_mongodb
+   # Or with an explicit connection string:
+   python3 manage.py seed_mongodb --uri="mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/nestora?retryWrites=true&w=majority"
+   ```
+
+   Populates the required collections:
+   - `hostels`: Campus residences, room types, pricing, occupancy & amenities
+   - `rooms` & `beds`: Room inventories, wings, floorplans, and bed statuses
+   - `students`: Student identity profiles, contacts, and verification records
+   - `roommate_profiles`: Living habits, sleep schedules, and compatibility scores
+   - `applications`: Ranked hostel preferences and cycle submissions
+   - `allocation_runs` & `allocation_records`: Reproducibility seeds, exception audits, and metrics
+   - `audit_logs`: Immutable governance audit trails

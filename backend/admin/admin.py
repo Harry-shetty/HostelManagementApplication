@@ -1,3 +1,1 @@
-from django.contrib import admin
-
-# Register your models here.
+"""Warden admin portal Django admin registrations."""

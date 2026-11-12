@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
-from housing.models import Hostel, Student, Application, UserProfile
+from housing.models import Hostel, Student, UserProfile
 
 class StudentAppTests(TestCase):
     def setUp(self):
@@ -73,3 +73,25 @@ class StudentAppTests(TestCase):
         self.student_obj.refresh_from_db()
         self.assertEqual(self.student_obj.name, 'Amara K. Mensah')
         self.assertEqual(self.student_obj.programme, 'Data Science')
+
+    def test_student_letter_view(self):
+        self.client.login(username='student', password='student123')
+        res = self.client.get(reverse('student-letter'))
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, 'Official Accommodation Allocation Letter')
+        self.assertContains(res, 'Amara')
+
+    def test_student_room_change_request(self):
+        from housing.models import RoomChangeRequest
+        self.client.login(username='student', password='student123')
+        res = self.client.post(reverse('student-room-change'), {
+            'reason_category': 'medical',
+            'preferred_hostel': 'Willow Hall',
+            'details': 'Need ground-floor accommodation due to leg injury'
+        })
+        self.assertEqual(res.status_code, 302)
+        self.assertTrue(RoomChangeRequest.objects.filter(
+            student=self.student_obj,
+            preferred_hostel='Willow Hall',
+            reason_category='medical'
+        ).exists())

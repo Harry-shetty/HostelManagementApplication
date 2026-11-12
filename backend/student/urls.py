@@ -7,6 +7,11 @@ urlpatterns = [
     path('roommate/', views.roommate_view, name='roommate'),
     path('application/', views.application_view, name='application'),
     path('status/', views.status_view, name='status'),
+    path('status/view/', views.status_view, name='student-status'),
+    path('status/letter/', views.student_letter_view, name='student-letter'),
+    path('status/room-change/', views.submit_room_change_view, name='student-room-change'),
+    path('applications/', views.applications_view, name='student-applications'),
+    path('waiting/', views.waiting_list_view, name='student-waiting-list'),
     path('profile/', views.profile_view, name='student-profile'),
     path('section/<str:section>/', views.placeholder_view, name='placeholder'),
 

@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+{% load housing_tags %}
+
+{% block title %}Priority Waiting List &amp; Pending Offers | Nestora{% endblock %}
+{% block topbar_title %}Waiting List &amp; Offers{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-heading">
+        <div>
+            <span class="eyebrow">ALLOCATION GOVERNANCE · DRAFT AR-2025-04</span>
+            <h1>Priority waiting list &amp; offers</h1>
+            <p>Manage ranked priority queues, monitor expiring room offers, and audit algorithmic vacancy backfills.</p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary" type="button" onclick="exportWaitlistCSV()">
+                {% icon 'download' %} Export CSV
+            </button>
+            <button class="btn btn-primary" type="button" onclick="dispatchOffersPrompt()">
+                {% icon 'spark' %} Dispatch Next Offers (14)
+            </button>
+        </div>
+    </div>
+
+    <!-- Waitlist Metrics -->
+    <div class="run-metrics" style="grid-template-columns: repeat(5, 1fr); margin-bottom: 24px;">
+        <div>
+            <small>TOTAL WAITLISTED</small>
+            <strong>162</strong>
+            <span>7.7% of all applicants</span>
+        </div>
+        <div>
+            <small>TIER 1 HIGH PRIORITY</small>
+            <strong style="color: var(--danger, #dc2626);">28</strong>
+            <span>Medical, care &amp; hardship</span>
+        </div>
+        <div class="metric-warning">
+            <small>PENDING OFFERS</small>
+            <strong class="warning-text">14</strong>
+            <span>Awaiting student confirmation</span>
+        </div>
+        <div>
+            <small>PLACED THIS CYCLE</small>
+            <strong class="success-text">32</strong>
+            <span>Reallocated from drops</span>
+        </div>
+        <div>
+            <small>AVG TIME TO OFFER</small>
+            <strong>4.2 days</strong>
+            <span>Dynamic queue clearing</span>
+        </div>
+    </div>
+
+    <!-- Tier Policy Card -->
+    <section class="panel" style="margin-bottom: 24px; padding: 22px 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h3 style="margin: 0 0 4px 0; font-size: 16px; font-weight: 700; color: var(--forest);">Priority Band Governance &amp; Queue Logic</h3>
+                <p style="margin: 0; color: var(--muted); font-size: 13px;">Vacancy reallocations automatically draw from highest priority tiers before general ballot.</p>
+            </div>
+            <span class="tag tag-info" style="font-size: 11px;">Algorithm Locked</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+            <div style="padding: 16px; border: 1px solid #f2d2ce; border-radius: 12px; background: #fffaf9;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                    <span class="tag tag-danger" style="font-weight: 700;">Tier 1 · Guaranteed / Medical</span>
+                    <strong style="margin-left: auto; color: var(--danger);">28 queued</strong>
+                </div>
+                <p style="margin: 0; font-size: 12px; color: var(--muted); line-height: 1.45;">Disability mobility accommodations, care-leavers, and registered medical ground-floor needs. Zero bypass allowed.</p>
+            </div>
+
+            <div style="padding: 16px; border: 1px solid #cce3ea; border-radius: 12px; background: #f6fbfa;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                    <span class="tag tag-info" style="font-weight: 700;">Tier 2 · Distance &amp; Overseas</span>
+                    <strong style="margin-left: auto; color: var(--blue);">74 queued</strong>
+                </div>
+                <p style="margin: 0; font-size: 12px; color: var(--muted); line-height: 1.45;">International scholars and non-local students residing &gt; 50 miles from campus with no regional alternatives.</p>
+            </div>
+
+            <div style="padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: #fafbf9;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                    <span class="tag tag-neutral" style="font-weight: 700;">Tier 3 · General Ballot</span>
+                    <strong style="margin-left: auto; color: var(--ink);">60 queued</strong>
+                </div>
+                <p style="margin: 0; font-size: 12px; color: var(--muted); line-height: 1.45;">Continuing undergraduate applicants entered into the general random tie-breaking reproducibility seed queue.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Waitlist Table -->
+    <section class="panel review-table">
+        <div class="table-tools">
+            <div class="tabs">
+                <a href="?filter=all" class="{% if current_filter == 'all' or not current_filter %}active{% endif %}">
+                    All Waitlisted 162
+                </a>
+                <a href="?filter=tier1" class="{% if current_filter == 'tier1' %}active{% endif %}">
+                    Tier 1 Priority 28
+                </a>
+                <a href="?filter=pending" class="{% if current_filter == 'pending' %}active{% endif %}">
+                    Pending Offers 14
+                </a>
+                <a href="?filter=placed" class="{% if current_filter == 'placed' %}active{% endif %}">
+                    Recently Placed 32
+                </a>
+            </div>
+            <form method="GET" style="display: flex; gap: 8px;">
+                <input type="hidden" name="filter" value="{{ current_filter|default:'all' }}">
+                <label class="mini-search">
+                    {% icon 'search' %}
+                    <input type="text" name="q" value="{{ search_query }}" placeholder="Search student or rank...">
+                </label>
+                <button class="btn btn-secondary" type="submit">Filter</button>
+            </form>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 70px;">POSITION</th>
+                        <th>STUDENT</th>
+                        <th>PRIORITY TIER</th>
+                        <th>PREFERRED RESIDENCE</th>
+                        <th>DATE QUEUED</th>
+                        <th>OFFER STATUS</th>
+                        <th>EXPIRATION</th>
+                        <th style="text-align: right;">ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in waitlist_items %}
+                    <tr>
+                        <td>
+                            <strong style="font-size: 13px; color: var(--forest); background: var(--lime-soft); padding: 3px 8px; border-radius: 6px;">
+                                #{{ item.position }}
+                            </strong>
+                        </td>
+                        <td>
+                            <div class="student-cell">
+                                <span class="avatar avatar-{{ item.avatar_color|default:'green' }}">
+                                    {{ item.avatar_initials }}
+                                </span>
+                                <div>
+                                    <strong>{{ item.student_name }}</strong>
+                                    <small>{{ item.student_id }} · {{ item.programme }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="tag {% if item.tier == 'Tier 1 · Medical / Hardship' %}tag-danger{% elif item.tier == 'Tier 2 · Distance Priority' %}tag-info{% else %}tag-neutral{% endif %}">
+                                {{ item.tier }}
+                            </span>
+                        </td>
+                        <td>
+                            <strong>{{ item.preferred_hostel }}</strong>
+                            <small>{{ item.room_type }}</small>
+                        </td>
+                        <td>
+                            <span>{{ item.date_queued }}</span>
+                        </td>
+                        <td>
+                            <span class="tag {% if item.status == 'Offer Pending' %}tag-warning{% elif item.status == 'Next in Line' %}tag-info{% elif item.status == 'Placed' %}tag-success{% else %}tag-neutral{% endif %}">
+                                {{ item.status }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if item.expiration %}
+                                <strong class="warning-text">{{ item.expiration }}</strong>
+                            {% else %}
+                                <span style="color: var(--muted);">Standard Queue</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: right;">
+                            <div style="display: inline-flex; gap: 6px;">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="viewWaitlistModal('{{ item.position }}', '{{ item.student_name }}', '{{ item.tier }}', '{{ item.preferred_hostel }}', '{{ item.status }}')" style="padding: 4px 10px; font-size: 11px;">
+                                    Details
+                                </button>
+                                {% if item.status != 'Offer Pending' and item.status != 'Placed' %}
+                                <button type="button" class="btn btn-primary btn-sm" onclick="makeOfferPrompt('{{ item.student_name }}', '{{ item.preferred_hostel }}')" style="padding: 4px 10px; font-size: 11px;">
+                                    Make Offer
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; color: var(--muted); padding: 32px;">
+                            No students match the current waitlist filter.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination" style="padding: 14px 20px;">
+            <span>Showing 1 – {{ waitlist_items|length }} of 162 waitlisted students</span>
+            <div style="display: flex; gap: 4px;">
+                <button type="button" class="current">1</button>
+                <button type="button">2</button>
+                <button type="button">3</button>
+                <button type="button">…</button>
+                <button type="button">17</button>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Details Modal -->
+<div id="waitlist-modal" class="modal-layer" style="display: none; z-index: 2000;">
+    <div class="modal small" style="max-width: 480px; width: 100%; border-radius: 18px; background: #ffffff; box-shadow: 0 25px 70px rgba(11,29,23,.28); overflow: hidden; display: flex; flex-direction: column;">
+        <div class="modal-head" style="display: flex; align-items: center; gap: 14px; padding: 20px 24px; border-bottom: 1px solid var(--line); background: #ffffff;">
+            <span class="confirm-mini" style="width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex-shrink: 0; background: var(--lime-soft); color: var(--forest);">
+                {% icon 'list' 20 %}
+            </span>
+            <div style="flex: 1; min-width: 0;">
+                <h2 id="modal-queue-pos" style="margin: 0 0 4px 0; font-size: 18px; font-weight: 700; color: var(--forest); line-height: 1.25;">Queue Position #1</h2>
+                <p id="modal-queue-sub" style="margin: 0; font-size: 12px; color: var(--muted); line-height: 1.4;">Waitlist Priority Record</p>
+            </div>
+            <button type="button" onclick="closeWaitlistModal()" style="cursor: pointer; background: transparent; border: none; width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); padding: 0;" title="Close">
+                {% icon 'close' 18 %}
+            </button>
+        </div>
+        <div class="modal-body" style="padding: 24px; display: flex; flex-direction: column; gap: 14px; background: #ffffff;">
+            <div>
+                <small style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Applicant</small>
+                <p id="modal-queue-name" style="margin: 4px 0 0; font-size: 16px; font-weight: 700; color: var(--ink);">Student Name</p>
+            </div>
+            <div>
+                <small style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Priority Tier</small>
+                <p id="modal-queue-tier" style="margin: 4px 0 0; font-size: 13px; font-weight: 600; color: var(--forest);">Tier</p>
+            </div>
+            <div>
+                <small style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Requested Preference</small>
+                <p id="modal-queue-pref" style="margin: 4px 0 0; font-size: 14px; font-weight: 600; color: var(--ink);">Hall Preference</p>
+            </div>
+            <div>
+                <small style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Queue Status</small>
+                <p style="margin: 4px 0 0;"><span id="modal-queue-status" class="tag tag-warning">Status</span></p>
+            </div>
+        </div>
+        <div class="modal-foot" style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding: 18px 24px; border-top: 1px solid var(--line); background: #fafbf9;">
+            <button class="btn btn-secondary" type="button" onclick="closeWaitlistModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewWaitlistModal(pos, name, tier, pref, status) {
+    document.getElementById('modal-queue-pos').textContent = `Queue Position #${pos}`;
+    document.getElementById('modal-queue-name').textContent = name;
+    document.getElementById('modal-queue-tier').textContent = tier;
+    document.getElementById('modal-queue-pref').textContent = pref;
+    document.getElementById('modal-queue-status').textContent = status;
+    document.getElementById('waitlist-modal').style.display = 'grid';
+}
+
+function closeWaitlistModal() {
+    document.getElementById('waitlist-modal').style.display = 'none';
+}
+
+function makeOfferPrompt(name, pref) {
+    alert(`Formal housing offer dispatched to ${name} for ${pref}! The student has 48 hours to confirm or decline.`);
+}
+
+function dispatchOffersPrompt() {
+    alert('Success: 14 automated bed offers dispatched to top eligible candidates in Tier 1 and Tier 2 queues.');
+}
+
+function exportWaitlistCSV() {
+    alert('Exporting 162 priority waitlist entries to waitlist_priority_report.csv...');
+}
+
+window.addEventListener('click', function(e) {
+    const m = document.getElementById('waitlist-modal');
+    if (e.target === m) closeWaitlistModal();
+});
+</script>
+{% endblock %}

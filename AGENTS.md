@@ -14,6 +14,7 @@ python3 manage.py runserver 8000
 - Student Portal: `http://127.0.0.1:8000/`
 - Warden Admin Workspace: `http://127.0.0.1:8000/admin-workspace/`
 - Django Admin: `http://127.0.0.1:8000/django-admin/`
+- Real-Time Live Sync: Socket.IO enabled at `/socket.io/`
 
 ## Project Structure
 
@@ -77,8 +78,11 @@ Django_project/
 ## Database & Testing
 
 ```bash
-# Seed initial demo data
+# Seed initial SQL demo data
 python3 manage.py seed_data
+
+# Seed MongoDB Atlas 'nestora' database & collections
+python3 manage.py seed_mongodb --uri="mongodb+srv://<user>:<password>@cluster.mongodb.net/nestora?retryWrites=true&w=majority"
 
 # Run tests across all apps
 python3 manage.py test

@@ -2,27 +2,35 @@
 {% load housing_tags %}
 
 {% block title %}Draft Allocation Review | Nestora Admin{% endblock %}
-{% block topbar_title %}Draft Review · AR-2025-04{% endblock %}
+{% block topbar_title %}Draft Review · {{ run.run_id }}{% endblock %}
 
 {% block content %}
 <div class="page">
     <div class="breadcrumb">
         <a href="{% url 'runs' %}">Allocation runs</a>
         {% icon 'chevron' 14 %}
-        <span>AR-2025-04</span>
+        <span>{{ run.run_id }}</span>
     </div>
 
     <div class="page-heading compact">
         <div>
             <div class="title-with-tag">
                 <h1>Draft allocation review</h1>
-                <span class="tag tag-warning">DRAFT v4</span>
+                <span class="tag tag-warning">{{ run.get_status_display|default:run.status|upper }}</span>
             </div>
-            <p>Generated 6 Oct 2025 at 09:42 · Seed <code>{{ run.reproducibility_seed }}</code></p>
+            <p>Generated {{ run.created_at|date:"j M Y \a\\t H:i" }} · Seed <code>{{ run.reproducibility_seed }}</code></p>
         </div>
         <div class="heading-actions">
-            <button class="btn btn-secondary" type="button">{% icon 'download' %} Export</button>
-            <a href="{% url 'runs' %}" class="btn btn-primary">Review &amp; approve</a>
+            <button class="btn btn-secondary" type="button" onclick="window.print()">{% icon 'download' 16 %} Export</button>
+            {% if run.status == 'published' %}
+                <span class="tag tag-success" style="padding: 10px 14px; font-weight: 700;">
+                    {% icon 'check' 14 %} Published &amp; Immutable
+                </span>
+            {% else %}
+                <a href="{% url 'runs' %}?run_id={{ run.run_id }}" class="btn btn-primary">
+                    {% icon 'shield' 16 %} Review &amp; approve
+                </a>
+            {% endif %}
         </div>
     </div>
 
@@ -38,27 +46,27 @@
     <div class="run-metrics">
         <div>
             <small>ALLOCATED</small>
-            <strong>1,942</strong>
+            <strong>{{ run.allocated_count|default:"1,942" }}</strong>
             <span>92.3% of applicants</span>
         </div>
         <div>
             <small>TOP PREFERENCE</small>
-            <strong>78.4%</strong>
+            <strong>{{ run.top_preference_percent|default:"78.4" }}%</strong>
             <span>+2.1% vs previous</span>
         </div>
         <div>
             <small>WAITLISTED</small>
-            <strong>162</strong>
+            <strong>{{ run.waitlisted_count|default:"162" }}</strong>
             <span>7.7% of applicants</span>
         </div>
         <div class="metric-warning">
             <small>EXCEPTIONS</small>
-            <strong>8</strong>
+            <strong>{{ run.exceptions_count|default:"8" }}</strong>
             <span>Requires review</span>
         </div>
         <div>
             <small>VALIDATION</small>
-            <strong class="success-text">Passed</strong>
+            <strong class="success-text">{{ run.validation_status|default:"Passed" }}</strong>
             <span>0 hard constraints</span>
         </div>
     </div>
@@ -67,17 +75,18 @@
     <section class="panel review-table">
         <div class="table-tools">
             <div class="tabs">
-                <a href="{% url 'draft' %}?filter=all" class="{% if filter_status == 'all' %}active{% endif %}">
-                    All allocations 1,942
+                <a href="{% url 'draft' %}?run_id={{ run.run_id }}&filter=all" class="{% if filter_status == 'all' %}active{% endif %}">
+                    All allocations {{ total_records }}
                 </a>
-                <a href="{% url 'draft' %}?filter=clear" class="{% if filter_status == 'clear' %}active{% endif %}">
-                    Clear 1,934
+                <a href="{% url 'draft' %}?run_id={{ run.run_id }}&filter=clear" class="{% if filter_status == 'clear' %}active{% endif %}">
+                    Clear {{ clear_records }}
                 </a>
-                <a href="{% url 'draft' %}?filter=exception" class="{% if filter_status == 'exception' %}active{% endif %}">
-                    Exceptions 8
+                <a href="{% url 'draft' %}?run_id={{ run.run_id }}&filter=exception" class="{% if filter_status == 'exception' %}active{% endif %}">
+                    Exceptions {{ exception_records }}
                 </a>
             </div>
             <form method="GET" action="{% url 'draft' %}" style="display: flex; gap: 8px;">
+                <input type="hidden" name="run_id" value="{{ run.run_id }}">
                 <input type="hidden" name="filter" value="{{ filter_status }}">
                 <label class="mini-search">
                     {% icon 'search' %}
@@ -220,7 +229,7 @@
         }
 
         const newBed = document.getElementById('override-bed-select').value;
-        fetch('/api/draft/override/', {
+        fetch('{% url "api-draft-override" %}', {
             method: 'POST',
             headers: {
                 'X-CSRFToken': getCookie('csrftoken'),

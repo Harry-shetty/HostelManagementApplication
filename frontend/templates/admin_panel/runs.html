@@ -6,13 +6,24 @@
 
 {% block content %}
 <div class="page">
+    {% if messages %}
+    <div style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;">
+        {% for message in messages %}
+        <div style="padding: 14px 18px; border-radius: 12px; background: #e3f3e7; color: var(--forest); border: 1px solid #c0e6cb; display: flex; align-items: center; gap: 10px; animation: card-rise 0.3s ease;">
+            {% icon 'check' 18 %}
+            <strong>{{ message }}</strong>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <div class="page-heading">
         <div>
             <span class="eyebrow">ALLOCATION GOVERNANCE</span>
             <h1>Allocation runs</h1>
             <p>Every run creates a reviewable draft. Publication requires authorised approval.</p>
         </div>
-        <button class="btn btn-primary" type="button" onclick="alert('Simulation: Started a new allocation run with random seed.');">
+        <button class="btn btn-primary" type="button" onclick="openCreateRunModal()">
             {% icon 'plus' %} Create draft run
         </button>
     </div>
@@ -30,7 +41,7 @@
             <span>2</span>
             <p>
                 <strong>Draft review</strong>
-                <small>8 exceptions remain</small>
+                <small>{{ run.exceptions_count|default:"8" }} exceptions remain</small>
             </p>
         </div>
         <div>
@@ -53,13 +64,26 @@
     <section class="panel run-card">
         <div class="run-card-head">
             <div>
-                <span class="tag tag-warning">DRAFT v4</span>
-                <h2>AR-2025-04 · Main allocation</h2>
-                <p>Created 6 Oct 2025 at 09:42 by Allocation Engine</p>
+                <span class="tag {% if run.status == 'published' %}tag-success{% else %}tag-warning{% endif %}">
+                    {{ run.get_status_display|default:run.status|upper }}
+                </span>
+                <h2>{{ run.run_id }} · {{ run.title }}</h2>
+                <p>Created {{ run.created_at|date:"j M Y \a\\t H:i" }} by Allocation Engine</p>
             </div>
-            <a href="{% url 'draft' %}" class="btn btn-primary">
-                Open draft review {% icon 'arrow' 17 %}
-            </a>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <a href="{% url 'draft' %}?run_id={{ run.run_id }}" class="btn btn-secondary">
+                    Open draft review {% icon 'arrow' 17 %}
+                </a>
+                {% if run.status != 'published' %}
+                <button type="button" class="btn btn-primary" onclick="openPublishModal()">
+                    {% icon 'shield' 16 %} Approve &amp; Publish
+                </button>
+                {% else %}
+                <span class="tag tag-success" style="padding: 10px 16px; font-size: 13px; font-weight: 700;">
+                    {% icon 'check' 14 %} Published &amp; Immutable
+                </span>
+                {% endif %}
+            </div>
         </div>
 
         <div class="run-details">
@@ -69,15 +93,23 @@
             </span>
             <span>
                 <small>VALIDATION</small>
-                <span class="tag tag-success">Passed</span>
+                <span class="tag tag-success">{{ run.validation_status|default:"Passed" }}</span>
             </span>
             <span>
                 <small>EXCEPTIONS</small>
-                <strong class="warning-text">8 open</strong>
+                {% if run.exceptions_count > 0 %}
+                    <strong class="warning-text">{{ run.exceptions_count }} open</strong>
+                {% else %}
+                    <strong class="success-text">0 open</strong>
+                {% endif %}
             </span>
             <span>
                 <small>APPROVAL</small>
-                <strong>Not requested</strong>
+                {% if run.status == 'published' %}
+                    <strong class="success-text">Approved &amp; Signed</strong>
+                {% else %}
+                    <strong>Pending Review</strong>
+                {% endif %}
             </span>
         </div>
 
@@ -94,15 +126,85 @@
                 <span class="tag tag-success">Complete</span>
             </div>
             <div>
-                <span></span>
+                <span class="checked">{% icon 'check' 13 %}</span>
                 <span>Exceptions reviewed</span>
-                <span class="tag tag-warning">Pending</span>
+                <span class="tag {% if run.exceptions_count == 0 %}tag-success{% else %}tag-warning{% endif %}">
+                    {% if run.exceptions_count == 0 %}Complete{% else %}Pending ({{ run.exceptions_count }}){% endif %}
+                </span>
             </div>
             <div>
-                <span></span>
+                <span class="{% if run.status == 'published' %}checked{% endif %}">{% if run.status == 'published' %}{% icon 'check' 13 %}{% endif %}</span>
                 <span>Approval record complete</span>
-                <span class="tag tag-warning">Pending</span>
+                <span class="tag {% if run.status == 'published' %}tag-success{% else %}tag-warning{% endif %}">
+                    {% if run.status == 'published' %}Approved &amp; Signed{% else %}Pending{% endif %}
+                </span>
             </div>
+        </div>
+    </section>
+
+    <!-- Run History & Cycles Overview -->
+    <section class="panel" style="margin-top: 24px; padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <h3 style="margin: 0 0 4px 0; font-size: 16px; color: var(--ink);">Allocation Run History</h3>
+                <p style="margin: 0; color: var(--muted); font-size: 13px;">Review previous cycles and compare algorithmic distribution metrics.</p>
+            </div>
+            <span class="tag tag-neutral">{{ runs|length }} runs total</span>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>RUN ID</th>
+                        <th>TITLE</th>
+                        <th>STATUS</th>
+                        <th>SEED</th>
+                        <th>ALLOCATED</th>
+                        <th>TOP PREF %</th>
+                        <th>EXCEPTIONS</th>
+                        <th>CREATED AT</th>
+                        <th style="text-align: right;">ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in runs %}
+                    <tr {% if r.run_id == run.run_id %}style="background: #f4faf6; font-weight: 500;"{% endif %}>
+                        <td><code>{{ r.run_id }}</code></td>
+                        <td>{{ r.title }}</td>
+                        <td>
+                            <span class="tag {% if r.status == 'published' %}tag-success{% elif r.status == 'approved' %}tag-info{% else %}tag-warning{% endif %}">
+                                {{ r.get_status_display|default:r.status|upper }}
+                            </span>
+                        </td>
+                        <td><code>{{ r.reproducibility_seed }}</code></td>
+                        <td>{{ r.allocated_count }}</td>
+                        <td>{{ r.top_preference_percent }}%</td>
+                        <td>
+                            {% if r.exceptions_count > 0 %}
+                                <span class="warning-text">{{ r.exceptions_count }} open</span>
+                            {% else %}
+                                <span class="success-text">0 open</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ r.created_at|date:"j M Y, H:i" }}</td>
+                        <td style="text-align: right;">
+                            <div style="display: inline-flex; gap: 6px;">
+                                {% if r.run_id != run.run_id %}
+                                    <a href="{% url 'runs' %}?run_id={{ r.run_id }}" class="btn btn-secondary btn-sm" style="padding: 4px 10px; font-size: 11px;">Select</a>
+                                {% else %}
+                                    <span class="tag tag-success" style="font-size: 11px;">Active</span>
+                                {% endif %}
+                                <a href="{% url 'draft' %}?run_id={{ r.run_id }}" class="btn btn-primary btn-sm" style="padding: 4px 10px; font-size: 11px;">Review</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" style="text-align: center; color: var(--muted); padding: 24px;">No allocation runs found. Click "Create draft run" above to generate one.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </section>
 
@@ -114,5 +216,188 @@
         </p>
     </div>
 </div>
+
+<!-- Create Draft Run Modal -->
+<div id="create-run-modal" class="modal-layer" style="display: none; z-index: 2000;">
+    <div class="modal" style="max-width: 540px; width: 100%; border-radius: 18px; background: #ffffff; box-shadow: 0 25px 70px rgba(11,29,23,.28); overflow: hidden; display: flex; flex-direction: column;">
+        <form method="POST" action="{% url 'create-run' %}" id="create-run-form" onsubmit="handleRunSubmit(event)" style="margin: 0; display: flex; flex-direction: column; width: 100%;">
+            {% csrf_token %}
+            <!-- Modal Head with Branded Icon -->
+            <div class="modal-head" style="display: flex; align-items: center; gap: 14px; padding: 22px 24px; border-bottom: 1px solid var(--line); background: #ffffff;">
+                <span class="confirm-mini" style="width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex-shrink: 0; background: var(--lime-soft); color: var(--forest);">
+                    {% icon 'spark' 20 %}
+                </span>
+                <div style="flex: 1; min-width: 0;">
+                    <h2 style="margin: 0 0 4px 0; font-size: 18px; font-weight: 700; color: var(--forest); line-height: 1.25;">Create draft run</h2>
+                    <p style="margin: 0; font-size: 12px; color: var(--muted); line-height: 1.4;">Configure algorithm parameters and generate a reproducible draft allocation.</p>
+                </div>
+                <button type="button" onclick="closeCreateRunModal()" style="cursor: pointer; background: transparent; border: none; width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); transition: background .15s ease, color .15s ease; padding: 0;" title="Close">
+                    {% icon 'close' 18 %}
+                </button>
+            </div>
+
+            <!-- Modal Body with Aligned Form Groups -->
+            <div class="modal-body" style="padding: 24px; display: flex; flex-direction: column; gap: 18px; background: #ffffff;">
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+                    <label for="run-title" style="font-size: 11px; font-weight: 700; color: var(--forest); letter-spacing: 0.06em; text-transform: uppercase;">
+                        RUN CYCLE TITLE
+                    </label>
+                    <input type="text" name="title" id="run-title" value="Cycle 2025/26 Draft Allocation" required style="width: 100%; height: 44px; min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; color: var(--ink); background: #ffffff; box-sizing: border-box; outline: none; transition: border-color .15s, box-shadow .15s;">
+                </div>
+
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+                    <label for="run-strategy" style="font-size: 11px; font-weight: 700; color: var(--forest); letter-spacing: 0.06em; text-transform: uppercase;">
+                        MATCHING STRATEGY
+                    </label>
+                    <select name="strategy" id="run-strategy" style="width: 100%; height: 44px; min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; color: var(--ink); background: #ffffff; box-sizing: border-box; outline: none; transition: border-color .15s, box-shadow .15s; cursor: pointer;">
+                        <option value="optimal">Optimal Compatibility &amp; Preference Satisfaction (Default)</option>
+                        <option value="preference_first">Strict Preference Hierarchy</option>
+                        <option value="quota_balanced">Seniority &amp; Demographic Quota Balanced</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+                    <label for="run-population" style="font-size: 11px; font-weight: 700; color: var(--forest); letter-spacing: 0.06em; text-transform: uppercase;">
+                        TARGET POPULATION
+                    </label>
+                    <select name="population" id="run-population" style="width: 100%; height: 44px; min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; color: var(--ink); background: #ffffff; box-sizing: border-box; outline: none; transition: border-color .15s, box-shadow .15s; cursor: pointer;">
+                        <option value="all">All Verified Applicants (Undergraduate &amp; Postgraduate)</option>
+                        <option value="ug_freshers">First-Year Undergraduates (Freshers)</option>
+                        <option value="postgraduate">Postgraduate &amp; Research Scholars</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+                    <label for="run-seed" style="font-size: 11px; font-weight: 700; color: var(--forest); letter-spacing: 0.06em; text-transform: uppercase;">
+                        REPRODUCIBILITY SEED
+                    </label>
+                    <div style="display: flex; gap: 10px; align-items: center; width: 100%;">
+                        <input type="text" name="seed" id="run-seed" value="" placeholder="e.g. NST-8F3A29" style="flex: 1; height: 44px; min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; letter-spacing: 0.05em; font-weight: 600; color: var(--forest); background: #ffffff; box-sizing: border-box; outline: none; transition: border-color .15s, box-shadow .15s;">
+                        <button type="button" class="btn btn-secondary" onclick="generateNewSeed()" style="height: 44px; min-height: 44px; padding: 0 18px; border-radius: 10px; white-space: nowrap; font-size: 12px; font-weight: 650; display: inline-flex; align-items: center; justify-content: center; gap: 7px; flex-shrink: 0;">
+                            {% icon 'spark' 14 %} Randomize
+                        </button>
+                    </div>
+                    <span style="color: var(--muted); font-size: 11.5px; line-height: 1.45; margin-top: 2px;">
+                        Seed locks tie-breaking sequence for mathematical audit reproducibility.
+                    </span>
+                </div>
+            </div>
+
+            <!-- Modal Foot with Aligned Actions -->
+            <div class="modal-foot" style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding: 18px 24px; border-top: 1px solid var(--line); background: #fafbf9;">
+                <button type="button" class="btn btn-secondary" onclick="closeCreateRunModal()" style="height: 42px; min-height: 42px; padding: 0 18px; border-radius: 10px; font-size: 12px; font-weight: 650;">
+                    Cancel
+                </button>
+                <button type="submit" class="btn btn-primary" id="btn-submit-run" style="height: 42px; min-height: 42px; padding: 0 20px; border-radius: 10px; font-size: 12px; font-weight: 650; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                    {% icon 'plus' 16 %} Generate Draft Run
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Approve & Publish Modal -->
+<div id="publish-run-modal" class="modal-layer" style="display: none; z-index: 2000;">
+    <div class="modal" style="max-width: 520px; width: 100%; border-radius: 18px; background: #ffffff; box-shadow: 0 25px 70px rgba(11,29,23,.28); overflow: hidden; display: flex; flex-direction: column;">
+        <form method="POST" action="{% url 'publish-run' run.run_id %}" style="margin: 0; display: flex; flex-direction: column; width: 100%;">
+            {% csrf_token %}
+            <div class="modal-head" style="display: flex; align-items: center; gap: 14px; padding: 22px 24px; border-bottom: 1px solid var(--line); background: #ffffff;">
+                <span class="confirm-mini" style="width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex-shrink: 0; background: #f0fdf4; color: var(--forest); border: 1px solid #bbf7d0;">
+                    {% icon 'shield' 20 %}
+                </span>
+                <div style="flex: 1; min-width: 0;">
+                    <h2 style="margin: 0 0 4px 0; font-size: 18px; font-weight: 700; color: var(--forest); line-height: 1.25;">Approve &amp; Publish Allocation</h2>
+                    <p style="margin: 0; font-size: 12px; color: var(--muted); line-height: 1.4;">Authorize official publication for run {{ run.run_id }}.</p>
+                </div>
+                <button type="button" onclick="closePublishModal()" style="cursor: pointer; background: transparent; border: none; width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); padding: 0;" title="Close">
+                    {% icon 'close' 18 %}
+                </button>
+            </div>
+
+            <div class="modal-body" style="padding: 24px; display: flex; flex-direction: column; gap: 16px; background: #ffffff;">
+                <div style="background: #fafbf9; padding: 14px; border-radius: 10px; border: 1px solid var(--line); font-size: 12px; line-height: 1.5;">
+                    <strong style="color: var(--forest); display: block; margin-bottom: 4px;">P03 Governance Mandate:</strong>
+                    Publishing locks all bed assignments, creates an immutable audit approval record, and issues official allocation letters to all students.
+                </div>
+
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-size: 11px; font-weight: 700; color: var(--forest); text-transform: uppercase;">Approving Authority Role</label>
+                    <input type="text" name="approver_role" value="Head Warden &amp; Dean of Student Welfare" required style="width: 100%; height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; background: white;">
+                </div>
+
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-size: 11px; font-weight: 700; color: var(--forest); text-transform: uppercase;">Verification Justification &amp; Notes</label>
+                    <textarea name="approval_notes" rows="3" required style="width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; font-family: inherit; line-height: 1.4;">All capacity, quota, gender block, and accessibility constraints validated. Exceptions reviewed and approved for publication.</textarea>
+                </div>
+
+                <div style="display: flex; align-items: flex-start; gap: 10px; margin-top: 4px;">
+                    <input type="checkbox" id="confirm_sig" required style="margin-top: 3px; width: 16px; height: 16px; accent-color: var(--forest);">
+                    <label for="confirm_sig" style="font-size: 12px; color: var(--ink); line-height: 1.4; cursor: pointer;">
+                        I certify that I have reviewed the allocation draft and authorize immediate public release and allocation letter dispatch.
+                    </label>
+                </div>
+            </div>
+
+            <div class="modal-foot" style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding: 18px 24px; border-top: 1px solid var(--line); background: #fafbf9;">
+                <button type="button" class="btn btn-secondary" onclick="closePublishModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="background: var(--forest); color: white;">
+                    {% icon 'check' 16 %} Confirm &amp; Publish Run
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openPublishModal() {
+    document.getElementById('publish-run-modal').style.display = 'grid';
+}
+
+function closePublishModal() {
+    document.getElementById('publish-run-modal').style.display = 'none';
+}
+
+function openCreateRunModal() {
+    generateNewSeed();
+    document.getElementById('create-run-modal').style.display = 'grid';
+}
+
+function closeCreateRunModal() {
+    document.getElementById('create-run-modal').style.display = 'none';
+}
+
+function generateNewSeed() {
+    const chars = '0123456789ABCDEF';
+    let rand = '';
+    for (let i = 0; i < 6; i++) {
+        rand += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    const seedEl = document.getElementById('run-seed');
+    if (seedEl) {
+        seedEl.value = 'NST-' + rand;
+    }
+}
+
+function handleRunSubmit(e) {
+    const btn = document.getElementById('btn-submit-run');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = 'Running algorithm...';
+    }
+}
+
+// Close modal when clicking outside
+window.addEventListener('click', function(event) {
+    const createModal = document.getElementById('create-run-modal');
+    if (event.target === createModal) {
+        closeCreateRunModal();
+    }
+    const pubModal = document.getElementById('publish-run-modal');
+    if (event.target === pubModal) {
+        closePublishModal();
+    }
+});
+</script>
 {% endblock %}
+
 

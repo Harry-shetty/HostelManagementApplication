@@ -242,3 +242,60 @@ class Notification(models.Model):
 
     def __str__(self):
         return self.title
+
+class AllocationApproval(models.Model):
+    run = models.OneToOneField(AllocationRun, on_delete=models.CASCADE, related_name='approval')
+    approved_by = models.CharField(max_length=120)
+    approver_role = models.CharField(max_length=80, default='Head Warden')
+    approval_notes = models.TextField(default='All quota constraints, medical accommodations, and exceptions verified in compliance with university housing policy v3.2.')
+    approved_at = models.DateTimeField(default=timezone.now)
+    is_published = models.BooleanField(default=False)
+    published_at = models.DateTimeField(null=True, blank=True)
+    digital_signature = models.CharField(max_length=64, blank=True)
+
+    def __str__(self):
+        return f"Approval for {self.run.run_id} by {self.approved_by}"
+
+class AllocationLetter(models.Model):
+    letter_id = models.CharField(max_length=40, unique=True)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='allocation_letters')
+    run = models.ForeignKey(AllocationRun, on_delete=models.CASCADE, related_name='letters', null=True, blank=True)
+    hostel_name = models.CharField(max_length=100)
+    room_number = models.CharField(max_length=20)
+    bed_letter = models.CharField(max_length=5)
+    room_type = models.CharField(max_length=50, default='Single room')
+    fee_category = models.CharField(max_length=80, default='Standard University Residential')
+    academic_year = models.CharField(max_length=20, default='2025/26')
+    move_in_date = models.CharField(max_length=50, default='20 October 2025')
+    generated_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['-generated_at']
+
+    def __str__(self):
+        return f"{self.letter_id} - {self.student.name} ({self.hostel_name} {self.room_number}{self.bed_letter})"
+
+class RoomChangeRequest(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='room_change_requests')
+    current_bed_label = models.CharField(max_length=60)
+    preferred_hostel = models.CharField(max_length=100)
+    reason_category = models.CharField(max_length=50, choices=[
+        ('medical', 'Medical or Accessibility'),
+        ('academic', 'Academic / Proximity to Dept'),
+        ('compatibility', 'Roommate Compatibility'),
+        ('financial', 'Financial / Room Type Change'),
+        ('other', 'Other Personal Reason')
+    ], default='academic')
+    details = models.TextField()
+    status = models.CharField(max_length=30, choices=[
+        ('pending', 'Pending Warden Review'),
+        ('approved', 'Approved'),
+        ('declined', 'Declined')
+    ], default='pending')
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Change Request #{self.id} for {self.student.name} ({self.status})"

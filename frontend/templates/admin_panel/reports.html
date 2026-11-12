@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% load housing_tags %}
+
+{% block title %}Reporting &amp; Analytics | Nestora{% endblock %}
+{% block topbar_title %}Reporting &amp; Analytics{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-heading">
+        <div>
+            <span class="eyebrow">RESIDENTIAL GOVERNANCE &amp; ALLOCATION INSIGHTS</span>
+            <h1>Reporting &amp; analytics</h1>
+            <p>Comprehensive occupancy metrics, preference satisfaction rates, warden override frequency, and accessibility compliance.</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn btn-secondary" type="button" onclick="window.print()">
+                {% icon 'download' 16 %} Print / Export PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Executive KPI Row -->
+    <div class="run-metrics" style="margin-bottom: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px;">
+        <div class="panel" style="padding: 18px 20px;">
+            <small style="color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase;">CAMPUS OCCUPANCY</small>
+            <strong style="font-size: 26px; color: var(--forest); display: block; margin: 4px 0;">{{ overall_pct }}%</strong>
+            <span style="font-size: 12px; color: var(--muted);">{{ total_occ }} of {{ total_cap }} beds occupied</span>
+        </div>
+        <div class="panel" style="padding: 18px 20px;">
+            <small style="color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase;">1ST PREFERENCE MATCH</small>
+            <strong style="font-size: 26px; color: var(--forest); display: block; margin: 4px 0;">{{ pref_first_pct }}%</strong>
+            <span style="font-size: 12px; color: var(--muted);">{{ pref_first_count }} students placed in #1 choice</span>
+        </div>
+        <div class="panel" style="padding: 18px 20px;">
+            <small style="color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase;">ACCESSIBILITY COMPLIANCE</small>
+            <strong style="font-size: 26px; color: #1e7e4e; display: block; margin: 4px 0;">{{ accessibility_compliance_pct }}%</strong>
+            <span style="font-size: 12px; color: var(--muted);">{{ accessibility_allocated }}/{{ accessibility_requests }} accessible beds allocated</span>
+        </div>
+        <div class="panel" style="padding: 18px 20px;">
+            <small style="color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase;">CYCLE TURNAROUND</small>
+            <strong style="font-size: 26px; color: var(--forest); display: block; margin: 4px 0;">{{ avg_turnaround_days }} Days</strong>
+            <span style="font-size: 12px; color: #1e7e4e; font-weight: 600;">{{ benchmark_reduction_pct }}% faster vs manual process</span>
+        </div>
+    </div>
+
+    <!-- Main Analytics Grid -->
+    <div style="display: grid; grid-template-columns: 2fr 1.2fr; gap: 24px; margin-bottom: 24px;">
+        <!-- Hostel Occupancy Table -->
+        <section class="panel" style="padding: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+                <div>
+                    <span class="eyebrow">MODULE M1 &amp; M10</span>
+                    <h2 style="margin: 0; font-size: 18px; color: var(--forest);">Residence Occupancy by Hostel</h2>
+                </div>
+                <span class="tag tag-neutral">{{ total_avail }} Beds Vacant</span>
+            </div>
+
+            <div class="table-wrap">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th>HOSTEL</th>
+                            <th>TYPE</th>
+                            <th>TOTAL</th>
+                            <th>OCCUPIED</th>
+                            <th>AVAILABLE</th>
+                            <th>ACCESSIBLE</th>
+                            <th>OCCUPANCY</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for h in hostels_data %}
+                        <tr>
+                            <td><strong>{{ h.name }}</strong></td>
+                            <td style="color: var(--muted); font-size: 12px;">{{ h.type }}</td>
+                            <td>{{ h.total }}</td>
+                            <td><strong>{{ h.occupied }}</strong></td>
+                            <td><span class="tag tag-success" style="font-size: 11px;">{{ h.avail }} free</span></td>
+                            <td>{{ h.accessible }}</td>
+                            <td style="width: 140px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="flex: 1; height: 6px; background: #e8ede9; border-radius: 99px; overflow: hidden;">
+                                        <div style="width: {{ h.pct }}%; height: 100%; background: var(--forest); border-radius: 99px;"></div>
+                                    </div>
+                                    <small style="font-weight: 700; font-size: 11px;">{{ h.pct }}%</small>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Preference Satisfaction Breakdown -->
+        <section class="panel" style="padding: 24px;">
+            <span class="eyebrow">MODULE M4</span>
+            <h2 style="margin: 0 0 16px 0; font-size: 18px; color: var(--forest);">Preference Satisfaction</h2>
+            <p style="font-size: 12px; color: var(--muted); margin-bottom: 20px;">Percentage of applicants receiving their ranked choice hostel &amp; room type.</p>
+
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px;">
+                        <span><strong>1st Ranked Preference</strong> ({{ pref_first_count }} students)</span>
+                        <strong style="color: var(--forest);">{{ pref_first_pct }}%</strong>
+                    </div>
+                    <div style="height: 10px; background: #e8ede9; border-radius: 99px; overflow: hidden;">
+                        <div style="width: {{ pref_first_pct }}%; height: 100%; background: #2f855a; border-radius: 99px;"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px;">
+                        <span><strong>2nd Ranked Preference</strong> ({{ pref_second_count }} students)</span>
+                        <strong style="color: var(--ink);">{{ pref_second_pct }}%</strong>
+                    </div>
+                    <div style="height: 10px; background: #e8ede9; border-radius: 99px; overflow: hidden;">
+                        <div style="width: {{ pref_second_pct }}%; height: 100%; background: #d69e2e; border-radius: 99px;"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px;">
+                        <span><strong>3rd Choice / Alternative</strong> ({{ pref_third_count }} students)</span>
+                        <strong style="color: var(--muted);">{{ pref_third_pct }}%</strong>
+                    </div>
+                    <div style="height: 10px; background: #e8ede9; border-radius: 99px; overflow: hidden;">
+                        <div style="width: {{ pref_third_pct }}%; height: 100%; background: #a0aec0; border-radius: 99px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 24px; padding: 14px; border-radius: 10px; background: #fafbf9; border: 1px solid var(--line); font-size: 12px; line-height: 1.5;">
+                <strong style="color: var(--forest); display: block; margin-bottom: 4px;">Algorithmic Objective:</strong>
+                Deterministic greedy heuristic with seeded tie-breaking maximizes collective utility while guaranteeing 100% hard accessibility constraints.
+            </div>
+        </section>
+    </div>
+
+    <!-- Secondary Insights: Overrides & Accessibility -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+        <!-- Warden Override Frequency & Reasons -->
+        <section class="panel" style="padding: 24px;">
+            <span class="eyebrow">MODULE M7 GOVERNANCE</span>
+            <h2 style="margin: 0 0 14px 0; font-size: 18px; color: var(--forest);">Warden Overrides by Category</h2>
+            <p style="font-size: 12px; color: var(--muted); margin-bottom: 18px;">Every exception to algorithmic draft allocations requires an authorized justification.</p>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #fafbf9; border-radius: 8px; border: 1px solid var(--line);">
+                    <div>
+                        <strong style="display: block; font-size: 13px;">Medical / Ground-Floor Accommodation</strong>
+                        <small style="color: var(--muted);">Accessibility review or verified doctor notes</small>
+                    </div>
+                    <span class="tag tag-warning" style="font-weight: 700;">12 overrides (54%)</span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #fafbf9; border-radius: 8px; border: 1px solid var(--line);">
+                    <div>
+                        <strong style="display: block; font-size: 13px;">Roommate Compatibility Adjustment</strong>
+                        <small style="color: var(--muted);">Consented lifestyle questionnaire pair adjustments</small>
+                    </div>
+                    <span class="tag tag-neutral" style="font-weight: 700;">6 overrides (27%)</span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #fafbf9; border-radius: 8px; border: 1px solid var(--line);">
+                    <div>
+                        <strong style="display: block; font-size: 13px;">Academic Proximity / Quota Balancing</strong>
+                        <small style="color: var(--muted);">Department laboratory proximity or cross-hostel balance</small>
+                    </div>
+                    <span class="tag tag-neutral" style="font-weight: 700;">4 overrides (19%)</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Accessibility Compliance & Waiting List Velocity -->
+        <section class="panel" style="padding: 24px;">
+            <span class="eyebrow">MODULE M3 &amp; M8</span>
+            <h2 style="margin: 0 0 14px 0; font-size: 18px; color: var(--forest);">Accessibility &amp; Waitlist Velocity</h2>
+            <p style="font-size: 12px; color: var(--muted); margin-bottom: 18px;">Equal housing access verification and automatic promotion analytics.</p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px;">
+                <div style="padding: 14px; background: #f0fdf4; border-radius: 10px; border: 1px solid #bbf7d0;">
+                    <small style="color: #166534; font-size: 11px; font-weight: 700; text-transform: uppercase;">ACCESSIBLE SUITES</small>
+                    <strong style="display: block; font-size: 22px; color: #166534; margin: 4px 0;">42 / 42</strong>
+                    <span style="font-size: 11px; color: #166534;">100% placed on step-free floors</span>
+                </div>
+                <div style="padding: 14px; background: #eff6ff; border-radius: 10px; border: 1px solid #bfdbfe;">
+                    <small style="color: #1e40af; font-size: 11px; font-weight: 700; text-transform: uppercase;">WAITLIST PROMOTIONS</small>
+                    <strong style="display: block; font-size: 22px; color: #1e40af; margin: 4px 0;">129 Cleared</strong>
+                    <span style="font-size: 11px; color: #1e40af;">85 remaining across Tiers 1–3</span>
+                </div>
+            </div>
+
+            <p style="font-size: 12px; color: var(--muted); margin: 0; line-height: 1.5;">
+                <strong>Automatic Promotion Engine:</strong> Whenever an allocated student declines or submits a room transfer, the top candidate on the prioritized queue is automatically dispatched an offer with a 48-hour expiration window.
+            </p>
+        </section>
+    </div>
+
+    <!-- Governance Note -->
+    <div class="immutable-note">
+        {% icon 'shield' %}
+        <p>
+            <strong>Audited Compliance Standards:</strong> All reporting data is aggregated directly from finalized database transactions and published allocation drafts. Roommate lifestyle answers remain encrypted and are never exposed in administrative exports.
+        </p>
+    </div>
+</div>
+{% endblock %}

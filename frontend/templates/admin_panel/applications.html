@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+{% load housing_tags %}
+
+{% block title %}Student Applications &amp; Quotas | Nestora{% endblock %}
+{% block topbar_title %}Applications &amp; Quotas{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-heading">
+        <div>
+            <span class="eyebrow">ACADEMIC CYCLE 2025/26 · HOUSING ADMISSIONS</span>
+            <h1>Student applications &amp; quotas</h1>
+            <p>Review student housing submissions, manage demographic quota allocations, and audit eligibility verification.</p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary" type="button" onclick="exportApplicationsCSV()">
+                {% icon 'download' %} Export CSV
+            </button>
+            <button class="btn btn-primary" type="button" onclick="batchVerifyPrompt()">
+                {% icon 'check' %} Batch Verify Eligible
+            </button>
+        </div>
+    </div>
+
+    <!-- Application Summary Metrics -->
+    <div class="run-metrics" style="grid-template-columns: repeat(5, 1fr); margin-bottom: 24px;">
+        <div>
+            <small>TOTAL APPLICATIONS</small>
+            <strong>2,104</strong>
+            <span class="success-text">↑ 14% vs previous cycle</span>
+        </div>
+        <div>
+            <small>VERIFIED &amp; ELIGIBLE</small>
+            <strong class="success-text">1,942</strong>
+            <span>92.3% validation rate</span>
+        </div>
+        <div class="metric-warning">
+            <small>UNDER REVIEW</small>
+            <strong class="warning-text">126</strong>
+            <span>Pending warden check</span>
+        </div>
+        <div>
+            <small>SPECIAL ACCOMMODATIONS</small>
+            <strong style="color: var(--blue, #2563eb);">36</strong>
+            <span>Medical &amp; accessibility</span>
+        </div>
+        <div>
+            <small>OVERALL QUOTA FILLED</small>
+            <strong>94.8%</strong>
+            <span>2,380 / 2,510 campus beds</span>
+        </div>
+    </div>
+
+    <!-- Cohort Quotas Distribution Card -->
+    <section class="panel" style="margin-bottom: 24px; padding: 22px 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h3 style="margin: 0 0 4px 0; font-size: 16px; font-weight: 700; color: var(--forest);">Demographic Quotas &amp; Cohort Capacity</h3>
+                <p style="margin: 0; color: var(--muted); font-size: 13px;">Statutory distribution caps enforced during algorithmic allocation cycles.</p>
+            </div>
+            <span class="tag tag-success" style="font-size: 11px;">Quotas Balanced</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+            <!-- Quota 1 -->
+            <div style="padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: #fafbf9;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <strong style="font-size: 13px; color: var(--ink);">First-Year Freshers</strong>
+                    <span style="font-size: 12px; font-weight: 700; color: var(--forest);">95.8%</span>
+                </div>
+                <div style="width: 100%; height: 8px; border-radius: 4px; background: #e0e5e2; overflow: hidden; margin-bottom: 6px;">
+                    <div style="width: 95.8%; height: 100%; background: var(--forest); border-radius: 4px;"></div>
+                </div>
+                <small style="color: var(--muted); font-size: 11px;">1,150 filled / 1,200 quota</small>
+            </div>
+
+            <!-- Quota 2 -->
+            <div style="padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: #fafbf9;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <strong style="font-size: 13px; color: var(--ink);">Continuing Students</strong>
+                    <span style="font-size: 12px; font-weight: 700; color: var(--forest);">96.7%</span>
+                </div>
+                <div style="width: 100%; height: 8px; border-radius: 4px; background: #e0e5e2; overflow: hidden; margin-bottom: 6px;">
+                    <div style="width: 96.7%; height: 100%; background: var(--forest); border-radius: 4px;"></div>
+                </div>
+                <small style="color: var(--muted); font-size: 11px;">580 filled / 600 quota</small>
+            </div>
+
+            <!-- Quota 3 -->
+            <div style="padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: #fafbf9;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <strong style="font-size: 13px; color: var(--ink);">Postgraduates</strong>
+                    <span style="font-size: 12px; font-weight: 700; color: var(--forest);">91.4%</span>
+                </div>
+                <div style="width: 100%; height: 8px; border-radius: 4px; background: #e0e5e2; overflow: hidden; margin-bottom: 6px;">
+                    <div style="width: 91.4%; height: 100%; background: var(--forest); border-radius: 4px;"></div>
+                </div>
+                <small style="color: var(--muted); font-size: 11px;">320 filled / 350 quota</small>
+            </div>
+
+            <!-- Quota 4 -->
+            <div style="padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: #fafbf9;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <strong style="font-size: 13px; color: var(--ink);">International Scholars</strong>
+                    <span style="font-size: 12px; font-weight: 700; color: var(--forest);">94.3%</span>
+                </div>
+                <div style="width: 100%; height: 8px; border-radius: 4px; background: #e0e5e2; overflow: hidden; margin-bottom: 6px;">
+                    <div style="width: 94.3%; height: 100%; background: var(--forest); border-radius: 4px;"></div>
+                </div>
+                <small style="color: var(--muted); font-size: 11px;">330 filled / 350 quota</small>
+            </div>
+        </div>
+    </section>
+
+    <!-- Submissions Table -->
+    <section class="panel review-table">
+        <div class="table-tools">
+            <div class="tabs">
+                <a href="?filter=all" class="{% if current_filter == 'all' or not current_filter %}active{% endif %}">
+                    All Submissions 2,104
+                </a>
+                <a href="?filter=under_review" class="{% if current_filter == 'under_review' %}active{% endif %}">
+                    Under Review 126
+                </a>
+                <a href="?filter=verified" class="{% if current_filter == 'verified' %}active{% endif %}">
+                    Verified 1,942
+                </a>
+                <a href="?filter=special" class="{% if current_filter == 'special' %}active{% endif %}">
+                    Special Accommodations 36
+                </a>
+            </div>
+            <form method="GET" style="display: flex; gap: 8px;">
+                <input type="hidden" name="filter" value="{{ current_filter|default:'all' }}">
+                <label class="mini-search">
+                    {% icon 'search' %}
+                    <input type="text" name="q" value="{{ search_query }}" placeholder="Search name, ID or course...">
+                </label>
+                <button class="btn btn-secondary" type="submit">Filter</button>
+            </form>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40px;"><input type="checkbox" aria-label="Select all applications"></th>
+                        <th>APPLICATION ID</th>
+                        <th>APPLICANT</th>
+                        <th>FIRST PREFERENCE</th>
+                        <th>SECOND PREFERENCE</th>
+                        <th>COHORT / QUOTA</th>
+                        <th>SUBMITTED</th>
+                        <th>STATUS</th>
+                        <th style="text-align: right;">ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications_list %}
+                    <tr>
+                        <td><input type="checkbox" aria-label="Select application {{ app.id }}"></td>
+                        <td><code>{{ app.id }}</code></td>
+                        <td>
+                            <div class="student-cell">
+                                <span class="avatar avatar-{{ app.avatar_color|default:'green' }}">
+                                    {{ app.avatar_initials }}
+                                </span>
+                                <div>
+                                    <strong>{{ app.student_name }}</strong>
+                                    <small>{{ app.student_id }} · {{ app.programme }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <strong>{{ app.first_preference }}</strong>
+                            <small>{{ app.room_type }}</small>
+                        </td>
+                        <td>
+                            <span>{{ app.second_preference }}</span>
+                        </td>
+                        <td>
+                            <span class="tag {% if app.quota == 'Special Accommodations' %}tag-danger{% elif app.quota == 'First-Year Freshers' %}tag-info{% elif app.quota == 'International' %}tag-warning{% else %}tag-neutral{% endif %}">
+                                {{ app.quota }}
+                            </span>
+                        </td>
+                        <td>
+                            <span>{{ app.submitted_at }}</span>
+                        </td>
+                        <td>
+                            <span class="tag {% if app.status == 'Verified' or app.status == 'Allocated' %}tag-success{% elif app.status == 'Under Review' %}tag-warning{% elif app.status == 'Waitlisted' %}tag-neutral{% else %}tag-danger{% endif %}">
+                                {{ app.status }}
+                            </span>
+                        </td>
+                        <td style="text-align: right;">
+                            <div style="display: inline-flex; gap: 6px;">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="viewApplicationModal('{{ app.id }}', '{{ app.student_name }}', '{{ app.programme }}', '{{ app.first_preference }}', '{{ app.status }}', '{{ app.notes }}')" style="padding: 4px 10px; font-size: 11px;">
+                                    View
+                                </button>
+                                {% if app.status == 'Under Review' %}
+                                <button type="button" class="btn btn-primary btn-sm" onclick="approveApplication('{{ app.id }}', '{{ app.student_name }}')" style="padding: 4px 10px; font-size: 11px;">
+                                    Verify
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" style="text-align: center; color: var(--muted); padding: 32px;">
+                            No applications match the search or filter query.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination" style="padding: 14px 20px;">
+            <span>Showing 1 – {{ applications_list|length }} of 2,104 student submissions</span>
+            <div style="display: flex; gap: 4px;">
+                <button type="button" class="current">1</button>
+                <button type="button">2</button>
+                <button type="button">3</button>
+                <button type="button">…</button>
+                <button type="button">211</button>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- View Application Modal -->
+<div id="view-app-modal" class="modal-layer" style="display: none; z-index: 2000;">
+    <div class="modal small" style="max-width: 480px; width: 100%; border-radius: 18px; background: #ffffff; box-shadow: 0 25px 70px rgba(11,29,23,.28); overflow: hidden; display: flex; flex-direction: column;">
+        <div class="modal-head" style="display: flex; align-items: center; gap: 14px; padding: 20px 24px; border-bottom: 1px solid var(--line); background: #ffffff;">
+            <span class="confirm-mini" style="width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex-shrink: 0; background: var(--lime-soft); color: var(--forest);">
+                {% icon 'file' 20 %}
+            </span>
+            <div style="flex: 1; min-width: 0;">
+                <h2 id="modal-app-title" style="margin: 0 0 4px 0; font-size: 18px; font-weight: 700; color: var(--forest); line-height: 1.25;">Application Details</h2>
+                <p id="modal-app-sub" style="margin: 0; font-size: 12px; color: var(--muted); line-height: 1.4;">Submitted Housing Cycle 2025/26</p>
+            </div>
+            <button type="button" onclick="closeViewAppModal()" style="cursor: pointer; background: transparent; border: none; width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); padding: 0;" title="Close">
+                {% icon 'close' 18 %}
+            </button>
+        </div>
+        <div class="modal-body" style="padding: 24px; display: flex; flex-direction: column; gap: 14px; background: #ffffff;">
+            <div style="padding: 12px 16px; border-radius: 10px; background: #f7f9f7; border: 1px solid var(--line); font-size: 13px;">
+                <strong id="modal-app-name" style="display: block; font-size: 15px; color: var(--forest);">Student Name</strong>
+                <span id="modal-app-programme" style="color: var(--muted); font-size: 12px;">Programme</span>
+            </div>
+            <div>
+                <small style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase;">1st Residence Preference</small>
+                <p id="modal-app-pref" style="margin: 4px 0 0; font-size: 14px; font-weight: 600; color: var(--ink);">Preference</p>
+            </div>
+            <div>
+                <small style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Verification Status</small>
+                <p style="margin: 4px 0 0;"><span id="modal-app-status-badge" class="tag tag-success">Verified</span></p>
+            </div>
+            <div>
+                <small style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Applicant Statement &amp; Special Needs</small>
+                <p id="modal-app-notes" style="margin: 4px 0 0; font-size: 13px; color: var(--ink); background: #fafafa; padding: 10px; border-radius: 8px; border: 1px dashed var(--line); line-height: 1.45;">No special notes provided.</p>
+            </div>
+        </div>
+        <div class="modal-foot" style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding: 18px 24px; border-top: 1px solid var(--line); background: #fafbf9;">
+            <button class="btn btn-secondary" type="button" onclick="closeViewAppModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewApplicationModal(id, name, programme, pref, status, notes) {
+    document.getElementById('modal-app-title').textContent = id;
+    document.getElementById('modal-app-name').textContent = name;
+    document.getElementById('modal-app-programme').textContent = programme;
+    document.getElementById('modal-app-pref').textContent = pref;
+    document.getElementById('modal-app-status-badge').textContent = status;
+    document.getElementById('modal-app-notes').textContent = notes || 'Standard application submission. No special medical or dietary accommodations requested.';
+    document.getElementById('view-app-modal').style.display = 'grid';
+}
+
+function closeViewAppModal() {
+    document.getElementById('view-app-modal').style.display = 'none';
+}
+
+function approveApplication(id, name) {
+    alert(`Application ${id} (${name}) has been marked as Verified! Audit record updated.`);
+    window.location.reload();
+}
+
+function batchVerifyPrompt() {
+    alert('Batch Verification Complete: 126 applications meeting all criteria have been verified.');
+}
+
+function exportApplicationsCSV() {
+    alert('Exporting 2,104 student submissions to applications_2025_26.csv...');
+}
+
+window.addEventListener('click', function(e) {
+    const m = document.getElementById('view-app-modal');
+    if (e.target === m) closeViewAppModal();
+});
+</script>
+{% endblock %}

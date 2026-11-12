@@ -1,7 +1,7 @@
-from django.test import TestCase, Client
+from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.contrib.auth.models import User
-from housing.models import Hostel, Student, Room, Bed, Application, AllocationRun, AllocationRecord, UserProfile
+from housing.models import Hostel, Student, Application, AllocationRun, AllocationRecord, UserProfile
 
 class AuthenticationAndRoleSeparationTests(TestCase):
     def setUp(self):
@@ -141,3 +141,47 @@ class AuthenticationAndRoleSeparationTests(TestCase):
         # Verify logged out
         res_after = self.client.get(reverse('overview'))
         self.assertEqual(res_after.status_code, 302)
+
+    @override_settings(MONGODB_URI='')
+    def test_mongodb_helper_unconfigured(self):
+        import housing.mongodb as h_mongo
+        h_mongo._mongo_client = None
+        self.assertIsNone(h_mongo.get_mongo_client())
+        self.assertIsNone(h_mongo.get_mongo_db())
+        ok, msg = h_mongo.test_connection()
+        self.assertFalse(ok)
+        self.assertIn("MONGODB_URI", msg)
+
+    def test_socketio_broadcasting(self):
+        from housing.sockets import sio, broadcast_bed_update, broadcast_allocation_override, broadcast_notification
+        self.assertIsNotNone(sio)
+        # Verify broadcasting helpers execute without exceptions
+        broadcast_bed_update(bed_label="Cedar House · C-101A", status="occupied", student_name="Test Student")
+        broadcast_allocation_override(student_name="Test Student", new_bed="Cedar House · C-102B")
+        broadcast_notification(title="Test", message="Real-time test message", level="info")
+
+    def test_socketio_wsgi_endpoint(self):
+        import io
+        from nestora.wsgi import application
+        environ = {
+            'REQUEST_METHOD': 'GET',
+            'PATH_INFO': '/socket.io/',
+            'QUERY_STRING': 'EIO=4&transport=polling',
+            'SERVER_NAME': 'localhost',
+            'SERVER_PORT': '8000',
+            'wsgi.version': (1, 0),
+            'wsgi.url_scheme': 'http',
+            'wsgi.input': io.BytesIO(b''),
+            'wsgi.errors': io.StringIO(),
+            'wsgi.multithread': True,
+            'wsgi.multiprocess': False,
+            'wsgi.run_once': False,
+        }
+        status_headers = []
+        def start_response(status, headers):
+            status_headers.append((status, headers))
+        response = application(environ, start_response)
+        self.assertTrue(len(status_headers) > 0)
+        self.assertTrue(status_headers[0][0].startswith('200'))
+        content = b''.join(response)
+        self.assertIn(b'"sid":', content)
