@@ -142,15 +142,25 @@ class AuthenticationAndRoleSeparationTests(TestCase):
         res_after = self.client.get(reverse('overview'))
         self.assertEqual(res_after.status_code, 302)
 
-    @override_settings(MONGODB_URI='')
-    def test_mongodb_helper_unconfigured(self):
-        import housing.mongodb as h_mongo
-        h_mongo._mongo_client = None
-        self.assertIsNone(h_mongo.get_mongo_client())
-        self.assertIsNone(h_mongo.get_mongo_db())
-        ok, msg = h_mongo.test_connection()
-        self.assertFalse(ok)
-        self.assertIn("MONGODB_URI", msg)
+    def test_unique_bed_per_draft_constraint(self):
+        from django.db import IntegrityError
+        student2 = Student.objects.create(
+            name='Test Student 2',
+            student_id='STU-999999'
+        )
+        run = AllocationRun.objects.create(run_id='AR-TEST-01', title='Constraint Test')
+        AllocationRecord.objects.create(
+            run=run,
+            student=self.student_obj,
+            assigned_bed_label='Cedar · C-101A'
+        )
+        # UniqueConstraint prevents double-assignment at the database level
+        with self.assertRaises(IntegrityError):
+            AllocationRecord.objects.create(
+                run=run,
+                student=student2,
+                assigned_bed_label='Cedar · C-101A'
+            )
 
     def test_socketio_broadcasting(self):
         from housing.sockets import sio, broadcast_bed_update, broadcast_allocation_override, broadcast_notification

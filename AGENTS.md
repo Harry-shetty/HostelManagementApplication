@@ -78,11 +78,8 @@ Django_project/
 ## Database & Testing
 
 ```bash
-# Seed initial SQL demo data
+# Seed initial demo data (PostgreSQL / SQLite)
 python3 manage.py seed_data
-
-# Seed MongoDB Atlas 'nestora' database & collections
-python3 manage.py seed_mongodb --uri="mongodb+srv://<user>:<password>@cluster.mongodb.net/nestora?retryWrites=true&w=majority"
 
 # Run tests across all apps
 python3 manage.py test

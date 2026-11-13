@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth import update_session_auth_hash
 from django.contrib import messages
+from django.core.cache import cache
 
 from housing.models import (
     Hostel, Student, Application,
@@ -10,24 +11,35 @@ from housing.models import (
     AllocationLetter, RoomChangeRequest, AllocationRun, AuditLog
 )
 from housing.decorators import student_required
-from housing.views import get_base_context
+from housing.views import get_base_context, invalidate_student_caches
 
 @student_required
 def overview(request):
     ctx = get_base_context(request, 'overview', is_admin=False)
-    ctx.update({
-        'hostels': Hostel.objects.all()[:2],
-        'application': Application.objects.first(),
-        'notifications': Notification.objects.all()[:3],
-    })
+    overview_data = cache.get('student_overview_data')
+    if not overview_data:
+        overview_data = {
+            'hostels': list(Hostel.objects.all()[:2]),
+            'application': Application.objects.first(),
+            'notifications': list(Notification.objects.all()[:3]),
+        }
+        cache.set('student_overview_data', overview_data, 180)
+
+    ctx.update(overview_data)
     return render(request, 'student/overview.html', ctx)
 
 @student_required
 def hostels_view(request):
     query = request.GET.get('q', '').strip()
-    hostels_qs = Hostel.objects.all()
+    all_hostels = cache.get('all_hostels_list')
+    if not all_hostels:
+        all_hostels = list(Hostel.objects.all())
+        cache.set('all_hostels_list', all_hostels, 300)
+
     if query:
-        hostels_qs = hostels_qs.filter(name__icontains=query)
+        hostels_qs = [h for h in all_hostels if query.lower() in h.name.lower()]
+    else:
+        hostels_qs = all_hostels
 
     ctx = get_base_context(request, 'hostels', is_admin=False)
     ctx.update({
@@ -39,62 +51,76 @@ def hostels_view(request):
 
 @student_required
 def roommate_view(request):
-    student = Student.objects.filter(student_id='STU-204810').first()
-    matches = RoommateSuggestion.objects.filter(target_student=student) if student else []
+    roommate_data = cache.get('student_roommate_data')
+    if not roommate_data:
+        student = Student.objects.filter(student_id='STU-204810').first()
+        matches = list(RoommateSuggestion.objects.filter(target_student=student).select_related('suggested_student', 'target_student')) if student else []
+        roommate_data = {
+            'matches': matches,
+            'student': student,
+        }
+        cache.set('student_roommate_data', roommate_data, 180)
 
     ctx = get_base_context(request, 'roommate', is_admin=False)
-    ctx.update({
-        'matches': matches,
-        'student': student,
-    })
+    ctx.update(roommate_data)
     return render(request, 'student/roommate.html', ctx)
 
 @student_required
 def application_view(request):
-    student = Student.objects.filter(student_id='STU-204810').first()
-    app = Application.objects.filter(student=student).first() if student else None
-    preferences = app.preferences.all().select_related('hostel') if app else []
+    app_data = cache.get('student_application_data')
+    if not app_data:
+        student = Student.objects.filter(student_id='STU-204810').first()
+        app = Application.objects.filter(student=student).first() if student else None
+        preferences = list(app.preferences.all().select_related('hostel')) if app else []
+        hostels = list(Hostel.objects.all())
+        app_data = {
+            'student': student,
+            'application': app,
+            'preferences': preferences,
+            'hostels': hostels,
+        }
+        cache.set('student_application_data', app_data, 180)
 
     ctx = get_base_context(request, 'application', is_admin=False)
-    ctx.update({
-        'student': student,
-        'application': app,
-        'preferences': preferences,
-        'hostels': Hostel.objects.all(),
-    })
+    ctx.update(app_data)
     return render(request, 'student/application.html', ctx)
 
 @student_required
 def status_view(request):
     profile = getattr(request.user, 'profile', None)
     student = profile.student_profile if (profile and profile.student_profile) else Student.objects.filter(student_id='STU-204810').first()
-    app = Application.objects.filter(student=student).first() if student else None
-
-    letter = AllocationLetter.objects.filter(student=student).order_by('-generated_at').first() if student else None
-    published_run = AllocationRun.objects.filter(status='published').order_by('-created_at').first()
     
-    is_allocated = (app and app.status == 'allocated') or (letter is not None) or (published_run is not None)
+    status_data = cache.get(f"student_status_data_{student.student_id if student else 'none'}")
+    if not status_data:
+        app = Application.objects.filter(student=student).first() if student else None
+        letter = AllocationLetter.objects.filter(student=student).order_by('-generated_at').first() if student else None
+        published_run = AllocationRun.objects.filter(status='published').order_by('-created_at').first()
+        
+        is_allocated = (app and app.status == 'allocated') or (letter is not None) or (published_run is not None)
 
-    if is_allocated and not letter and student:
-        letter = AllocationLetter.objects.create(
-            letter_id=f"LET-2025-{student.student_id.split('-')[-1]}",
-            student=student,
-            run=published_run,
-            hostel_name="Cedar House",
-            room_number="C-214",
-            bed_letter="A",
-            room_type="Single Ensuite",
-            fee_category="Standard Academic",
-            move_in_date="20 October 2025"
-        )
+        if is_allocated and not letter and student:
+            letter = AllocationLetter.objects.create(
+                letter_id=f"LET-2025-{student.student_id.split('-')[-1]}",
+                student=student,
+                run=published_run,
+                hostel_name="Cedar House",
+                room_number="C-214",
+                bed_letter="A",
+                room_type="Single Ensuite",
+                fee_category="Standard Academic",
+                move_in_date="20 October 2025"
+            )
+
+        status_data = {
+            'student': student,
+            'application': app,
+            'letter': letter,
+            'is_allocated': is_allocated,
+        }
+        cache.set(f"student_status_data_{student.student_id if student else 'none'}", status_data, 180)
 
     ctx = get_base_context(request, 'status', is_admin=False)
-    ctx.update({
-        'student': student,
-        'application': app,
-        'letter': letter,
-        'is_allocated': is_allocated,
-    })
+    ctx.update(status_data)
     return render(request, 'student/status.html', ctx)
 
 @student_required
@@ -140,6 +166,7 @@ def submit_room_change_view(request):
             action=f"Room change request submitted by {student.name} ({student.student_id}) for {preferred_hostel} ({reason_cat})",
             actor=actor_name
         )
+        invalidate_student_caches()
         messages.success(request, "Your room change request has been submitted for Warden review.")
     return redirect('status')
 
@@ -255,6 +282,7 @@ def profile_view(request):
                     student.bio = bio
                 student.save()
                 request.user.save()
+                invalidate_student_caches()
             success_msg = 'Your profile details have been successfully updated!'
 
     ctx = get_base_context(request, 'student-profile', is_admin=False)

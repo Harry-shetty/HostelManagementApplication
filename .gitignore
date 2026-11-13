@@ -35,3 +35,4 @@ logs/
 # Agent platform
 /.plugins/
 /.opencode-skills/
+.neon

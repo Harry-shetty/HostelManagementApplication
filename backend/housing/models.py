@@ -112,10 +112,45 @@ class Bed(models.Model):
     def __str__(self):
         return f"{self.room.room_number}{self.bed_letter} ({self.status})"
 
+class AllocationCycle(models.Model):
+    CYCLE_STATUS_CHOICES = [
+        ('open', 'Application Window Open'),
+        ('allocating', 'Draft Engine Allocating'),
+        ('review', 'Warden Review'),
+        ('published', 'Allocations Published'),
+        ('closed', 'Cycle Closed'),
+    ]
+    cycle_id = models.CharField(max_length=40, unique=True)
+    title = models.CharField(max_length=150)
+    academic_year = models.CharField(max_length=20, default='2025/26')
+    window_open = models.DateTimeField()
+    window_close = models.DateTimeField()
+    status = models.CharField(max_length=30, choices=CYCLE_STATUS_CHOICES, default='open')
+    is_active = models.BooleanField(default=True)
+    description = models.TextField(blank=True)
+    quota_distribution = models.JSONField(default=dict)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.cycle_id} - {self.title} ({self.get_status_display()})"
+
+class EligibilityRule(models.Model):
+    code = models.CharField(max_length=30, unique=True)
+    name = models.CharField(max_length=120)
+    category = models.CharField(max_length=50, default='General Policy')
+    description = models.TextField()
+    is_mandatory = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"[{self.code}] {self.name}"
+
 class Application(models.Model):
     application_id = models.CharField(max_length=30, unique=True, default='NST-25-10482')
     student = models.OneToOneField(Student, on_delete=models.CASCADE, related_name='application')
+    cycle = models.ForeignKey(AllocationCycle, on_delete=models.SET_NULL, null=True, blank=True, related_name='applications')
     academic_year = models.CharField(max_length=20, default='2025/26')
+    quota = models.CharField(max_length=60, default='Continuing Students')
     status = models.CharField(
         max_length=30,
         choices=[
@@ -211,10 +246,17 @@ class AllocationRecord(models.Model):
         default='clear'
     )
     override_reason = models.TextField(blank=True, null=True)
+    assignment_explanation = models.TextField(blank=True, default='Matched 1st preference; room accessibility & quota conditions satisfied.')
     is_overridden = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['run', 'assigned_bed_label'],
+                name='unique_bed_per_draft'
+            )
+        ]
 
     def __str__(self):
         return f"{self.student.name} -> {self.assigned_bed_label} [{self.status}]"
@@ -223,6 +265,7 @@ class AuditLog(models.Model):
     action = models.CharField(max_length=250)
     actor = models.CharField(max_length=100, default='System')
     timestamp = models.DateTimeField(default=timezone.now)
+    digest = models.CharField(max_length=64, blank=True, default='')
 
     class Meta:
         ordering = ['-timestamp']
@@ -299,3 +342,31 @@ class RoomChangeRequest(models.Model):
 
     def __str__(self):
         return f"Change Request #{self.id} for {self.student.name} ({self.status})"
+
+class WaitlistEntry(models.Model):
+    STATUS_CHOICES = [
+        ('active', 'Next in Line'),
+        ('offered', 'Offer Pending'),
+        ('promoted', 'Promoted & Allocated'),
+        ('expired', 'Offer Expired'),
+        ('withdrawn', 'Withdrawn'),
+    ]
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='waitlist_entries')
+    cycle = models.ForeignKey(AllocationCycle, on_delete=models.SET_NULL, null=True, blank=True, related_name='waitlist_entries')
+    tier = models.IntegerField(default=2)  # 1: Medical / Hardship, 2: Distance Priority, 3: Late / Postgrad
+    tier_label = models.CharField(max_length=80, default='Tier 2 · Distance Priority')
+    position = models.PositiveIntegerField(default=1)
+    priority_points = models.IntegerField(default=75)
+    preferred_hostels = models.CharField(max_length=150, default='Cedar House, Willow Hall')
+    room_type_preference = models.CharField(max_length=50, default='Single room')
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='active')
+    offer_bed_label = models.CharField(max_length=60, blank=True, null=True)
+    offer_expires_at = models.DateTimeField(null=True, blank=True)
+    notes = models.CharField(max_length=250, blank=True)
+    queued_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['position', 'queued_at']
+
+    def __str__(self):
+        return f"#{self.position} {self.student.name} ({self.tier_label}) - {self.get_status_display()}"

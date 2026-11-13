@@ -80,28 +80,28 @@ Nestora integrates **Socket.IO** (`python-socketio` + client-side `socket.io.min
 
 ---
 
-## MongoDB Atlas Integration
+## PostgreSQL Database Configuration (Track P)
 
-Nestora includes a MongoDB Atlas client and seeder for document-based storage in the `nestora` database:
+Nestora uses PostgreSQL as its primary relational database with native ACID transactions and constraints:
 
-1. **Configure Connection**: Add your Atlas URI to a `.env` file (or pass `--uri` directly):
+1. **Configure Connection**: Add your PostgreSQL connection details to `.env`:
    ```env
-   MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/nestora?retryWrites=true&w=majority
-   MONGODB_DB_NAME=nestora
+   # Option A: Full Connection URI
+   DATABASE_URL=postgres://postgres:password@localhost:5432/nestora
+
+   # Option B: Individual parameters
+   DB_ENGINE=postgresql
+   DB_NAME=nestora
+   DB_USER=postgres
+   DB_PASSWORD=your_password
+   DB_HOST=localhost
+   DB_PORT=5432
    ```
 
-2. **Seed Collections & Mock Data**:
+2. **Run Migrations & Seed Data**:
    ```bash
-   python3 manage.py seed_mongodb
-   # Or with an explicit connection string:
-   python3 manage.py seed_mongodb --uri="mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/nestora?retryWrites=true&w=majority"
+   python3 manage.py migrate
+   python3 manage.py seed_data
    ```
 
-   Populates the required collections:
-   - `hostels`: Campus residences, room types, pricing, occupancy & amenities
-   - `rooms` & `beds`: Room inventories, wings, floorplans, and bed statuses
-   - `students`: Student identity profiles, contacts, and verification records
-   - `roommate_profiles`: Living habits, sleep schedules, and compatibility scores
-   - `applications`: Ranked hostel preferences and cycle submissions
-   - `allocation_runs` & `allocation_records`: Reproducibility seeds, exception audits, and metrics
-   - `audit_logs`: Immutable governance audit trails
+   Populates all housing inventory, students, bed allocations, applications, and roommate compatibility profiles.

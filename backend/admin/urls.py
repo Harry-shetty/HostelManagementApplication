@@ -18,5 +18,6 @@ urlpatterns = [
     # Admin APIs
     path('api/draft/override/', views.api_draft_override, name='api-draft-override'),
     path('api/bedmap/reassign/', views.api_reassign_bed, name='api-bedmap-reassign'),
+    path('api/bedmap/vacant/', views.api_get_vacant_beds, name='api-bedmap-vacant'),
 ]
 

@@ -187,11 +187,15 @@
                 <strong>Overrides are permanently recorded.</strong>
                 <p>Provide a specific policy or operational reason. This action will appear in the audit log.</p>
             </div>
-            <label>New bed assignment
+            <label>New bed assignment (vacant beds only)
                 <select id="override-bed-select">
-                    <option value="Cedar House · C-216A">Cedar House · C-216A</option>
-                    <option value="Maple Court · M-108A">Maple Court · M-108A</option>
-                    <option value="Willow Hall · W-102A">Willow Hall · W-102A</option>
+                    {% for b in vacant_beds %}
+                    <option value="{{ b.room.hostel.name }} · {{ b.room.room_number }}{{ b.bed_letter }}">
+                        {{ b.room.hostel.name }} · {{ b.room.room_number }}{{ b.bed_letter }} ({{ b.room.room_type }}, {{ b.room.floor }})
+                    </option>
+                    {% empty %}
+                    <option value="" disabled selected>No vacant beds currently available</option>
+                    {% endfor %}
                 </select>
             </label>
             <label>Mandatory reason

@@ -39,6 +39,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django.middleware.gzip.GZipMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -46,6 +47,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+
+AUTHENTICATION_BACKENDS = [
+    'housing.auth_backend.CachedModelBackend',
 ]
 
 ROOT_URLCONF = 'nestora.urls'
@@ -68,12 +75,61 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'nestora.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Database Configuration (Track P: PostgreSQL with automatic fallback)
+DB_ENGINE = os.getenv('DB_ENGINE', '').lower()
+DB_URL = os.getenv('DATABASE_URL', '')
+USE_POSTGRES = DB_ENGINE in ('postgresql', 'postgres') or bool(DB_URL) or bool(os.getenv('POSTGRES_DB') or os.getenv('DB_NAME'))
+
+if USE_POSTGRES:
+    if DB_URL:
+        import urllib.parse as urlparse
+        _url = urlparse.urlparse(DB_URL)
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': _url.path.lstrip('/') or 'nestora',
+                'USER': _url.username or 'postgres',
+                'PASSWORD': _url.password or '',
+                'HOST': _url.hostname or 'localhost',
+                'PORT': str(_url.port or '5432'),
+                'CONN_MAX_AGE': 600,
+                'CONN_HEALTH_CHECKS': True,
+                'OPTIONS': {
+                    'connect_timeout': 10,
+                    'keepalives': 1,
+                    'keepalives_idle': 30,
+                    'keepalives_interval': 10,
+                    'keepalives_count': 5,
+                }
+            }
+        }
+    else:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': os.getenv('POSTGRES_DB', os.getenv('DB_NAME', 'nestora')),
+                'USER': os.getenv('POSTGRES_USER', os.getenv('DB_USER', 'postgres')),
+                'PASSWORD': os.getenv('POSTGRES_PASSWORD', os.getenv('DB_PASSWORD', '')),
+                'HOST': os.getenv('POSTGRES_HOST', os.getenv('DB_HOST', 'localhost')),
+                'PORT': os.getenv('POSTGRES_PORT', os.getenv('DB_PORT', '5432')),
+                'CONN_MAX_AGE': 600,
+                'CONN_HEALTH_CHECKS': True,
+                'OPTIONS': {
+                    'connect_timeout': 10,
+                    'keepalives': 1,
+                    'keepalives_idle': 30,
+                    'keepalives_interval': 10,
+                    'keepalives_count': 5,
+                }
+            }
+        }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -89,6 +145,14 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'nestora-memory-cache',
+        'TIMEOUT': 120,
+    }
+}
 
 LANGUAGE_CODE = 'en-us'
 
@@ -109,7 +173,3 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = 'login'
 
 TEST_RUNNER = 'nestora.test_runner.BackendDiscoverRunner'
-
-# MongoDB Atlas Configuration
-MONGODB_URI = os.getenv('MONGODB_URI', '')
-MONGODB_DB_NAME = os.getenv('MONGODB_DB_NAME', 'nestora')

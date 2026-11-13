@@ -18,6 +18,14 @@ urlpatterns = [
     # Admin Workspace App
     path('admin-workspace/', include('admin.urls')),
 
+    # Convenience root redirects to Admin Workspace
+    path('inventory/', RedirectView.as_view(url='/admin-workspace/inventory/', permanent=False)),
+    path('bedmap/', RedirectView.as_view(url='/admin-workspace/inventory/', permanent=False)),
+    path('draft/', RedirectView.as_view(url='/admin-workspace/draft/', permanent=False)),
+    path('runs/', RedirectView.as_view(url='/admin-workspace/runs/', permanent=False)),
+    path('reports/', RedirectView.as_view(url='/admin-workspace/reports/', permanent=False)),
+    path('audit/', RedirectView.as_view(url='/admin-workspace/audit/', permanent=False)),
+
     # Student Portal App
     path('', include('student.urls')),
 ]

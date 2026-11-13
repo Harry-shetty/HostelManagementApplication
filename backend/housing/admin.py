@@ -2,8 +2,45 @@ from django.contrib import admin
 from .models import (
     Hostel, Student, Room, Bed, Application, ApplicationPreference,
     RoommateProfile, RoommateSuggestion, AllocationRun, AllocationRecord,
-    AuditLog, Notification, UserProfile
+    AuditLog, Notification, UserProfile,
+    AllocationCycle, EligibilityRule, WaitlistEntry, AllocationApproval,
+    AllocationLetter, RoomChangeRequest
 )
+
+@admin.register(AllocationCycle)
+class AllocationCycleAdmin(admin.ModelAdmin):
+    list_display = ('cycle_id', 'title', 'academic_year', 'status', 'is_active', 'window_open', 'window_close')
+    list_filter = ('status', 'academic_year', 'is_active')
+    search_fields = ('cycle_id', 'title')
+
+@admin.register(EligibilityRule)
+class EligibilityRuleAdmin(admin.ModelAdmin):
+    list_display = ('code', 'name', 'category', 'is_mandatory', 'is_active')
+    list_filter = ('category', 'is_mandatory', 'is_active')
+    search_fields = ('code', 'name', 'description')
+
+@admin.register(WaitlistEntry)
+class WaitlistEntryAdmin(admin.ModelAdmin):
+    list_display = ('position', 'student', 'tier_label', 'status', 'priority_points', 'offer_bed_label', 'offer_expires_at')
+    list_filter = ('tier', 'status')
+    search_fields = ('student__name', 'student__student_id', 'offer_bed_label')
+
+@admin.register(AllocationApproval)
+class AllocationApprovalAdmin(admin.ModelAdmin):
+    list_display = ('run', 'approved_by', 'approver_role', 'is_published', 'approved_at', 'published_at')
+    list_filter = ('is_published',)
+    search_fields = ('run__run_id', 'approved_by')
+
+@admin.register(AllocationLetter)
+class AllocationLetterAdmin(admin.ModelAdmin):
+    list_display = ('letter_id', 'student', 'hostel_name', 'room_number', 'bed_letter', 'generated_at')
+    search_fields = ('letter_id', 'student__name', 'student__student_id', 'hostel_name')
+
+@admin.register(RoomChangeRequest)
+class RoomChangeRequestAdmin(admin.ModelAdmin):
+    list_display = ('id', 'student', 'current_bed_label', 'preferred_hostel', 'reason_category', 'status', 'created_at')
+    list_filter = ('status', 'reason_category')
+    search_fields = ('student__name', 'current_bed_label', 'preferred_hostel')
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):

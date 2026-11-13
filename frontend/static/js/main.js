@@ -94,6 +94,7 @@ function initSocketIO() {
             reconnectionDelay: 1500,
             timeout: 20000
         });
+        window.nestoraSocket = socket;
 
         const indicators = document.querySelectorAll('.live-sync-indicator');
 

@@ -28,9 +28,9 @@
     <div class="bed-summary">
         <span><i class="available"></i> Available <b id="summary-available-count">{{ available_count }}</b></span>
         <span><i class="occupied"></i> Occupied <b id="summary-occupied-count">{{ occupied_count }}</b></span>
-        <span><i class="reserved"></i> Reserved <b>{{ reserved_count }}</b></span>
-        <span><i class="accessible"></i> Accessible <b>{{ accessible_count }}</b></span>
-        <small>{{ total_beds }} beds · <span id="summary-floor-label">{{ floor }}</span></small>
+        <span><i class="reserved"></i> Reserved <b id="summary-reserved-count">{{ reserved_count }}</b></span>
+        <span><i class="accessible"></i> Accessible <b id="summary-accessible-count">{{ accessible_count }}</b></span>
+        <small><span id="summary-total-beds">{{ total_beds }}</span> beds · <span id="summary-floor-label">{{ floor }}</span></small>
     </div>
 
     <!-- Map Layout -->
@@ -48,15 +48,16 @@
             <div class="floor-map">
                 <div class="corridor-label">NORTH CORRIDOR</div>
                 <div class="room-grid" id="rooms-grid">
-                    {% for room in rooms %}
+                    {% for room in all_rooms %}
                     <button type="button" 
-                            class="room-btn {% if forloop.first %}selected{% endif %}"
+                            class="room-btn {% if room.room_number == initial_room.room_number %}selected{% endif %}"
                             data-room="{{ room.room_number }}"
                             data-floor="{{ room.floor }}"
                             data-wing="{{ room.wing }}"
                             data-gender="{{ room.gender }}"
                             data-access="{{ room.access_type }}"
                             data-type="{{ room.room_type }}"
+                            style="{% if room.floor != floor %}display: none;{% endif %}"
                             onclick="selectRoom(this)">
                         <span>
                             <strong>{{ room.room_number }}</strong>
@@ -125,14 +126,14 @@
             <div class="assignment" id="panel-assignment-box">
                 <h3 id="reassign-section-title">Reassign bed A</h3>
                 <p id="reassign-section-desc">Drag a student here or use the accessible selection below.</p>
-                <label>Move student to
+                <label>Move student to vacant bed
                     <select id="reassign-target-select" style="min-height: 42px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; background: white; font-size: 13px; cursor: pointer; width: 100%;">
-                        <option value="Cedar · C-216A · Single" selected>Cedar · C-216A · Single</option>
-                        <option value="Cedar · C-208B · Twin">Cedar · C-208B · Twin</option>
-                        <option value="Cedar · C-114A · Single">Cedar · C-114A · Single</option>
-                        <option value="Cedar · C-202B · Twin">Cedar · C-202B · Twin</option>
                         {% for b in available_target_beds %}
-                        <option value="Cedar · {{ b.room.room_number }}{{ b.bed_letter }} · {{ b.room.room_type }}">Cedar · {{ b.room.room_number }}{{ b.bed_letter }} · {{ b.room.room_type }}</option>
+                        <option value="{{ b.room.hostel.name|cut:' House'|cut:' Court'|cut:' Hall'|cut:' Residence'|cut:' Lodge' }} · {{ b.room.room_number }}{{ b.bed_letter }} · {{ b.room.room_type }}" data-bed-code="{{ b.room.room_number }}{{ b.bed_letter }}">
+                            {{ b.room.hostel.name }} · {{ b.room.room_number }}{{ b.bed_letter }} · {{ b.room.room_type }} ({{ b.room.floor }})
+                        </option>
+                        {% empty %}
+                        <option value="" disabled selected>No vacant beds currently available</option>
                         {% endfor %}
                     </select>
                 </label>
@@ -201,6 +202,7 @@
 
 {% block extra_scripts %}
 <script id="rooms-data-json" type="application/json">{{ rooms_data_json|safe }}</script>
+<script id="floor-metrics-json" type="application/json">{{ floor_metrics_json|safe }}</script>
 <script>
     let roomsData = {};
     try {
@@ -210,13 +212,65 @@
         console.error('Error loading rooms data:', e);
     }
 
-    let selectedRoomNumber = '{% if rooms %}{{ rooms.0.room_number }}{% else %}C-214{% endif %}';
+    let floorMetrics = {};
+    try {
+        const rawMetrics = document.getElementById('floor-metrics-json').textContent;
+        floorMetrics = JSON.parse(rawMetrics);
+    } catch (e) {
+        console.error('Error loading floor metrics:', e);
+    }
+
+    let selectedRoomNumber = '{% if initial_room %}{{ initial_room.room_number }}{% elif rooms %}{{ rooms.0.room_number }}{% else %}C-214{% endif %}';
     let currentStudentId = 'STU-204810';
     let currentStudentName = 'Amara Mensah';
     let currentAssignedBed = 'Cedar · ' + selectedRoomNumber + 'A';
 
     function changeFloor(floor) {
-        window.location.href = `{% url 'bedmap' %}?floor=${encodeURIComponent(floor)}`;
+        const floorSelect = document.getElementById('floor-select');
+        if (floorSelect) floorSelect.value = floor;
+
+        // 1. Instant client-side room grid toggle (0ms latency, zero network round trips)
+        const roomButtons = document.querySelectorAll('#rooms-grid .room-btn');
+        let firstVisibleBtn = null;
+        roomButtons.forEach(btn => {
+            if (btn.dataset.floor === floor) {
+                btn.style.display = '';
+                if (!firstVisibleBtn) firstVisibleBtn = btn;
+            } else {
+                btn.style.display = 'none';
+            }
+        });
+
+        // 2. Instant summary metrics update from memory
+        if (floorMetrics && floorMetrics[floor]) {
+            const m = floorMetrics[floor];
+            const elAvail = document.getElementById('summary-available-count');
+            const elOcc = document.getElementById('summary-occupied-count');
+            const elRes = document.getElementById('summary-reserved-count');
+            const elAcc = document.getElementById('summary-accessible-count');
+            const elTotal = document.getElementById('summary-total-beds');
+            if (elAvail) elAvail.textContent = m.available_count;
+            if (elOcc) elOcc.textContent = m.occupied_count;
+            if (elRes) elRes.textContent = m.reserved_count;
+            if (elAcc) elAcc.textContent = m.accessible_count;
+            if (elTotal) elTotal.textContent = m.total_beds;
+        }
+        const floorLabel = document.getElementById('summary-floor-label');
+        if (floorLabel) floorLabel.textContent = floor;
+        const floorTitle = document.getElementById('floor-title');
+        if (floorTitle) floorTitle.textContent = floor;
+
+        // 3. Select first room on floor
+        if (firstVisibleBtn) {
+            selectRoom(firstVisibleBtn);
+        }
+
+        // 4. Update browser URL history without reload
+        if (window.history && window.history.replaceState) {
+            const newUrl = new URL(window.location);
+            newUrl.searchParams.set('floor', floor);
+            window.history.replaceState({}, '', newUrl);
+        }
     }
 
     function selectRoom(btn) {
@@ -299,12 +353,10 @@
 
     function openReassignModal() {
         const targetSelect = document.getElementById('reassign-target-select');
-        let targetBed = targetSelect ? targetSelect.value : 'Cedar · C-216A · Single';
+        const targetBed = (targetSelect && targetSelect.value) ? targetSelect.value.trim() : '';
         if (!targetBed) {
-            targetBed = 'Cedar · C-216A · Single';
-        }
-        if (!targetBed.startsWith('Cedar')) {
-            targetBed = `Cedar · ${targetBed}`;
+            alert('Please select an available vacant bed from the dropdown.');
+            return;
         }
 
         const fromBed = currentAssignedBed || `Cedar · ${selectedRoomNumber}A`;
@@ -426,27 +478,7 @@
         }
 
         // 4. Update Target Bed Select Dropdown
-        const targetSelect = document.getElementById('reassign-target-select');
-        if (targetSelect) {
-            // Remove newly occupied bed
-            for (let i = 0; i < targetSelect.options.length; i++) {
-                if (targetSelect.options[i].value === targetBed || (targetInfo.room && targetSelect.options[i].value.includes(targetInfo.room + targetInfo.letter))) {
-                    targetSelect.remove(i);
-                    break;
-                }
-            }
-            // Add freed bed back to available options
-            const alreadyExists = Array.from(targetSelect.options).some(opt => fromInfo.room && opt.value.includes(fromInfo.room + fromInfo.letter));
-            if (!alreadyExists && fromInfo.room) {
-                const opt = document.createElement('option');
-                opt.value = fromBed;
-                opt.textContent = fromBed;
-                targetSelect.appendChild(opt);
-            }
-            if (targetSelect.options.length > 0) {
-                targetSelect.selectedIndex = 0;
-            }
-        }
+        refreshVacantBedsDropdown();
 
         // 5. Update assigned bed and re-render current room details
         currentAssignedBed = targetBed;
@@ -465,6 +497,104 @@
         const occEl = document.getElementById('summary-occupied-count');
         if (availEl) availEl.textContent = availCount;
         if (occEl) occEl.textContent = occCount;
+    }
+
+    function refreshVacantBedsDropdown() {
+        const floorSelect = document.getElementById('floor-select');
+        const currentFloor = floorSelect ? floorSelect.value : 'Floor 2';
+        fetch(`{% url 'api-bedmap-vacant' %}?floor=${encodeURIComponent(currentFloor)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.vacant_beds) {
+                    const targetSelect = document.getElementById('reassign-target-select');
+                    if (!targetSelect) return;
+
+                    const previousVal = targetSelect.value;
+                    targetSelect.innerHTML = '';
+
+                    if (data.vacant_beds.length === 0) {
+                        const opt = document.createElement('option');
+                        opt.value = '';
+                        opt.disabled = true;
+                        opt.selected = true;
+                        opt.textContent = 'No vacant beds currently available';
+                        targetSelect.appendChild(opt);
+                    } else {
+                        let preserved = false;
+                        data.vacant_beds.forEach(b => {
+                            const opt = document.createElement('option');
+                            opt.value = b.value;
+                            opt.textContent = b.label;
+                            opt.setAttribute('data-bed-code', `${b.room_number}${b.bed_letter}`);
+                            if (b.value === previousVal) {
+                                opt.selected = true;
+                                preserved = true;
+                            }
+                            targetSelect.appendChild(opt);
+                        });
+                        if (!preserved && targetSelect.options.length > 0) {
+                            targetSelect.selectedIndex = 0;
+                        }
+                    }
+                }
+            })
+            .catch(err => console.warn('Could not refresh vacant beds dropdown:', err));
+    }
+
+    function initBedmapLiveSocket() {
+        const attachListener = () => {
+            if (window.nestoraSocket) {
+                window.nestoraSocket.on('bed_updated', (data) => {
+                    if (!data) return;
+                    console.log('⚡ [Bedmap Live Sync] bed_updated received:', data);
+
+                    // 1. Update roomsData cache if present on current floor
+                    if (data.room_number && roomsData[data.room_number]) {
+                        const beds = roomsData[data.room_number].beds || [];
+                        const b = beds.find(x => data.bed_label && data.bed_label.includes(data.room_number + x.letter)) || beds[0];
+                        if (b) {
+                            b.status = data.status;
+                            b.student_name = data.status === 'occupied' ? data.student_name : null;
+                            b.student_id = data.status === 'occupied' ? data.student_id : null;
+                        }
+
+                        // Update room button status indicator
+                        const btn = document.querySelector(`.room-btn[data-room="${data.room_number}"]`);
+                        if (btn) {
+                            const icon = btn.querySelector(`i[data-letter="${b ? b.letter : 'A'}"]`) || btn.querySelector('i');
+                            if (icon) icon.className = data.status;
+                            btn.style.boxShadow = data.status === 'available' ? '0 0 0 4px #bbf7d0' : '0 0 0 4px #fbcfe8';
+                            setTimeout(() => btn.style.boxShadow = '', 2000);
+                        }
+
+                        // If inspected room matches, re-render drawer
+                        if (selectedRoomNumber === data.room_number) {
+                            renderRoomDetails(selectedRoomNumber);
+                        }
+                    }
+
+                    // 2. Refresh vacant beds dropdown dynamically in real time
+                    refreshVacantBedsDropdown();
+
+                    // 3. Update summary metrics live
+                    let availCount = 0;
+                    let occCount = 0;
+                    Object.values(roomsData).forEach(r => {
+                        (r.beds || []).forEach(b => {
+                            if (b.status === 'available') availCount++;
+                            if (b.status === 'occupied') occCount++;
+                        });
+                    });
+                    const availEl = document.getElementById('summary-available-count');
+                    const occEl = document.getElementById('summary-occupied-count');
+                    if (availEl) availEl.textContent = availCount;
+                    if (occEl) occEl.textContent = occCount;
+                });
+            } else {
+                setTimeout(attachListener, 350);
+            }
+        };
+        attachListener();
     }
 
     function showReassignNotification(msg) {
@@ -504,9 +634,10 @@
         }
     });
 
-    // Initialize room details on page load
+    // Initialize room details and live sync on page load
     document.addEventListener('DOMContentLoaded', function() {
         renderRoomDetails(selectedRoomNumber);
+        initBedmapLiveSocket();
     });
 </script>
 {% endblock %}
