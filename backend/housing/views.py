@@ -1,9 +1,13 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from django.contrib import messages
 from django.core.cache import cache
+from django.db import transaction
+import random
 
 from .models import (
-    Student, Notification
+    Student, Notification, UserProfile, AuditLog
 )
 
 def invalidate_allocation_caches():
@@ -136,6 +140,138 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+def signup_view(request):
+    if request.user.is_authenticated:
+        profile = getattr(request.user, 'profile', None)
+        if request.user.is_staff or (profile and profile.is_admin()):
+            return redirect('admin-overview')
+        return redirect('overview')
+
+    error = None
+    form_data = {
+        'name': '',
+        'student_id': '',
+        'email': '',
+        'username': '',
+        'programme': 'Computer Science',
+        'year': 'Year 1',
+        'phone': '',
+    }
+
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        student_id = request.POST.get('student_id', '').strip().upper()
+        email = request.POST.get('email', '').strip().lower()
+        username = request.POST.get('username', '').strip().lower()
+        programme = request.POST.get('programme', '').strip() or 'Computer Science'
+        year = request.POST.get('year', '').strip() or 'Year 1'
+        phone = request.POST.get('phone', '').strip()
+        password = request.POST.get('password', '').strip()
+        confirm_password = request.POST.get('confirm_password', '').strip()
+
+        form_data.update({
+            'name': name,
+            'student_id': student_id,
+            'email': email,
+            'username': username,
+            'programme': programme,
+            'year': year,
+            'phone': phone,
+        })
+
+        # Generate username from student ID or email if omitted
+        if not username:
+            if student_id:
+                username = student_id.lower().replace('-', '')
+            elif email:
+                username = email.split('@')[0]
+            else:
+                username = name.lower().replace(' ', '')
+
+        # Validations
+        if not name or not student_id or not email or not password:
+            error = 'Please fill out all required fields.'
+        elif len(password) < 6:
+            error = 'Password must be at least 6 characters long.'
+        elif password != confirm_password:
+            error = 'Passwords do not match. Please re-enter.'
+        elif User.objects.filter(username__iexact=username).exists():
+            error = f"Username '{username}' is already taken. Please choose another."
+        elif User.objects.filter(email__iexact=email).exists():
+            error = f"An account with email '{email}' already exists."
+        elif Student.objects.filter(student_id__iexact=student_id).exists():
+            error = f"Student ID '{student_id}' is already registered in the housing system."
+        else:
+            try:
+                with transaction.atomic():
+                    name_parts = name.split()
+                    first_name = name_parts[0]
+                    last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
+
+                    user = User.objects.create_user(
+                        username=username,
+                        email=email,
+                        password=password,
+                        first_name=first_name,
+                        last_name=last_name
+                    )
+
+                    colors = ['green', 'forest', 'teal', 'emerald', 'blue']
+                    chosen_color = random.choice(colors)
+
+                    student = Student.objects.create(
+                        name=name,
+                        student_id=student_id,
+                        email=email,
+                        programme=programme,
+                        year=year,
+                        avatar_color=chosen_color,
+                        phone=phone or '+44 7700 900142',
+                        eligibility_status='Verified'
+                    )
+
+                    UserProfile.objects.create(
+                        user=user,
+                        role='student',
+                        student_profile=student,
+                        title='Student'
+                    )
+
+                    invalidate_student_caches()
+
+                    AuditLog.objects.create(
+                        action=f"New student self-registered: {name} ({student_id})",
+                        actor=name
+                    )
+
+                    # Real-time live sync notification to Warden dashboard
+                    try:
+                        from housing.sockets import broadcast_notification, sio
+                        broadcast_notification(
+                            title="New Student Registered",
+                            message=f"{name} ({student_id}) registered in {programme}",
+                            level="info",
+                            target_role="admin"
+                        )
+                        sio.emit('new_activity', {
+                            'actor': name,
+                            'action': f"Registered as student ({student_id})",
+                            'time': "Just now"
+                        })
+                    except Exception:
+                        pass
+
+                    login(request, user, backend='housing.auth_backend.CachedModelBackend')
+                    messages.success(request, f"Welcome to Nestora, {name}! Your student housing account is ready.")
+                    return redirect('overview')
+            except Exception as e:
+                error = f"Could not create account: {str(e)}"
+
+    return render(request, 'housing/signup.html', {
+        'error': error,
+        'form_data': form_data,
+    })
 
 
 def get_mock_applications(filter_val=None, search_query=None):

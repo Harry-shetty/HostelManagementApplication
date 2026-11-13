@@ -1,0 +1,280 @@
+{% load static %}
+{% load housing_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Registration | Nestora Housing</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}?v=4">
+    <link rel="shortcut icon" type="image/svg+xml" href="{% static 'favicon.svg' %}?v=4">
+    <link rel="apple-touch-icon" href="{% static 'favicon.svg' %}?v=4">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .signup-wrap {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #f4f6f2 0%, #e9efe9 100%);
+        }
+        .signup-box {
+            width: 100%;
+            max-width: 520px;
+            background: white;
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            padding: 38px 34px;
+            box-shadow: 0 20px 50px rgba(23, 76, 60, 0.08);
+            animation: card-rise 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .signup-brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .signup-brand .brand-mark {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            font-size: 20px;
+        }
+        .signup-brand strong {
+            font-size: 22px;
+            display: block;
+            color: var(--charcoal);
+            line-height: 1.1;
+        }
+        .signup-brand small {
+            display: block;
+            color: var(--muted);
+            font-size: 10px;
+            font-weight: 500;
+        }
+        .badge-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .badge-header h1 {
+            margin: 0 0 6px 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--forest);
+        }
+        .badge-header p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.45;
+        }
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .form-group label {
+            font-size: 11.5px;
+            font-weight: 650;
+            color: var(--charcoal);
+            display: flex;
+            justify-content: space-between;
+        }
+        .form-group label span.opt {
+            font-weight: 400;
+            color: var(--muted);
+            font-size: 10.5px;
+        }
+        .form-group input, .form-group select {
+            height: 44px;
+            padding: 0 14px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            font-size: 12.5px;
+            background: #fafbfa;
+            transition: all 0.2s;
+            color: var(--charcoal);
+            font-family: inherit;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--forest);
+            background: white;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(23, 76, 60, 0.08);
+        }
+        .alert-error {
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: var(--danger-soft);
+            color: var(--danger);
+            font-size: 11.5px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+        .btn-submit {
+            width: 100%;
+            height: 48px;
+            margin-top: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 650;
+        }
+        .footer-note {
+            margin-top: 22px;
+            padding-top: 18px;
+            border-top: 1px solid var(--line);
+            text-align: center;
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .footer-note a {
+            color: var(--forest);
+            font-weight: 700;
+            text-decoration: underline;
+        }
+        @media (max-width: 540px) {
+            .signup-wrap {
+                padding: 16px 12px;
+            }
+            .signup-box {
+                padding: 26px 20px;
+                border-radius: 18px;
+            }
+            .form-grid-2 {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-wrap">
+        <div class="signup-box">
+            <div class="signup-brand">
+                {% logo_icon 44 %}
+                <div>
+                    <strong>Nestora</strong>
+                    <small>University Student Housing</small>
+                </div>
+            </div>
+
+            <div class="badge-header">
+                <h1>Student Registration</h1>
+                <p>Create your university student profile to explore campus residences, find compatible roommates, and submit housing applications.</p>
+            </div>
+
+            {% if error %}
+            <div class="alert-error">
+                <span>⚠</span> {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="POST" action="{% url 'signup' %}" id="signup-form">
+                {% csrf_token %}
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="name">Full Name *</label>
+                        <input type="text" id="name" name="name" placeholder="e.g. Alex Morgan" value="{{ form_data.name }}" required autofocus>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="student_id">Student ID *</label>
+                        <input type="text" id="student_id" name="student_id" placeholder="e.g. STU-204901" value="{{ form_data.student_id }}" required>
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="email">University Email *</label>
+                        <input type="email" id="email" name="email" placeholder="e.g. alex.morgan@university.ac.uk" value="{{ form_data.email }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="username">Username <span class="opt">(optional)</span></label>
+                        <input type="text" id="username" name="username" placeholder="Defaults to Student ID" value="{{ form_data.username }}">
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="programme">Programme of Study</label>
+                        <select id="programme" name="programme">
+                            <option value="Computer Science" {% if form_data.programme == 'Computer Science' %}selected{% endif %}>Computer Science</option>
+                            <option value="Software Engineering" {% if form_data.programme == 'Software Engineering' %}selected{% endif %}>Software Engineering</option>
+                            <option value="Mechanical Engineering" {% if form_data.programme == 'Mechanical Engineering' %}selected{% endif %}>Mechanical Engineering</option>
+                            <option value="Economics &amp; Finance" {% if form_data.programme == 'Economics & Finance' %}selected{% endif %}>Economics &amp; Finance</option>
+                            <option value="Business Administration" {% if form_data.programme == 'Business Administration' %}selected{% endif %}>Business Administration</option>
+                            <option value="Law &amp; Jurisprudence" {% if form_data.programme == 'Law & Jurisprudence' %}selected{% endif %}>Law &amp; Jurisprudence</option>
+                            <option value="Biomedical Science" {% if form_data.programme == 'Biomedical Science' %}selected{% endif %}>Biomedical Science</option>
+                            <option value="Architecture &amp; Design" {% if form_data.programme == 'Architecture & Design' %}selected{% endif %}>Architecture &amp; Design</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="year">Year of Study</label>
+                        <select id="year" name="year">
+                            <option value="Year 1" {% if form_data.year == 'Year 1' %}selected{% endif %}>Year 1 (First Year)</option>
+                            <option value="Year 2" {% if form_data.year == 'Year 2' %}selected{% endif %}>Year 2 (Second Year)</option>
+                            <option value="Year 3" {% if form_data.year == 'Year 3' %}selected{% endif %}>Year 3 (Third Year)</option>
+                            <option value="Final Year" {% if form_data.year == 'Final Year' %}selected{% endif %}>Final Year</option>
+                            <option value="Postgraduate" {% if form_data.year == 'Postgraduate' %}selected{% endif %}>Postgraduate / Masters</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number <span class="opt">(optional)</span></label>
+                    <input type="tel" id="phone" name="phone" placeholder="e.g. +44 7700 900552" value="{{ form_data.phone }}">
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="password">Password *</label>
+                        <input type="password" id="password" name="password" placeholder="At least 6 characters" minlength="6" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm_password">Confirm Password *</label>
+                        <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter password" minlength="6" required>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-submit" type="submit">
+                    Create Student Account {% icon 'arrow' 17 %}
+                </button>
+            </form>
+
+            <div class="footer-note">
+                Already registered? <a href="{% url 'login' %}">Sign in to your account</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('signup-form');
+        form.addEventListener('submit', function(e) {
+            const pwd = document.getElementById('password').value;
+            const confirm = document.getElementById('confirm_password').value;
+            if (pwd !== confirm) {
+                e.preventDefault();
+                alert('Passwords do not match. Please re-enter identical passwords.');
+            }
+        });
+    </script>
+</body>
+</html>
