@@ -6,10 +6,81 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Nestora | Student Living & Housing Allocation{% endblock %}</title>
-    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}?v=4">
-    <link rel="shortcut icon" type="image/svg+xml" href="{% static 'favicon.svg' %}?v=4">
-    <link rel="apple-touch-icon" href="{% static 'favicon.svg' %}?v=4">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}?v=5">
+    <link rel="shortcut icon" type="image/svg+xml" href="{% static 'favicon.svg' %}?v=5">
+    <link rel="apple-touch-icon" href="{% static 'favicon.svg' %}?v=5">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20261117_v5">
+    <style>
+        /* Mobile Navigation Dropdown Collapsing & Compact Display */
+        @media (max-width: 900px) {
+            .nav-dropdown {
+                display: flex !important;
+                flex-direction: column !important;
+                width: 100% !important;
+                align-items: stretch !important;
+            }
+            /* Collapsed and hidden by default on mobile */
+            .nav-dropdown-menu {
+                display: none !important;
+                max-height: 0 !important;
+                opacity: 0 !important;
+                visibility: hidden !important;
+                overflow: hidden !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                background: rgba(0, 0, 0, 0.22) !important;
+                border-radius: 12px !important;
+                box-shadow: none !important;
+                transform: none !important;
+                transition: max-height 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease !important;
+            }
+            /* Expanded ONLY when clicked/tapped (.open) */
+            .nav-dropdown.open > .nav-dropdown-menu {
+                display: block !important;
+                max-height: 600px !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                overflow: visible !important;
+                margin: 4px 0 8px 10px !important;
+                padding: 6px !important;
+                border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            }
+            /* Expanded on hover for mouse/fine pointer devices */
+            @media (hover: hover) and (pointer: fine) {
+                .nav-dropdown:hover > .nav-dropdown-menu {
+                    display: block !important;
+                    max-height: 600px !important;
+                    opacity: 1 !important;
+                    visibility: visible !important;
+                    overflow: visible !important;
+                    margin: 4px 0 8px 10px !important;
+                    padding: 6px !important;
+                    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                }
+                .nav-dropdown:hover .dropdown-chevron {
+                    transform: rotate(180deg) !important;
+                    opacity: 1 !important;
+                }
+            }
+            .nav-dropdown.open .dropdown-chevron {
+                transform: rotate(180deg) !important;
+                opacity: 1 !important;
+            }
+            /* Collapse verbose secondary descriptive text on mobile for sleek clean links */
+            .dropdown-link small {
+                display: none !important;
+            }
+            .dropdown-link {
+                padding: 10px 12px !important;
+                gap: 10px !important;
+            }
+            .dropdown-link strong {
+                font-size: 13px !important;
+                font-weight: 600 !important;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="app {% if is_admin %}admin{% endif %}">
@@ -293,9 +364,32 @@
                 openSidebar();
             }
         }
+
+        // Inline resilient dropdown toggle handler
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.nav-dropdown > .has-dropdown').forEach(function(trigger) {
+                trigger.addEventListener('click', function(e) {
+                    if (window.innerWidth <= 900) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        var parent = trigger.closest('.nav-dropdown');
+                        if (!parent) return;
+                        var wasOpen = parent.classList.contains('open');
+                        document.querySelectorAll('.nav-dropdown.open').forEach(function(d) {
+                            if (d !== parent) d.classList.remove('open');
+                        });
+                        if (wasOpen) {
+                            parent.classList.remove('open');
+                        } else {
+                            parent.classList.add('open');
+                        }
+                    }
+                });
+            });
+        });
     </script>
     <script src="{% static 'js/socket.io.min.js' %}"></script>
-    <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/main.js' %}?v=20261117_v5"></script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>
