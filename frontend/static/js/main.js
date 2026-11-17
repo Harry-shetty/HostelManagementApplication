@@ -23,20 +23,89 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Reset mobile sidebar when resizing window to desktop
+    // Reset mobile sidebar and dropdowns when resizing window to desktop
     window.addEventListener('resize', () => {
         if (window.innerWidth > 800) {
             if (typeof closeSidebar === 'function') {
                 closeSidebar();
             }
+            document.querySelectorAll('.nav-dropdown.open').forEach(d => {
+                d.classList.remove('open');
+            });
         }
     });
+
+    // -------------------------------------------------------------
+    // Responsive Navigation Dropdowns (Click & Hover)
+    // -------------------------------------------------------------
+    initNavDropdowns();
 
     // -------------------------------------------------------------
     // Real-Time Socket.IO Client
     // -------------------------------------------------------------
     initSocketIO();
 });
+
+/**
+ * Responsive Navigation Dropdown Handler
+ * Ensures dropdown menus in small screen/mobile view expand ONLY when clicked or hovered.
+ */
+function initNavDropdowns() {
+    const dropdownTriggers = document.querySelectorAll('.nav-dropdown > .has-dropdown');
+    
+    dropdownTriggers.forEach(trigger => {
+        trigger.setAttribute('aria-expanded', 'false');
+        
+        trigger.addEventListener('click', (e) => {
+            const dropdown = trigger.closest('.nav-dropdown');
+            if (!dropdown) return;
+
+            // In mobile or small screens (<= 800px), clicking toggles the dropdown
+            if (window.innerWidth <= 800) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const wasOpen = dropdown.classList.contains('open');
+
+                // Close other open sibling dropdowns in the sidebar
+                document.querySelectorAll('.nav-dropdown.open').forEach(d => {
+                    if (d !== dropdown) {
+                        d.classList.remove('open');
+                        const otherTrigger = d.querySelector('.has-dropdown');
+                        if (otherTrigger) otherTrigger.setAttribute('aria-expanded', 'false');
+                    }
+                });
+
+                if (wasOpen) {
+                    dropdown.classList.remove('open');
+                    trigger.setAttribute('aria-expanded', 'false');
+                } else {
+                    dropdown.classList.add('open');
+                    trigger.setAttribute('aria-expanded', 'true');
+                }
+            } else {
+                // On desktop screens, clicking the chevron toggles manual open state
+                if (e.target.closest('.dropdown-chevron')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const isOpen = dropdown.classList.toggle('open');
+                    trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                }
+            }
+        });
+    });
+
+    // Close any open dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.nav-dropdown')) {
+            document.querySelectorAll('.nav-dropdown.open').forEach(d => {
+                d.classList.remove('open');
+                const trigger = d.querySelector('.has-dropdown');
+                if (trigger) trigger.setAttribute('aria-expanded', 'false');
+            });
+        }
+    });
+}
 
 /**
  * Real-Time Toast Notification Handler

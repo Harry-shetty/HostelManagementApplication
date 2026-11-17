@@ -58,7 +58,9 @@ p { color: var(--muted); line-height: 1.55; }
 .nav-item b { display: grid; width: 20px; height: 20px; margin-left: auto; place-items: center; border-radius: 50%; color: var(--forest-dark); background: var(--lime); font-size: 10px; }
 .nav-item.active b { color: white; background: var(--forest); }
 .nav-item .dropdown-chevron { display: inline-flex; align-items: center; margin-left: 2px; transition: transform .22s ease; opacity: .7; }
-.nav-dropdown:hover .dropdown-chevron, .nav-dropdown:focus-within .dropdown-chevron { transform: rotate(180deg); opacity: 1; }
+.nav-dropdown:hover .dropdown-chevron,
+.nav-dropdown:focus-within .dropdown-chevron,
+.nav-dropdown.open .dropdown-chevron { transform: rotate(180deg); opacity: 1; }
 
 /* Navbar Dropdown Container */
 .nav-dropdown { position: relative; display: flex; align-items: center; }
@@ -88,7 +90,8 @@ p { color: var(--muted); line-height: 1.55; }
   height: 12px;
 }
 .nav-dropdown:hover .nav-dropdown-menu,
-.nav-dropdown:focus-within .nav-dropdown-menu {
+.nav-dropdown:focus-within .nav-dropdown-menu,
+.nav-dropdown.open .nav-dropdown-menu {
   opacity: 1;
   visibility: visible;
   transform: translateX(-50%) translateY(0);
@@ -741,18 +744,43 @@ body.drawer-open { overflow: hidden; touch-action: none; }
   .nav-dropdown-menu {
     position: static;
     left: auto;
-    opacity: 1;
-    visibility: visible;
+    display: none;
+    max-height: 0;
+    opacity: 0;
+    visibility: hidden;
+    overflow: hidden;
     transform: none !important;
     box-shadow: none;
     background: rgba(0, 0, 0, 0.16);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
-    margin: 4px 0 8px 10px;
-    padding: 6px;
+    margin: 0 0 0 10px;
+    padding: 0 6px;
     width: calc(100% - 10px);
     min-width: 0;
     max-width: none;
+    transition: max-height 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+                opacity 0.2s ease,
+                margin 0.2s ease,
+                padding 0.2s ease;
+  }
+  .nav-dropdown:hover .nav-dropdown-menu,
+  .nav-dropdown:focus-within .nav-dropdown-menu,
+  .nav-dropdown.open .nav-dropdown-menu {
+    display: block;
+    max-height: 480px;
+    opacity: 1;
+    visibility: visible;
+    overflow: visible;
+    margin: 4px 0 8px 10px;
+    padding: 6px;
+    transform: none !important;
+  }
+  .nav-dropdown:hover .dropdown-chevron,
+  .nav-dropdown:focus-within .dropdown-chevron,
+  .nav-dropdown.open .dropdown-chevron {
+    transform: rotate(180deg);
+    opacity: 1;
   }
   .nav-dropdown-menu::before { display: none; }
   .dropdown-link {
