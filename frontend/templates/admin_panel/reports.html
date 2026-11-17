@@ -20,26 +20,26 @@
     </div>
 
     <!-- Executive KPI Row -->
-    <div class="run-metrics" style="margin-bottom: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px;">
-        <div class="panel" style="padding: 18px 20px;">
-            <small style="color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase;">CAMPUS OCCUPANCY</small>
-            <strong style="font-size: 26px; color: var(--forest); display: block; margin: 4px 0;">{{ overall_pct }}%</strong>
-            <span style="font-size: 12px; color: var(--muted);">{{ total_occ }} of {{ total_cap }} beds occupied</span>
+    <div class="reports-kpi-grid">
+        <div class="kpi-metric-card">
+            <small>CAMPUS OCCUPANCY</small>
+            <strong>{{ overall_pct }}%</strong>
+            <span>{{ total_occ }} of {{ total_cap }} beds occupied</span>
         </div>
-        <div class="panel" style="padding: 18px 20px;">
-            <small style="color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase;">1ST PREFERENCE MATCH</small>
-            <strong style="font-size: 26px; color: var(--forest); display: block; margin: 4px 0;">{{ pref_first_pct }}%</strong>
-            <span style="font-size: 12px; color: var(--muted);">{{ pref_first_count }} students placed in #1 choice</span>
+        <div class="kpi-metric-card">
+            <small>1ST PREFERENCE MATCH</small>
+            <strong>{{ pref_first_pct }}%</strong>
+            <span>{{ pref_first_count }} students placed in #1 choice</span>
         </div>
-        <div class="panel" style="padding: 18px 20px;">
-            <small style="color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase;">ACCESSIBILITY COMPLIANCE</small>
-            <strong style="font-size: 26px; color: #1e7e4e; display: block; margin: 4px 0;">{{ accessibility_compliance_pct }}%</strong>
-            <span style="font-size: 12px; color: var(--muted);">{{ accessibility_allocated }}/{{ accessibility_requests }} accessible beds allocated</span>
+        <div class="kpi-metric-card">
+            <small>ACCESSIBILITY COMPLIANCE</small>
+            <strong class="highlight-green">{{ accessibility_compliance_pct }}%</strong>
+            <span>{{ accessibility_allocated }}/{{ accessibility_requests }} accessible beds allocated</span>
         </div>
-        <div class="panel" style="padding: 18px 20px;">
-            <small style="color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase;">CYCLE TURNAROUND</small>
-            <strong style="font-size: 26px; color: var(--forest); display: block; margin: 4px 0;">{{ avg_turnaround_days }} Days</strong>
-            <span style="font-size: 12px; color: #1e7e4e; font-weight: 600;">{{ benchmark_reduction_pct }}% faster vs manual process</span>
+        <div class="kpi-metric-card">
+            <small>CYCLE TURNAROUND</small>
+            <strong>{{ avg_turnaround_days }} Days</strong>
+            <span class="highlight-green-text">{{ benchmark_reduction_pct }}% faster vs manual process</span>
         </div>
     </div>
 
