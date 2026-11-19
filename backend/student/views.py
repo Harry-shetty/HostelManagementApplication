@@ -263,12 +263,9 @@ def application_view(request):
         if is_roommate_completed:
             request.session['roommate_quiz_completed'] = True
 
-    # Do not let student access hostel application unless roommate matching is completed
-    if not is_roommate_completed:
-        messages.info(request, "Please answer the roommate matching questions first to start your hostel application.")
-        return redirect(f"{reverse('roommate')}?start=1&next={reverse('application')}&required=1")
+    is_locked = not is_roommate_completed
 
-    cache_key = f"student_application_data_{student.student_id if student else 'default'}"
+    cache_key = f"student_application_data_{student.student_id if student else 'default'}_{is_locked}"
     app_data = cache.get(cache_key)
     if not app_data:
         app = Application.objects.filter(student=student).first() if student else None
@@ -288,12 +285,15 @@ def application_view(request):
             'is_submitted': is_submitted,
             'preferences': preferences,
             'hostels': hostels,
-            'needs_roommate_quiz': False,
+            'is_locked': is_locked,
+            'needs_roommate_quiz': is_locked,
         }
         cache.set(cache_key, app_data, 1800)
 
     ctx = get_base_context(request, 'application', is_admin=False)
     ctx.update(app_data)
+    ctx['is_locked'] = is_locked
+    ctx['needs_roommate_quiz'] = is_locked
     return render(request, 'student/application.html', ctx)
 
 @student_required
@@ -316,7 +316,7 @@ def submit_application_view(request):
     if not is_roommate_completed:
         return JsonResponse({
             'status': 'error',
-            'message': 'Please answer the roommate matching questions first to start and submit your hostel application.',
+            'message': 'Hostel application is locked. Please answer the roommate matching questions first to unlock.',
             'redirect_url': f"{reverse('roommate')}?start=1&next={reverse('application')}&required=1"
         }, status=403)
 

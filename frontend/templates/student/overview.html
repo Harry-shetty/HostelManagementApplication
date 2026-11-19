@@ -60,11 +60,11 @@
             </a>
             {% else %}
             <p>
-                <strong>Next: {% if application %}Review your application{% else %}Start your application{% endif %}</strong><br>
-                <span>{% if application %}Check your details before submitting.{% else %}Rank your hostel and room preferences.{% endif %}</span>
+                <strong>Next: {% if application %}Review your application{% elif not chk_roommate %}Complete Roommate Matching (Application Locked){% else %}Start your application{% endif %}</strong><br>
+                <span>{% if application %}Check your details before submitting.{% elif not chk_roommate %}Answer 3 roommate lifestyle questions to unlock your hostel application.{% else %}Rank your hostel and room preferences.{% endif %}</span>
             </p>
             <a href="{% if not chk_roommate and not application %}{% url 'roommate' %}?start=1&next={% url 'application' %}&required=1{% else %}{% url 'application' %}{% endif %}" class="btn btn-primary" style="color: var(--forest); background: var(--lime);">
-                {% if application %}Continue application{% else %}Start application{% endif %} {% icon 'arrow' 17 %}
+                {% if application %}Continue application{% elif not chk_roommate %}{% icon 'lock' 15 %} Unlock application{% else %}Start application{% endif %} {% icon 'arrow' 17 %}
             </a>
             {% endif %}
         </div>
