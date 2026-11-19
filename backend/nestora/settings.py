@@ -93,9 +93,10 @@ if USE_POSTGRES:
                 'HOST': _url.hostname or 'localhost',
                 'PORT': str(_url.port or '5432'),
                 'CONN_MAX_AGE': 600,
-                'CONN_HEALTH_CHECKS': True,
+                'CONN_HEALTH_CHECKS': False,
                 'OPTIONS': {
                     'connect_timeout': 10,
+                    'sslmode': 'require',
                     'keepalives': 1,
                     'keepalives_idle': 30,
                     'keepalives_interval': 10,
@@ -113,9 +114,10 @@ if USE_POSTGRES:
                 'HOST': os.getenv('POSTGRES_HOST', os.getenv('DB_HOST', 'localhost')),
                 'PORT': os.getenv('POSTGRES_PORT', os.getenv('DB_PORT', '5432')),
                 'CONN_MAX_AGE': 600,
-                'CONN_HEALTH_CHECKS': True,
+                'CONN_HEALTH_CHECKS': False,
                 'OPTIONS': {
                     'connect_timeout': 10,
+                    'sslmode': 'require',
                     'keepalives': 1,
                     'keepalives_idle': 30,
                     'keepalives_interval': 10,
@@ -150,7 +152,7 @@ CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': 'nestora-memory-cache',
-        'TIMEOUT': 120,
+        'TIMEOUT': 1800,  # 30-minute hot cache for university residential inventory
     }
 }
 

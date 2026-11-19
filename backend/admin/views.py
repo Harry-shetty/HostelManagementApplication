@@ -40,7 +40,7 @@ def admin_overview(request):
             'occupancy_pct': occupancy_pct,
             'recent_logs': list(AuditLog.objects.all()[:4]),
         }
-        cache.set('admin_overview_metrics', overview_cache, 180)
+        cache.set('admin_overview_metrics', overview_cache, 1800)
 
     ctx.update(overview_cache)
     ctx.update({
@@ -146,7 +146,7 @@ def bedmap_view(request):
             'run_id': run_id,
             'available_target_beds': all_vacant,
         }
-        cache.set('cedar_house_full_inventory', cedar_data, 600)
+        cache.set('cedar_house_full_inventory', cedar_data, 1800)
 
     f_metrics = cedar_data['floor_metrics'].get(floor, {
         'total_beds': 48, 'available_count': 16, 'occupied_count': 28, 'reserved_count': 2, 'accessible_count': 2

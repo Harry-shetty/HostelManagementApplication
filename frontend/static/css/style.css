@@ -1,6 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-
 :root {
   --forest: #174c3c;
   --forest-dark: #103a2e;
@@ -18,7 +15,7 @@
   --danger-soft: #fff0ee;
   --blue-soft: #eaf3f7;
   --shadow: 0 8px 28px rgba(24, 55, 44, .07);
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   color: var(--charcoal);
   background: var(--ivory);
   font-synthesis: none;

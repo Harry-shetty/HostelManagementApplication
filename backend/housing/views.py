@@ -42,7 +42,7 @@ def get_base_context(request, active_view='overview', is_admin=False):
     notifications = cache.get('recent_notifications')
     if notifications is None:
         notifications = list(Notification.objects.all()[:5])
-        cache.set('recent_notifications', notifications, 180)
+        cache.set('recent_notifications', notifications, 1800)
     unread_count = len(notifications)
 
     current_user = request.user if (request.user and request.user.is_authenticated) else None

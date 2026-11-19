@@ -21,9 +21,9 @@ def overview(request):
         overview_data = {
             'hostels': list(Hostel.objects.all()[:2]),
             'application': Application.objects.first(),
-            'notifications': list(Notification.objects.all()[:3]),
+            'notifications': ctx.get('notifications', [])[:3],
         }
-        cache.set('student_overview_data', overview_data, 180)
+        cache.set('student_overview_data', overview_data, 1800)
 
     ctx.update(overview_data)
     return render(request, 'student/overview.html', ctx)
@@ -34,7 +34,7 @@ def hostels_view(request):
     all_hostels = cache.get('all_hostels_list')
     if not all_hostels:
         all_hostels = list(Hostel.objects.all())
-        cache.set('all_hostels_list', all_hostels, 300)
+        cache.set('all_hostels_list', all_hostels, 1800)
 
     if query:
         hostels_qs = [h for h in all_hostels if query.lower() in h.name.lower()]
@@ -51,15 +51,19 @@ def hostels_view(request):
 
 @student_required
 def roommate_view(request):
-    roommate_data = cache.get('student_roommate_data')
+    profile = getattr(request.user, 'profile', None)
+    student = profile.student_profile if (profile and profile.student_profile) else None
+    cache_key = f"student_roommate_data_{student.student_id if student else 'default'}"
+    roommate_data = cache.get(cache_key)
     if not roommate_data:
-        student = Student.objects.filter(student_id='STU-204810').first()
+        if not student:
+            student = Student.objects.filter(student_id='STU-204810').first()
         matches = list(RoommateSuggestion.objects.filter(target_student=student).select_related('suggested_student', 'target_student')) if student else []
         roommate_data = {
             'matches': matches,
             'student': student,
         }
-        cache.set('student_roommate_data', roommate_data, 180)
+        cache.set(cache_key, roommate_data, 1800)
 
     ctx = get_base_context(request, 'roommate', is_admin=False)
     ctx.update(roommate_data)
@@ -67,9 +71,13 @@ def roommate_view(request):
 
 @student_required
 def application_view(request):
-    app_data = cache.get('student_application_data')
+    profile = getattr(request.user, 'profile', None)
+    student = profile.student_profile if (profile and profile.student_profile) else None
+    cache_key = f"student_application_data_{student.student_id if student else 'default'}"
+    app_data = cache.get(cache_key)
     if not app_data:
-        student = Student.objects.filter(student_id='STU-204810').first()
+        if not student:
+            student = Student.objects.filter(student_id='STU-204810').first()
         app = Application.objects.filter(student=student).first() if student else None
         preferences = list(app.preferences.all().select_related('hostel')) if app else []
         hostels = list(Hostel.objects.all())
@@ -79,7 +87,7 @@ def application_view(request):
             'preferences': preferences,
             'hostels': hostels,
         }
-        cache.set('student_application_data', app_data, 180)
+        cache.set(cache_key, app_data, 1800)
 
     ctx = get_base_context(request, 'application', is_admin=False)
     ctx.update(app_data)
@@ -90,7 +98,8 @@ def status_view(request):
     profile = getattr(request.user, 'profile', None)
     student = profile.student_profile if (profile and profile.student_profile) else Student.objects.filter(student_id='STU-204810').first()
     
-    status_data = cache.get(f"student_status_data_{student.student_id if student else 'none'}")
+    cache_key = f"student_status_data_{student.student_id if student else 'none'}"
+    status_data = cache.get(cache_key)
     if not status_data:
         app = Application.objects.filter(student=student).first() if student else None
         letter = AllocationLetter.objects.filter(student=student).order_by('-generated_at').first() if student else None
@@ -117,7 +126,7 @@ def status_view(request):
             'letter': letter,
             'is_allocated': is_allocated,
         }
-        cache.set(f"student_status_data_{student.student_id if student else 'none'}", status_data, 180)
+        cache.set(cache_key, status_data, 1800)
 
     ctx = get_base_context(request, 'status', is_admin=False)
     ctx.update(status_data)

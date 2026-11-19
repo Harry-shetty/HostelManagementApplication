@@ -152,18 +152,30 @@ function showToast(title, message, level = 'info', duration = 5000) {
  */
 function initSocketIO() {
     if (typeof io === 'undefined') {
-        console.warn('Socket.IO client library not loaded. Live sync unavailable.');
+        return;
+    }
+
+    // Only connect real-time socket on views that actively display real-time components
+    // (e.g. interactive bed maps, draft reviews, activity logs).
+    // This prevents background long-polling from exhausting WSGI worker threads on general browsing pages!
+    const needsLiveSync = document.querySelector('.room-grid, .review-table, .recent, .live-sync-indicator, [data-live-sync]');
+    if (!needsLiveSync) {
         return;
     }
 
     try {
         const socket = io({
-            transports: ['polling', 'websocket'],
-            reconnectionAttempts: 15,
-            reconnectionDelay: 1500,
-            timeout: 20000
+            transports: ['polling'],
+            reconnectionAttempts: 5,
+            reconnectionDelay: 2500,
+            timeout: 8000
         });
         window.nestoraSocket = socket;
+
+        // Clean up connection immediately when user navigates away to free dev server threads
+        window.addEventListener('beforeunload', () => {
+            try { socket.disconnect(); } catch (e) {}
+        });
 
         const indicators = document.querySelectorAll('.live-sync-indicator');
 
