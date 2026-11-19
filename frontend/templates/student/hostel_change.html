@@ -7,7 +7,7 @@
 {% block content %}
 <div class="page" style="max-width: 1340px; margin: 0 auto;">
     
-    <!-- Header Section with University Title, Session, Demos & Guidelines -->
+    <!-- Header Section with University Title, Session & Guidelines -->
     <div class="hcr-header-panel">
         <div class="hcr-title-group">
             <div class="hcr-brand-crest">
@@ -20,15 +20,6 @@
         </div>
 
         <div class="hcr-top-actions">
-            <div class="hcr-action-buttons">
-                <button type="button" class="hcr-demo-btn" onclick="openDemoModal()">
-                    <span class="hcr-play-icon">▶</span> Booking Process Demo
-                </button>
-                <button type="button" class="hcr-demo-btn" onclick="openFacilitiesModal()">
-                    <span class="hcr-play-icon">▶</span> Watch Residential Facilities 🏠
-                </button>
-            </div>
-
             <div class="hcr-guidelines-links">
                 <a href="#facilities" onclick="openInfoModal('Facilities in Hostel/Apartment Rooms')">Facilities in Hostel/Apartment Rooms</a>
                 <span class="hcr-pipe">|</span>
@@ -122,36 +113,6 @@
                 </div>
             </section>
 
-            <!-- Step 4: Optional Meal & Amenity Upgrades -->
-            <section class="hcr-section">
-                <h2 class="hcr-section-heading" style="color: var(--forest);">Optional Amenities &amp; Boarding</h2>
-                <div class="hcr-amenities-row">
-                    <label class="hcr-amenity-checkbox">
-                        <input type="checkbox" id="chk-meal-upgrade" onchange="recalculateCart()">
-                        <span>
-                            <strong>Full Board 4-Meal Plan Upgrade</strong>
-                            <small>Breakfast, Lunch, Evening Snacks &amp; Dinner (+₹12,000 / sem)</small>
-                        </span>
-                    </label>
-
-                    <label class="hcr-amenity-checkbox">
-                        <input type="checkbox" id="chk-laundry-plan" onchange="recalculateCart()">
-                        <span>
-                            <strong>Hostel Laundry Valet Service</strong>
-                            <small>Twice weekly wash &amp; steam fold (+₹4,500 / sem)</small>
-                        </span>
-                    </label>
-
-                    <label class="hcr-amenity-checkbox">
-                        <input type="checkbox" id="chk-gym-access" onchange="recalculateCart()">
-                        <span>
-                            <strong>Campus Fitness &amp; Gym Membership</strong>
-                            <small>All-access pass to student sports pavilion (+₹3,000 / sem)</small>
-                        </span>
-                    </label>
-                </div>
-            </section>
-
         </div>
 
         <!-- Right Column: Sticky Residential Cart -->
@@ -198,10 +159,6 @@
                         <div class="hcr-breakdown-row" style="color: var(--muted);">
                             <span>Current Allocation Credit:</span>
                             <strong>-₹119,450.00</strong>
-                        </div>
-                        <div id="breakdown-addons-row" class="hcr-breakdown-row" style="display: none; color: var(--forest);">
-                            <span>Selected Amenities:</span>
-                            <strong id="breakdown-addons-price">+₹0.00</strong>
                         </div>
                         <div class="hcr-net-payable-row">
                             <span class="hcr-net-label">Net Payable Amount</span>
@@ -281,44 +238,6 @@
                         View in Allocation Status {% icon 'arrow' 14 %}
                     </a>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Booking Process Demo Modal -->
-    <div id="hcr-demo-modal" class="modal-layer" style="display: none; z-index: 2500;">
-        <div class="modal" style="max-width: 620px; width: 100%; border-radius: 18px; background: white; overflow: hidden; box-shadow: 0 25px 80px rgba(0,0,0,0.3);">
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid var(--line);">
-                <h3 style="margin: 0; font-size: 18px; color: var(--forest);">▶ Residential Booking Change Demo</h3>
-                <button type="button" onclick="closeDemoModal()" style="border: none; background: transparent; cursor: pointer; color: var(--muted);">{% icon 'close' 18 %}</button>
-            </div>
-            <div style="padding: 24px;">
-                <div style="display: flex; flex-direction: column; gap: 16px; font-size: 13px; line-height: 1.6;">
-                    <div style="display: flex; gap: 14px; align-items: flex-start;">
-                        <span style="width: 28px; height: 28px; border-radius: 50%; background: var(--forest); color: var(--lime); display: grid; place-items: center; font-weight: 800; flex-shrink: 0;">1</span>
-                        <div>
-                            <strong style="color: var(--forest);">Choose Room Type &amp; Air Conditioning:</strong>
-                            <p style="margin: 4px 0 0; color: var(--muted);">Select between Studio Apartments, Standard AC, or Air Cooled options based on your preference and budget.</p>
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 14px; align-items: flex-start;">
-                        <span style="width: 28px; height: 28px; border-radius: 50%; background: var(--forest); color: var(--lime); display: grid; place-items: center; font-weight: 800; flex-shrink: 0;">2</span>
-                        <div>
-                            <strong style="color: var(--forest);">Pick Seater &amp; Live Vacancies:</strong>
-                            <p style="margin: 4px 0 0; color: var(--muted);">Review real-time seat availability tags (Limited Seats Left, Available) and select single, 2-seater, 3-seater, or 4-seater layouts.</p>
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 14px; align-items: flex-start;">
-                        <span style="width: 28px; height: 28px; border-radius: 50%; background: var(--forest); color: var(--lime); display: grid; place-items: center; font-weight: 800; flex-shrink: 0;">3</span>
-                        <div>
-                            <strong style="color: var(--forest);">Automatic Net Difference Settlement:</strong>
-                            <p style="margin: 4px 0 0; color: var(--muted);">Your existing allocation fee (₹119,450.00) is credited automatically in the Residential Cart. You only pay or balance the net difference.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div style="padding: 16px 24px; border-top: 1px solid var(--line); background: #fafbf9; text-align: right;">
-                <button type="button" class="btn btn-primary" onclick="closeDemoModal()" style="background: var(--lime); color: var(--forest); font-weight: 750; border: none;">Got It</button>
             </div>
         </div>
     </div>
@@ -455,49 +374,22 @@
     }
 
     function recalculateCart() {
-        let addonTotal = 0;
-        const chkMeal = document.getElementById('chk-meal-upgrade');
-        const chkLaundry = document.getElementById('chk-laundry-plan');
-        const chkGym = document.getElementById('chk-gym-access');
-
-        if (chkMeal && chkMeal.checked) addonTotal += 12000;
-        if (chkLaundry && chkLaundry.checked) addonTotal += 4500;
-        if (chkGym && chkGym.checked) addonTotal += 3000;
-
-        const grossTotal = selectedSeaterPrice + addonTotal;
-        const netDifference = Math.max(0, grossTotal - BASE_CREDIT);
+        const netDifference = Math.max(0, selectedSeaterPrice - BASE_CREDIT);
 
         // Update Cart Header & Items
         const titleEl = document.getElementById('cart-item-title');
         const priceEl = document.getElementById('cart-item-price');
         const breakdownNewPriceEl = document.getElementById('breakdown-new-price');
         const netEl = document.getElementById('cart-net-payable');
-        const addonsRow = document.getElementById('breakdown-addons-row');
-        const addonsPriceEl = document.getElementById('breakdown-addons-price');
 
         if (titleEl) titleEl.textContent = selectedSeaterName;
         if (priceEl) priceEl.textContent = selectedSeaterPrice.toFixed(2);
-        if (breakdownNewPriceEl) breakdownNewPriceEl.textContent = `₹${grossTotal.toLocaleString('en-IN')}.00`;
+        if (breakdownNewPriceEl) breakdownNewPriceEl.textContent = `₹${selectedSeaterPrice.toLocaleString('en-IN')}.00`;
         if (netEl) netEl.textContent = netDifference.toLocaleString('en-IN');
-
-        if (addonsRow && addonsPriceEl) {
-            if (addonTotal > 0) {
-                addonsRow.style.display = 'flex';
-                addonsPriceEl.textContent = `+₹${addonTotal.toLocaleString('en-IN')}.00`;
-            } else {
-                addonsRow.style.display = 'none';
-            }
-        }
     }
 
     function resetCartSelection() {
         selectRoomType('studio_ac', 'Studio Apartment Air Conditioned');
-        const chkMeal = document.getElementById('chk-meal-upgrade');
-        const chkLaundry = document.getElementById('chk-laundry-plan');
-        const chkGym = document.getElementById('chk-gym-access');
-        if (chkMeal) chkMeal.checked = false;
-        if (chkLaundry) chkLaundry.checked = false;
-        if (chkGym) chkGym.checked = false;
         recalculateCart();
     }
 
@@ -564,37 +456,12 @@
     }
 
     // Modal controls
-    function openDemoModal() {
-        document.getElementById('hcr-demo-modal').style.display = 'grid';
-    }
-    function closeDemoModal() {
-        document.getElementById('hcr-demo-modal').style.display = 'none';
-    }
-
-    function openFacilitiesModal() {
-        const body = `
-            <div style="background: #0f2b21; border-radius: 12px; padding: 24px; text-align: center; color: white; margin-bottom: 16px;">
-                <div style="font-size: 40px; margin-bottom: 8px;">🏢</div>
-                <h4 style="margin: 0 0 6px; color: var(--lime);">Interactive 360° Virtual Residence Tour</h4>
-                <p style="margin: 0; font-size: 12px; color: #a9cfc1;">Explore Studio Apartments, attached washroom configurations, quiet study halls, and dining commons.</p>
-            </div>
-            <ul style="padding-left: 20px; margin: 0; display: flex; flex-direction: column; gap: 8px;">
-                <li><strong>Studio 2-Seater with Pantry:</strong> Equipped with individual refrigerator, study nook, high-speed Wi-Fi 6, and ensuite washroom.</li>
-                <li><strong>Standard AC Rooms:</strong> Twin/multi-occupancy with climate control, acoustic baffling, and biometric door access.</li>
-                <li><strong>Dining &amp; Recreation:</strong> 7-day multi-cuisine mess halls, indoor sports arena, and 24/7 emergency medical triage.</li>
-            </ul>
-        `;
-        document.getElementById('info-modal-title').textContent = 'Residential Facilities Tour & Overview';
-        document.getElementById('info-modal-body').innerHTML = body;
-        document.getElementById('hcr-info-modal').style.display = 'grid';
-    }
-
     function openInfoModal(type) {
         let content = '';
         if (type.includes('Facilities')) {
-            content = '<p>Hostel accommodations are provisioned with 24/7 power backup, RO-filtered purified drinking water, centralized laundry hubs, and high-speed campus fiber networking. Students requesting studio apartments receive private pantries and attached bathrooms.</p>';
+            content = '<p>Hostel accommodations are provisioned with 24/7 power backup, RO-filtered purified drinking water, high-speed campus fiber networking, and dedicated quiet study spaces. Students requesting studio apartments receive private pantries and attached bathrooms.</p>';
         } else if (type.includes('Charges')) {
-            content = '<p>Residential fees are semester-based and cover maintenance, security, basic utilities, and housekeeping. Any upgrade in seater tier requires clearing the net difference before room key issuance. Reductions are credited toward subsequent academic cycle dues.</p>';
+            content = '<p>Residential fees are semester-based and cover room maintenance, 24/7 security, utilities, and housekeeping. Any upgrade in seater tier requires clearing the net difference before room key issuance. Reductions are credited toward subsequent academic cycle dues.</p>';
         } else {
             content = '<p>Refund and change requests are governed by the University Residential Policy. Cancellations within 7 days of allotment receive full adjustments minus administrative handling charges. Medical transfers receive expedited zero-penalty processing.</p>';
         }

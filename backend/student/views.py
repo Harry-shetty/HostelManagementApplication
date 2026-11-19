@@ -682,12 +682,6 @@ def hostel_change_view(request):
         'hostel': 'Boys Hostel-01',
         'seater': 'Standard Air Conditioned 4 Seater',
         'room_no': f"{letter.room_number if letter else 'A914'}-Bed {letter.bed_letter if letter else 'D'}",
-        'availing_food': 'Yes',
-        'meal_type': 'Standard Mess Two Meals',
-        'food_type': 'Combo North-South',
-        'mess_name': 'Same Hostel Mess 1(BH-01)',
-        'availing_laundry': 'No',
-        'availing_gym': 'No',
         'current_credit': 119450,  # Fee baseline for difference calculation
     }
 
