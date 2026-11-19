@@ -30,16 +30,31 @@
                 <span class="eyebrow">YOUR APPLICATION</span>
                 <h2>Application progress</h2>
             </div>
-            <strong>60% complete</strong>
+            <strong>{% if is_submitted %}100% complete{% else %}{{ application.progress_percentage|default:60 }}% complete{% endif %}</strong>
         </div>
         <div class="step-track">
             <div class="step done"><span>{% icon 'check' 15 %}</span><b>Profile</b></div>
             <div class="step done"><span>{% icon 'check' 15 %}</span><b>Preferences</b></div>
-            <div class="step current"><span>3</span><b>Review</b></div>
-            <div class="step"><span>4</span><b>Submitted</b></div>
-            <div class="step"><span>5</span><b>Allocated</b></div>
+            <div class="step {% if is_submitted %}done{% else %}current{% endif %}">
+                <span>{% if is_submitted %}{% icon 'check' 15 %}{% else %}3{% endif %}</span><b>Review</b>
+            </div>
+            <div class="step {% if is_submitted %}done{% endif %}">
+                <span>{% if is_submitted %}{% icon 'check' 15 %}{% else %}4{% endif %}</span><b>Submitted</b>
+            </div>
+            <div class="step {% if application.status == 'allocated' %}done{% endif %}">
+                <span>{% if application.status == 'allocated' %}{% icon 'check' 15 %}{% else %}5{% endif %}</span><b>Allocated</b>
+            </div>
         </div>
         <div class="progress-action">
+            {% if is_submitted %}
+            <p>
+                <strong>Application Submitted ({{ application.application_id|default:'NST-25-10482' }})</strong><br>
+                <span>Your preferences are locked in for the draft allocation cycle.</span>
+            </p>
+            <a href="{% url 'status' %}" class="btn btn-primary" style="color: var(--forest); background: var(--lime);">
+                Track allocation status {% icon 'arrow' 17 %}
+            </a>
+            {% else %}
             <p>
                 <strong>Next: Review your application</strong><br>
                 <span>Check your details before submitting.</span>
@@ -47,6 +62,7 @@
             <a href="{% url 'application' %}" class="btn btn-primary" style="color: var(--forest); background: var(--lime);">
                 Continue application {% icon 'arrow' 17 %}
             </a>
+            {% endif %}
         </div>
     </section>
 
@@ -56,31 +72,31 @@
             <div class="stat-icon lime">{% icon 'file' %}</div>
             <div>
                 <span>APPLICATION STATUS</span>
-                <strong>In progress</strong>
-                <small>Last saved 12 mins ago</small>
+                <strong>{% if is_submitted %}{{ application.get_status_display|default:'Submitted' }}{% else %}In progress{% endif %}</strong>
+                <small>{% if is_submitted and application.submitted_at %}Submitted {{ application.submitted_at|date:"d M, H:i" }}{% else %}Last saved recently{% endif %}</small>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon">{% icon 'building' %}</div>
             <div>
                 <span>TOP PREFERENCE</span>
-                <strong>Boys Hostel 1</strong>
-                <small>Single ensuite</small>
+                <strong>{{ top_preference|default:'Boys Hostel 1' }}</strong>
+                <small>{{ top_preference_room|default:'Single room' }}</small>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon">{% icon 'bed' %}</div>
             <div>
                 <span>ROOM PREFERENCE</span>
-                <strong>Single room</strong>
-                <small>3 hostels ranked</small>
+                <strong>{{ application.room_type_preference|default:'Single room' }}</strong>
+                <small>{{ preferences_count|default:3 }} hostels ranked</small>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon mint">{% icon 'check' %}</div>
             <div>
                 <span>PROFILE</span>
-                <strong>Complete</strong>
+                <strong>{{ student.eligibility_status|default:'Complete' }}</strong>
                 <small>Eligibility verified</small>
             </div>
         </div>

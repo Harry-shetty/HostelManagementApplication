@@ -5,20 +5,20 @@
 {% block topbar_title %}Hostel Application{% endblock %}
 
 {% block content %}
-<!-- Confirmation Screen (Shown after submit) -->
-<div id="application-confirmation" class="page narrow" style="display: none;">
+<!-- Confirmation Screen (Shown after submit or when already submitted) -->
+<div id="application-confirmation" class="page narrow" style="display: {% if is_submitted and not request.GET.edit %}block{% else %}none{% endif %};">
     <div class="confirmation">
         <span class="confirm-icon">{% icon 'check' 32 %}</span>
         <span class="tag tag-success">APPLICATION SUBMITTED</span>
-        <h1>You’re all set, Amara.</h1>
-        <p>Your application has been securely submitted for the 2025/26 housing cycle.</p>
+        <h1>You’re all set, <span id="conf-student-name">{{ first_name|default:'Amara' }}</span>.</h1>
+        <p>Your application has been securely submitted and saved to the database for the 2025/26 housing cycle.</p>
         
         <div class="application-id">
             <div>
                 <small>APPLICATION ID</small>
-                <strong>NST-25-10482</strong>
+                <strong id="conf-app-id">{{ application.application_id|default:'NST-25-10482' }}</strong>
             </div>
-            <button type="button" onclick="navigator.clipboard.writeText('NST-25-10482'); alert('Copied to clipboard!');">Copy</button>
+            <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('conf-app-id').innerText); alert('Copied to clipboard!');">Copy</button>
         </div>
 
         <div class="next-steps">
@@ -50,20 +50,22 @@
         </div>
 
         <div class="confirmation-actions">
-            <button class="btn btn-secondary" type="button">{% icon 'download' %} Download receipt</button>
+            <button class="btn btn-secondary" type="button" onclick="editExistingApplication()">
+                {% icon 'edit' 16 %} Edit preferences
+            </button>
             <a href="{% url 'status' %}" class="btn btn-primary">Track application {% icon 'arrow' 16 %}</a>
         </div>
     </div>
 </div>
 
 <!-- Main Wizard Screen -->
-<div id="application-wizard" class="page wizard-page">
+<div id="application-wizard" class="page wizard-page" style="display: {% if is_submitted and not request.GET.edit %}none{% else %}block{% endif %};">
     <div class="page-heading compact">
         <div>
             <span class="eyebrow">2025/26 HOSTEL APPLICATION</span>
             <h1>Complete your application</h1>
         </div>
-        <span class="autosave"><i></i> Saved just now</span>
+        <span class="autosave"><i></i> Saved in database</span>
     </div>
 
     <div class="wizard-layout">
@@ -103,258 +105,316 @@
 
         <!-- Form Card -->
         <section class="form-card">
-            <!-- Step 0: Profile -->
-            <div class="wizard-form-step" id="form-step-0" style="display: none;">
-                <div class="form-heading">
-                    <span class="eyebrow">STEP 1 OF 6</span>
-                    <h2>Student profile</h2>
-                    <p>Confirm the details we received from your student record.</p>
+            <form id="housing-application-form" onsubmit="event.preventDefault(); submitApplication();">
+                {% csrf_token %}
+
+                <!-- Step 0: Profile -->
+                <div class="wizard-form-step" id="form-step-0" style="display: none;">
+                    <div class="form-heading">
+                        <span class="eyebrow">STEP 1 OF 6</span>
+                        <h2>Student profile</h2>
+                        <p>Confirm the details we received from your student record.</p>
+                    </div>
+                    <div class="fields-grid">
+                        <label>Legal first name
+                            <input type="text" id="app-first-name" name="first_name" value="{{ first_name|default:'Amara' }}" placeholder="First name" required>
+                        </label>
+                        <label>Legal last name
+                            <input type="text" id="app-last-name" name="last_name" value="{{ last_name|default:'Mensah' }}" placeholder="Last name" required>
+                        </label>
+                        <label>Student ID
+                            <input type="text" id="app-student-id" name="student_id" value="{{ student.student_id|default:'STU-204810' }}" readonly>
+                        </label>
+                        <label>Programme
+                            <select id="app-programme" name="programme">
+                                <option value="Computer Science" {% if student.programme == 'Computer Science' %}selected{% endif %}>Computer Science</option>
+                                <option value="Economics" {% if student.programme == 'Economics' %}selected{% endif %}>Economics</option>
+                                <option value="Architecture" {% if student.programme == 'Architecture' %}selected{% endif %}>Architecture</option>
+                                <option value="Business Analytics" {% if student.programme == 'Business Analytics' %}selected{% endif %}>Business Analytics</option>
+                                <option value="Mechanical Engineering" {% if student.programme == 'Mechanical Engineering' %}selected{% endif %}>Mechanical Engineering</option>
+                                <option value="Medicine" {% if student.programme == 'Medicine' %}selected{% endif %}>Medicine</option>
+                                <option value="Data Science" {% if student.programme == 'Data Science' %}selected{% endif %}>Data Science</option>
+                            </select>
+                        </label>
+                        <label class="full">Additional information
+                            <textarea id="app-additional-info" name="additional_info" placeholder="Add any information our housing team should consider">{{ application.additional_notes|default:'' }}</textarea>
+                        </label>
+                    </div>
+                    <div class="consent-row">
+                        <input type="checkbox" id="consent-0" checked>
+                        <label for="consent-0">I confirm these details are accurate and may be used to assess my hostel application.</label>
+                    </div>
                 </div>
-                <div class="fields-grid">
-                    <label>Legal first name<input type="text" value="Amara" placeholder="Enter details"></label>
-                    <label>Legal last name<input type="text" value="Mensah" placeholder="Enter details"></label>
-                    <label>Student ID<input type="text" value="STU-204810" readonly></label>
-                    <label>Programme
-                        <select>
-                            <option selected>Computer Science</option>
-                            <option>Economics</option>
-                            <option>Architecture</option>
+
+                <!-- Step 1: Eligibility -->
+                <div class="wizard-form-step" id="form-step-1" style="display: none;">
+                    <div class="form-heading">
+                        <span class="eyebrow">STEP 2 OF 6</span>
+                        <h2>Eligibility details</h2>
+                        <p>Help us apply the correct housing policies to your application.</p>
+                    </div>
+                    <div class="fields-grid">
+                        <label>Academic Year
+                            <input type="text" value="2025/26" readonly>
+                        </label>
+                        <label>Study Mode
+                            <select id="app-study-mode" name="study_mode">
+                                <option value="Full-time student" selected>Full-time student</option>
+                                <option value="Exchange student">Exchange student</option>
+                                <option value="Postgraduate research">Postgraduate research</option>
+                            </select>
+                        </label>
+                        <label class="full">Special Requirements
+                            <textarea id="app-special-reqs" name="special_requirements" placeholder="List any medical, accessibility, or dietary requirements"></textarea>
+                        </label>
+                    </div>
+                    <div class="consent-row">
+                        <input type="checkbox" id="consent-1" checked>
+                        <label for="consent-1">I confirm that all eligibility criteria have been declared truthfully.</label>
+                    </div>
+                </div>
+
+                <!-- Step 2: Preferences -->
+                <div class="wizard-form-step" id="form-step-2">
+                    <div class="form-heading">
+                        <span class="eyebrow">STEP 3 OF 6</span>
+                        <h2>Rank your hostel preferences</h2>
+                        <p>We’ll consider these in order. Ranking does not guarantee placement, but the allocation engine prioritises your choices where policy allows.</p>
+                    </div>
+                    <div class="info-box">
+                        {% icon 'spark' %}
+                        <p>
+                            <strong>How ranking works</strong><br>
+                            Your highest-ranked eligible option is considered first. You can reorder until the application deadline.
+                        </p>
+                    </div>
+                    <label class="field-label">Your ranked preferences <span>Required</span></label>
+                    
+                    <div class="rank-list" id="rank-items-list">
+                        {% if preferences %}
+                            {% for pref in preferences %}
+                            <div class="rank-item" data-hostel="{{ pref.hostel.name }}">
+                                <span class="drag">⠿</span>
+                                <b class="rank-num">{{ pref.rank }}</b>
+                                <span class="rank-thumb thumb-{{ forloop.counter }}"></span>
+                                <p>
+                                    <strong>{{ pref.hostel.name }}</strong>
+                                    <small>{{ pref.hostel.location }} · {{ pref.hostel.room_summary }}</small>
+                                </p>
+                                <span class="tag tag-success">{{ pref.hostel.beds_available }} beds</span>
+                                <span class="rank-controls">
+                                    <button type="button" onclick="moveRank(this, -1)" {% if forloop.first %}disabled{% endif %}>↑</button>
+                                    <button type="button" onclick="moveRank(this, 1)" {% if forloop.last %}disabled{% endif %}>↓</button>
+                                    <button type="button" onclick="removeRankItem(this)" style="color: #c93b2b; margin-left: 4px;" title="Remove">✕</button>
+                                </span>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="rank-item" data-hostel="Boys Hostel 1">
+                                <span class="drag">⠿</span>
+                                <b class="rank-num">1</b>
+                                <span class="rank-thumb thumb-1"></span>
+                                <p>
+                                    <strong>Boys Hostel 1</strong>
+                                    <small>North Campus · Single ensuite</small>
+                                </p>
+                                <span class="tag tag-success">Best fit</span>
+                                <span class="rank-controls">
+                                    <button type="button" onclick="moveRank(this, -1)" disabled>↑</button>
+                                    <button type="button" onclick="moveRank(this, 1)">↓</button>
+                                    <button type="button" onclick="removeRankItem(this)" style="color: #c93b2b; margin-left: 4px;" title="Remove">✕</button>
+                                </span>
+                            </div>
+
+                            <div class="rank-item" data-hostel="Boys Hostel 2">
+                                <span class="drag">⠿</span>
+                                <b class="rank-num">2</b>
+                                <span class="rank-thumb thumb-2"></span>
+                                <p>
+                                    <strong>Boys Hostel 2</strong>
+                                    <small>Central Campus · Single room</small>
+                                </p>
+                                <span class="tag">11 beds</span>
+                                <span class="rank-controls">
+                                    <button type="button" onclick="moveRank(this, -1)">↑</button>
+                                    <button type="button" onclick="moveRank(this, 1)">↓</button>
+                                    <button type="button" onclick="removeRankItem(this)" style="color: #c93b2b; margin-left: 4px;" title="Remove">✕</button>
+                                </span>
+                            </div>
+
+                            <div class="rank-item" data-hostel="Boys Hostel 3">
+                                <span class="drag">⠿</span>
+                                <b class="rank-num">3</b>
+                                <span class="rank-thumb thumb-3"></span>
+                                <p>
+                                    <strong>Boys Hostel 3</strong>
+                                    <small>East Campus · Twin room</small>
+                                </p>
+                                <span class="tag">26 beds</span>
+                                <span class="rank-controls">
+                                    <button type="button" onclick="moveRank(this, -1)">↑</button>
+                                    <button type="button" onclick="moveRank(this, 1)" disabled>↓</button>
+                                    <button type="button" onclick="removeRankItem(this)" style="color: #c93b2b; margin-left: 4px;" title="Remove">✕</button>
+                                </span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div style="display: flex; gap: 10px; align-items: center; margin: 16px 0 24px 0; flex-wrap: wrap;">
+                        <select id="add-hostel-select" style="height: 42px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--line); font-size: 13px; background: white; min-width: 200px;">
+                            <option value="">Select hostel to add...</option>
+                            {% for h in hostels %}
+                            <option value="{{ h.name }}" data-loc="{{ h.location }}" data-rooms="{{ h.room_summary }}" data-beds="{{ h.beds_available }}">{{ h.name }} ({{ h.location }})</option>
+                            {% endfor %}
                         </select>
-                    </label>
-                    <label class="full">Additional information
-                        <textarea placeholder="Add any information our housing team should consider"></textarea>
-                    </label>
-                </div>
-                <div class="consent-row">
-                    <input type="checkbox" id="consent-0" checked>
-                    <label for="consent-0">I confirm these details are accurate and may be used to assess my hostel application.</label>
-                </div>
-            </div>
-
-            <!-- Step 1: Eligibility -->
-            <div class="wizard-form-step" id="form-step-1" style="display: none;">
-                <div class="form-heading">
-                    <span class="eyebrow">STEP 2 OF 6</span>
-                    <h2>Eligibility details</h2>
-                    <p>Help us apply the correct housing policies to your application.</p>
-                </div>
-                <div class="fields-grid">
-                    <label>Academic Year<input type="text" value="2025/26" readonly></label>
-                    <label>Study Mode
-                        <select><option>Full-time student</option><option>Exchange student</option></select>
-                    </label>
-                    <label class="full">Special Requirements
-                        <textarea placeholder="List any medical, accessibility, or dietary requirements"></textarea>
-                    </label>
-                </div>
-                <div class="consent-row">
-                    <input type="checkbox" id="consent-1" checked>
-                    <label for="consent-1">I confirm that all eligibility criteria have been declared truthfully.</label>
-                </div>
-            </div>
-
-            <!-- Step 2: Preferences -->
-            <div class="wizard-form-step" id="form-step-2">
-                <div class="form-heading">
-                    <span class="eyebrow">STEP 3 OF 6</span>
-                    <h2>Rank your hostel preferences</h2>
-                    <p>We’ll consider these in order. Ranking does not guarantee placement, but the allocation engine prioritises your choices where policy allows.</p>
-                </div>
-                <div class="info-box">
-                    {% icon 'spark' %}
-                    <p>
-                        <strong>How ranking works</strong><br>
-                        Your highest-ranked eligible option is considered first. You can reorder until the application deadline.
-                    </p>
-                </div>
-                <label class="field-label">Your ranked preferences <span>Required</span></label>
-                
-                <div class="rank-list" id="rank-items-list">
-                    <div class="rank-item" data-hostel="Boys Hostel 1">
-                        <span class="drag">⠿</span>
-                        <b class="rank-num">1</b>
-                        <span class="rank-thumb thumb-1"></span>
-                        <p>
-                            <strong>Boys Hostel 1</strong>
-                            <small>North Campus · Single ensuite</small>
-                        </p>
-                        <span class="tag tag-success">Best fit</span>
-                        <span class="rank-controls">
-                            <button type="button" onclick="moveRank(this, -1)" disabled>↑</button>
-                            <button type="button" onclick="moveRank(this, 1)">↓</button>
-                        </span>
+                        <button class="btn btn-secondary" type="button" onclick="addSelectedHostel()">
+                            {% icon 'plus' %} Add to preferences
+                        </button>
                     </div>
 
-                    <div class="rank-item" data-hostel="Boys Hostel 2">
-                        <span class="drag">⠿</span>
-                        <b class="rank-num">2</b>
-                        <span class="rank-thumb thumb-2"></span>
-                        <p>
-                            <strong>Boys Hostel 2</strong>
-                            <small>Central Campus · Single room</small>
-                        </p>
-                        <span class="tag">11 beds</span>
-                        <span class="rank-controls">
-                            <button type="button" onclick="moveRank(this, -1)">↑</button>
-                            <button type="button" onclick="moveRank(this, 1)">↓</button>
-                        </span>
-                    </div>
-
-                    <div class="rank-item" data-hostel="Boys Hostel 3">
-                        <span class="drag">⠿</span>
-                        <b class="rank-num">3</b>
-                        <span class="rank-thumb thumb-3"></span>
-                        <p>
-                            <strong>Boys Hostel 3</strong>
-                            <small>East Campus · Twin room</small>
-                        </p>
-                        <span class="tag">26 beds</span>
-                        <span class="rank-controls">
-                            <button type="button" onclick="moveRank(this, -1)">↑</button>
-                            <button type="button" onclick="moveRank(this, 1)" disabled>↓</button>
-                        </span>
+                    <div class="form-section">
+                        <h3>Room occupancy preference</h3>
+                        <p>Choose your first choice. You can add alternatives on the next step.</p>
+                        <div class="choice-cards">
+                            <label>
+                                <input type="radio" name="room_pref" value="Single room" {% if not application or application.room_type_preference == 'Single room' %}checked{% endif %}>
+                                <span>
+                                    {% icon 'bed' %}
+                                    <strong>Single room</strong>
+                                    <small>Private bedroom</small>
+                                </span>
+                            </label>
+                            <label>
+                                <input type="radio" name="room_pref" value="Twin room" {% if application.room_type_preference == 'Twin room' %}checked{% endif %}>
+                                <span>
+                                    {% icon 'users' %}
+                                    <strong>Twin room</strong>
+                                    <small>Share with 1 student</small>
+                                </span>
+                            </label>
+                            <label>
+                                <input type="radio" name="room_pref" value="Triple room" {% if application.room_type_preference == 'Triple room' %}checked{% endif %}>
+                                <span>
+                                    {% icon 'users' %}
+                                    <strong>Triple room</strong>
+                                    <small>Share with 2 students</small>
+                                </span>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
-                <button class="btn btn-secondary" type="button">
-                    {% icon 'plus' %} Add another hostel
-                </button>
-
-                <div class="form-section">
-                    <h3>Room occupancy preference</h3>
-                    <p>Choose your first choice. You can add alternatives on the next step.</p>
-                    <div class="choice-cards">
-                        <label>
-                            <input type="radio" name="room_pref" checked>
-                            <span>
-                                {% icon 'bed' %}
-                                <strong>Single room</strong>
-                                <small>Private bedroom</small>
-                            </span>
+                <!-- Step 3: Room type -->
+                <div class="wizard-form-step" id="form-step-3" style="display: none;">
+                    <div class="form-heading">
+                        <span class="eyebrow">STEP 4 OF 6</span>
+                        <h2>Room requirements</h2>
+                        <p>Choose room types and tell us about accessibility requirements.</p>
+                    </div>
+                    <div class="fields-grid">
+                        <label>Preferred Floor
+                            <select id="app-floor-pref" name="preferred_floor">
+                                <option value="No preference" selected>No preference</option>
+                                <option value="Ground floor">Ground floor</option>
+                                <option value="Upper floor">Upper floor</option>
+                            </select>
                         </label>
-                        <label>
-                            <input type="radio" name="room_pref">
-                            <span>
-                                {% icon 'users' %}
-                                <strong>Twin room</strong>
-                                <small>Share with 1 student</small>
-                            </span>
+                        <label>Bathroom Type
+                            <select id="app-bathroom-pref" name="bathroom_pref">
+                                <option value="Private Ensuite" selected>Private Ensuite</option>
+                                <option value="Shared Bathroom">Shared Bathroom</option>
+                            </select>
                         </label>
-                        <label>
-                            <input type="radio" name="room_pref">
-                            <span>
-                                {% icon 'users' %}
-                                <strong>Triple room</strong>
-                                <small>Share with 2 students</small>
-                            </span>
+                        <label class="full">Accessibility Requirements
+                            <textarea id="app-accessibility-reqs" name="accessibility_reqs" placeholder="Accessible bathroom, elevator access, strobe smoke alarm, etc."></textarea>
                         </label>
                     </div>
                 </div>
-            </div>
 
-            <!-- Step 3: Room type -->
-            <div class="wizard-form-step" id="form-step-3" style="display: none;">
-                <div class="form-heading">
-                    <span class="eyebrow">STEP 4 OF 6</span>
-                    <h2>Room requirements</h2>
-                    <p>Choose room types and tell us about accessibility requirements.</p>
+                <!-- Step 4: Documents -->
+                <div class="wizard-form-step" id="form-step-4" style="display: none;">
+                    <div class="form-heading">
+                        <span class="eyebrow">STEP 5 OF 6</span>
+                        <h2>Document checklist</h2>
+                        <p>Upload clear copies of the required supporting documents.</p>
+                    </div>
+                    <div class="option-list" style="margin: 20px 0;">
+                        <button type="button" class="selected">
+                            <span>A</span>
+                            Student Identification Card (Verified)
+                            <i>{% icon 'check' %}</i>
+                        </button>
+                        <button type="button" class="selected">
+                            <span>B</span>
+                            Proof of Enrollment 2025/26 (Verified)
+                            <i>{% icon 'check' %}</i>
+                        </button>
+                    </div>
                 </div>
-                <div class="fields-grid">
-                    <label>Preferred Floor
-                        <select><option>No preference</option><option>Ground floor</option><option>Upper floor</option></select>
-                    </label>
-                    <label>Bathroom Type
-                        <select><option>Private Ensuite</option><option>Shared Bathroom</option></select>
-                    </label>
-                    <label class="full">Accessibility Requirements
-                        <textarea placeholder="Accessible bathroom, elevator access, strobe smoke alarm, etc."></textarea>
-                    </label>
-                </div>
-            </div>
 
-            <!-- Step 4: Documents -->
-            <div class="wizard-form-step" id="form-step-4" style="display: none;">
-                <div class="form-heading">
-                    <span class="eyebrow">STEP 5 OF 6</span>
-                    <h2>Document checklist</h2>
-                    <p>Upload clear copies of the required supporting documents.</p>
+                <!-- Step 5: Review & Submit -->
+                <div class="wizard-form-step" id="form-step-5" style="display: none;">
+                    <div class="form-heading">
+                        <span class="eyebrow">FINAL STEP</span>
+                        <h2>Review and submit</h2>
+                        <p>Check your answers carefully. You can edit any section before submission.</p>
+                    </div>
+                    
+                    <div class="review-row">
+                        <span class="review-icon">{% icon 'check' %}</span>
+                        <p><strong>Student profile</strong><small id="review-profile-summary">{{ first_name|default:'Amara' }} {{ last_name|default:'Mensah' }} &middot; {{ student.programme|default:'Computer Science' }}</small></p>
+                        <span class="tag tag-success">Complete</span>
+                        <button type="button" onclick="goToStep(0)">Edit</button>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-icon">{% icon 'check' %}</span>
+                        <p><strong>Eligibility details</strong><small>2025/26 &middot; Full-time declared</small></p>
+                        <span class="tag tag-success">Complete</span>
+                        <button type="button" onclick="goToStep(1)">Edit</button>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-icon">{% icon 'building' %}</span>
+                        <p><strong>Hostel preferences</strong><small id="review-pref-summary">1. Boys Hostel 1 · 2. Boys Hostel 2 · 3. Boys Hostel 3</small></p>
+                        <span class="tag tag-success">Complete</span>
+                        <button type="button" onclick="goToStep(2)">Edit</button>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-icon">{% icon 'bed' %}</span>
+                        <p><strong>Room &amp; accessibility</strong><small id="review-room-summary">Single room · Private Ensuite</small></p>
+                        <span class="tag tag-success">Complete</span>
+                        <button type="button" onclick="goToStep(3)">Edit</button>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-icon">{% icon 'file' %}</span>
+                        <p><strong>Documents</strong><small>2 documents verified</small></p>
+                        <span class="tag tag-success">Complete</span>
+                        <button type="button" onclick="goToStep(4)">Edit</button>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-icon">{% icon 'users' %}</span>
+                        <p><strong>Roommate questionnaire</strong><small>Completed with consent</small></p>
+                        <span class="tag tag-success">Complete</span>
+                        <button type="button" onclick="goToStep(2)">Edit</button>
+                    </div>
+
+                    <div class="consent-row submit-consent">
+                        <input type="checkbox" id="final-consent" checked>
+                        <label for="final-consent">
+                            <strong>I confirm this application is complete and accurate.</strong><br>
+                            <small>I understand allocation is not guaranteed until authorised results are officially published.</small>
+                        </label>
+                    </div>
                 </div>
-                <div class="option-list" style="margin: 20px 0;">
-                    <button type="button" class="selected">
-                        <span>A</span>
-                        Student Identification Card (Verified)
-                        <i>{% icon 'check' %}</i>
-                    </button>
-                    <button type="button" class="selected">
-                        <span>B</span>
-                        Proof of Enrollment 2025/26 (Verified)
-                        <i>{% icon 'check' %}</i>
+
+                <!-- Form Footer -->
+                <div class="form-footer">
+                    <button class="btn btn-secondary" id="form-back-btn" type="button" onclick="prevStep()">Back</button>
+                    <span id="form-step-indicator">Step 3 of 6</span>
+                    <button class="btn btn-primary" id="form-next-btn" type="button" onclick="nextStep()">
+                        Save &amp; continue {% icon 'arrow' 17 %}
                     </button>
                 </div>
-            </div>
-
-            <!-- Step 5: Review & Submit -->
-            <div class="wizard-form-step" id="form-step-5" style="display: none;">
-                <div class="form-heading">
-                    <span class="eyebrow">FINAL STEP</span>
-                    <h2>Review and submit</h2>
-                    <p>Check your answers carefully. You can edit any section before submission.</p>
-                </div>
-                
-                <div class="review-row">
-                    <span class="review-icon">{% icon 'check' %}</span>
-                    <p><strong>Student profile</strong><small>Complete and verified</small></p>
-                    <span class="tag tag-success">Complete</span>
-                    <button type="button" onclick="goToStep(0)">Edit</button>
-                </div>
-                <div class="review-row">
-                    <span class="review-icon">{% icon 'check' %}</span>
-                    <p><strong>Eligibility details</strong><small>Complete and verified</small></p>
-                    <span class="tag tag-success">Complete</span>
-                    <button type="button" onclick="goToStep(1)">Edit</button>
-                </div>
-                <div class="review-row">
-                    <span class="review-icon">{% icon 'building' %}</span>
-                    <p><strong>Hostel preferences</strong><small>1. Boys Hostel 1 · 2. Boys Hostel 2 · 3. Boys Hostel 3</small></p>
-                    <span class="tag tag-success">Complete</span>
-                    <button type="button" onclick="goToStep(2)">Edit</button>
-                </div>
-                <div class="review-row">
-                    <span class="review-icon">{% icon 'bed' %}</span>
-                    <p><strong>Room &amp; accessibility</strong><small>Single room · No accessibility requirements</small></p>
-                    <span class="tag tag-success">Complete</span>
-                    <button type="button" onclick="goToStep(3)">Edit</button>
-                </div>
-                <div class="review-row">
-                    <span class="review-icon">{% icon 'file' %}</span>
-                    <p><strong>Documents</strong><small>2 documents verified</small></p>
-                    <span class="tag tag-success">Complete</span>
-                    <button type="button" onclick="goToStep(4)">Edit</button>
-                </div>
-                <div class="review-row">
-                    <span class="review-icon">{% icon 'users' %}</span>
-                    <p><strong>Roommate questionnaire</strong><small>Completed with consent</small></p>
-                    <span class="tag tag-success">Complete</span>
-                    <button type="button" onclick="goToStep(2)">Edit</button>
-                </div>
-
-                <div class="consent-row submit-consent">
-                    <input type="checkbox" id="final-consent" checked>
-                    <label for="final-consent">
-                        <strong>I confirm this application is complete and accurate.</strong><br>
-                        <small>I understand allocation is not guaranteed until authorised results are officially published.</small>
-                    </label>
-                </div>
-            </div>
-
-            <!-- Form Footer -->
-            <div class="form-footer">
-                <button class="btn btn-secondary" id="form-back-btn" type="button" onclick="prevStep()">Back</button>
-                <span id="form-step-indicator">Step 3 of 6</span>
-                <button class="btn btn-primary" id="form-next-btn" type="button" onclick="nextStep()">
-                    Save &amp; continue {% icon 'arrow' 17 %}
-                </button>
-            </div>
+            </form>
         </section>
     </div>
 </div>
@@ -370,15 +430,19 @@
         renderWizard();
     }
 
+    function editExistingApplication() {
+        document.getElementById('application-confirmation').style.display = 'none';
+        document.getElementById('application-wizard').style.display = 'block';
+        goToStep(2);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     function nextStep() {
         if (activeStep < totalSteps - 1) {
             activeStep++;
             renderWizard();
         } else {
-            // Submit application
-            document.getElementById('application-wizard').style.display = 'none';
-            document.getElementById('application-confirmation').style.display = 'block';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            submitApplication();
         }
     }
 
@@ -400,6 +464,11 @@
             }
         }
 
+        // Update live review labels if stepping to Step 5
+        if (activeStep === 5) {
+            updateReviewSummaries();
+        }
+
         document.getElementById('form-step-indicator').textContent = `Step ${activeStep + 1} of ${totalSteps}`;
         const nextBtn = document.getElementById('form-next-btn');
         if (activeStep === totalSteps - 1) {
@@ -407,6 +476,25 @@
         } else {
             nextBtn.innerHTML = `Save & continue <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14m-5-5 5 5-5 5"/></svg>`;
         }
+    }
+
+    function updateReviewSummaries() {
+        const fn = document.getElementById('app-first-name')?.value || '';
+        const ln = document.getElementById('app-last-name')?.value || '';
+        const prog = document.getElementById('app-programme')?.value || 'Computer Science';
+        const profSummary = document.getElementById('review-profile-summary');
+        if (profSummary) profSummary.textContent = `${fn} ${ln} · ${prog}`;
+
+        const rankItems = document.querySelectorAll('#rank-items-list .rank-item');
+        const names = Array.from(rankItems).map((el, i) => `${i + 1}. ${el.getAttribute('data-hostel')}`);
+        const prefSummary = document.getElementById('review-pref-summary');
+        if (prefSummary) prefSummary.textContent = names.join(' · ') || 'None selected';
+
+        const selRoom = document.querySelector('input[name="room_pref"]:checked');
+        const roomVal = selRoom ? selRoom.value : 'Single room';
+        const bathVal = document.getElementById('app-bathroom-pref')?.value || 'Private Ensuite';
+        const roomSummary = document.getElementById('review-room-summary');
+        if (roomSummary) roomSummary.textContent = `${roomVal} · ${bathVal}`;
     }
 
     function moveRank(btn, direction) {
@@ -426,15 +514,129 @@
         }
     }
 
+    function removeRankItem(btn) {
+        const item = btn.closest('.rank-item');
+        const list = document.getElementById('rank-items-list');
+        const items = list.querySelectorAll('.rank-item');
+        if (items.length <= 1) {
+            alert('You must rank at least one hostel preference.');
+            return;
+        }
+        item.remove();
+        updateRankNumbers();
+    }
+
+    function addSelectedHostel() {
+        const select = document.getElementById('add-hostel-select');
+        const hostelName = select.value;
+        if (!hostelName) {
+            alert('Please select a hostel to add.');
+            return;
+        }
+
+        const list = document.getElementById('rank-items-list');
+        const existing = list.querySelector(`.rank-item[data-hostel="${hostelName}"]`);
+        if (existing) {
+            alert(`${hostelName} is already in your ranked preferences.`);
+            return;
+        }
+
+        const opt = select.options[select.selectedIndex];
+        const loc = opt.getAttribute('data-loc') || 'Campus residence';
+        const rooms = opt.getAttribute('data-rooms') || 'Single & twin rooms';
+        const beds = opt.getAttribute('data-beds') || '15';
+        const currentCount = list.querySelectorAll('.rank-item').length + 1;
+
+        const div = document.createElement('div');
+        div.className = 'rank-item';
+        div.setAttribute('data-hostel', hostelName);
+        div.innerHTML = `
+            <span class="drag">⠿</span>
+            <b class="rank-num">${currentCount}</b>
+            <span class="rank-thumb thumb-${(currentCount % 5) + 1}"></span>
+            <p>
+                <strong>${hostelName}</strong>
+                <small>${loc} · ${rooms}</small>
+            </p>
+            <span class="tag tag-success">${beds} beds</span>
+            <span class="rank-controls">
+                <button type="button" onclick="moveRank(this, -1)">↑</button>
+                <button type="button" onclick="moveRank(this, 1)" disabled>↓</button>
+                <button type="button" onclick="removeRankItem(this)" style="color: #c93b2b; margin-left: 4px;" title="Remove">✕</button>
+            </span>
+        `;
+        list.appendChild(div);
+        updateRankNumbers();
+        select.value = '';
+    }
+
     function updateRankNumbers() {
         const items = document.querySelectorAll('#rank-items-list .rank-item');
         items.forEach((item, idx) => {
             item.querySelector('.rank-num').textContent = idx + 1;
             const upBtn = item.querySelectorAll('.rank-controls button')[0];
             const downBtn = item.querySelectorAll('.rank-controls button')[1];
-            upBtn.disabled = (idx === 0);
-            downBtn.disabled = (idx === items.length - 1);
+            if (upBtn) upBtn.disabled = (idx === 0);
+            if (downBtn) downBtn.disabled = (idx === items.length - 1);
         });
+    }
+
+    async function submitApplication() {
+        const nextBtn = document.getElementById('form-next-btn');
+        const originalText = nextBtn.innerHTML;
+        nextBtn.disabled = true;
+        nextBtn.innerHTML = `Saving to database...`;
+
+        const rankItems = document.querySelectorAll('#rank-items-list .rank-item');
+        const hostelNames = Array.from(rankItems).map(el => el.getAttribute('data-hostel'));
+
+        const formData = new FormData();
+        formData.append('first_name', document.getElementById('app-first-name')?.value || '');
+        formData.append('last_name', document.getElementById('app-last-name')?.value || '');
+        formData.append('programme', document.getElementById('app-programme')?.value || 'Computer Science');
+        formData.append('study_mode', document.getElementById('app-study-mode')?.value || 'Full-time student');
+        formData.append('special_requirements', document.getElementById('app-special-reqs')?.value || '');
+        formData.append('additional_info', document.getElementById('app-additional-info')?.value || '');
+
+        const selectedRoom = document.querySelector('input[name="room_pref"]:checked');
+        formData.append('room_pref', selectedRoom ? selectedRoom.value : 'Single room');
+        formData.append('preferred_floor', document.getElementById('app-floor-pref')?.value || 'No preference');
+        formData.append('bathroom_pref', document.getElementById('app-bathroom-pref')?.value || 'Private Ensuite');
+        formData.append('accessibility_reqs', document.getElementById('app-accessibility-reqs')?.value || '');
+        formData.append('hostel_preferences', JSON.stringify(hostelNames));
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+
+        try {
+            const resp = await fetch("{% url 'submit-application' %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            const data = await resp.json();
+            if (data.status === 'success') {
+                const confId = document.getElementById('conf-app-id');
+                const confName = document.getElementById('conf-student-name');
+                if (confId) confId.innerText = data.application_id;
+                if (confName) confName.innerText = data.student_name.split(' ')[0];
+
+                document.getElementById('application-wizard').style.display = 'none';
+                document.getElementById('application-confirmation').style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                alert(data.message || 'Error saving application. Please try again.');
+            }
+        } catch (err) {
+            console.error('Submission error:', err);
+            alert('Network error submitting application. Please try again.');
+        } finally {
+            nextBtn.disabled = false;
+            nextBtn.innerHTML = originalText;
+        }
     }
 </script>
 {% endblock %}

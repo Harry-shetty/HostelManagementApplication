@@ -37,6 +37,7 @@ def invalidate_student_caches():
     ]
     for k in keys_to_clear:
         cache.delete(k)
+    cache.clear()
 
 def get_base_context(request, active_view='overview', is_admin=False):
     notifications = cache.get('recent_notifications')
@@ -277,196 +278,200 @@ def signup_view(request):
 def get_mock_applications(filter_val=None, search_query=None):
     from housing.models import Application
     items = []
+    db_student_ids = set()
     try:
-        apps = Application.objects.select_related('student', 'cycle').prefetch_related('preferences__hostel').all().order_by('id')
-        if apps.exists():
-            for app in apps:
-                s = app.student
-                prefs = list(app.preferences.all().order_by('rank'))
-                first_pref = prefs[0].hostel.name if len(prefs) > 0 else 'None specified'
-                second_pref = prefs[1].hostel.name if len(prefs) > 1 else 'None'
-                status_display_map = {
-                    'under_review': 'Under Review',
-                    'submitted': 'Under Review' if s.eligibility_status != 'Verified' else 'Verified',
-                    'allocated': 'Allocated',
-                    'waitlisted': 'Waitlisted',
-                    'in_progress': 'In Progress'
-                }
-                status_str = status_display_map.get(app.status, 'Verified')
-                if s.eligibility_status == 'Review':
-                    status_str = 'Under Review'
+        apps = Application.objects.select_related('student', 'cycle').prefetch_related('preferences__hostel').all().order_by('-submitted_at')
+        for app in apps:
+            s = app.student
+            db_student_ids.add(s.student_id)
+            prefs = list(app.preferences.all().order_by('rank'))
+            first_pref = prefs[0].hostel.name if len(prefs) > 0 else 'Boys Hostel 1'
+            second_pref = prefs[1].hostel.name if len(prefs) > 1 else 'Boys Hostel 2'
+            status_display_map = {
+                'under_review': 'Under Review',
+                'submitted': 'Under Review' if s.eligibility_status != 'Verified' else 'Verified',
+                'allocated': 'Allocated',
+                'waitlisted': 'Waitlisted',
+                'in_progress': 'In Progress'
+            }
+            status_str = status_display_map.get(app.status, 'Verified')
+            if s.eligibility_status == 'Review':
+                status_str = 'Under Review'
 
-                items.append({
-                    'id': app.application_id,
-                    'student_name': s.name,
-                    'student_id': s.student_id,
-                    'programme': f"{s.programme} · {s.year}",
-                    'first_preference': first_pref,
-                    'second_preference': second_pref,
-                    'room_type': app.room_type_preference,
-                    'quota': app.quota,
-                    'status': status_str,
-                    'submitted_at': app.submitted_at.strftime('%d %b %Y, %H:%M') if app.submitted_at else '6 Oct 2025, 14:20',
-                    'avatar_initials': s.avatar_initials,
-                    'avatar_color': s.avatar_color,
-                    'notes': app.additional_notes
-                })
+            items.append({
+                'id': app.application_id,
+                'student_name': s.name,
+                'student_id': s.student_id,
+                'programme': f"{s.programme} · {s.year}",
+                'first_preference': first_pref,
+                'second_preference': second_pref,
+                'room_type': app.room_type_preference,
+                'quota': app.quota,
+                'status': status_str,
+                'submitted_at': app.submitted_at.strftime('%d %b %Y, %H:%M') if app.submitted_at else '6 Oct 2025, 14:20',
+                'avatar_initials': s.avatar_initials,
+                'avatar_color': s.avatar_color,
+                'notes': app.additional_notes
+            })
     except Exception:
         pass
 
-    if not items:
-        items = [
-            {
-                'id': 'NST-25-10482',
-                'student_name': 'Amara Mensah',
-                'student_id': 'STU-204810',
-                'programme': 'Computer Science & AI · Year 2',
-                'first_preference': 'Cedar House',
-                'second_preference': 'Maple Court',
-                'room_type': 'Single room',
-                'quota': 'Continuing Students',
-                'status': 'Verified',
-                'submitted_at': '6 Oct 2025, 14:20',
-                'avatar_initials': 'AM',
-                'avatar_color': 'green',
-                'notes': 'Requested quiet study environment near Computer Science faculty.'
-            },
-            {
-                'id': 'NST-25-10483',
-                'student_name': 'Maya Okafor',
-                'student_id': 'STU-204746',
-                'programme': 'Architecture · Year 2',
-                'first_preference': 'Maple Court',
-                'second_preference': 'Cedar House',
-                'room_type': 'Ensuite room',
-                'quota': 'Continuing Students',
-                'status': 'Verified',
-                'submitted_at': '6 Oct 2025, 15:45',
-                'avatar_initials': 'MO',
-                'avatar_color': 'peach',
-                'notes': 'Proximity to Architecture design studio drafting workshops required.'
-            },
-            {
-                'id': 'NST-25-10484',
-                'student_name': 'Daniel Kim',
-                'student_id': 'STU-204612',
-                'programme': 'Mechanical Engineering · Year 1',
-                'first_preference': 'Willow Hall',
-                'second_preference': 'Cedar House',
-                'room_type': 'Ground floor accessible',
-                'quota': 'Special Accommodations',
-                'status': 'Under Review',
-                'submitted_at': '7 Oct 2025, 09:12',
-                'avatar_initials': 'DK',
-                'avatar_color': 'green',
-                'notes': 'Medical ground-floor mobility accommodation with step-free bathroom access.'
-            },
-            {
-                'id': 'NST-25-10485',
-                'student_name': 'Leila Chen',
-                'student_id': 'STU-204588',
-                'programme': 'Economics · Year 3',
-                'first_preference': 'Cedar House',
-                'second_preference': 'Oak Residence',
-                'room_type': 'Single room',
-                'quota': 'Continuing Students',
-                'status': 'Allocated',
-                'submitted_at': '5 Oct 2025, 18:30',
-                'avatar_initials': 'LC',
-                'avatar_color': 'blue',
-                'notes': 'Final-year research scholar dissertation quiet period requested.'
-            },
-            {
-                'id': 'NST-25-10486',
-                'student_name': 'Jon Bell',
-                'student_id': 'STU-204490',
-                'programme': 'Business Analytics · Year 2',
-                'first_preference': 'Pine Lodge',
-                'second_preference': 'Willow Hall',
-                'room_type': 'Twin room',
-                'quota': 'Continuing Students',
-                'status': 'Waitlisted',
-                'submitted_at': '8 Oct 2025, 11:05',
-                'avatar_initials': 'JB',
-                'avatar_color': 'gray',
-                'notes': 'Applied for general undergraduate ballot. Currently queued in waitlist Tier 2.'
-            },
-            {
-                'id': 'NST-25-10487',
-                'student_name': 'Zara Bello',
-                'student_id': 'STU-204512',
-                'programme': 'Medicine · Year 2',
-                'first_preference': 'Pine Lodge',
-                'second_preference': 'Cedar House',
-                'room_type': 'Single room',
-                'quota': 'Continuing Students',
-                'status': 'Verified',
-                'submitted_at': '6 Oct 2025, 12:15',
-                'avatar_initials': 'ZB',
-                'avatar_color': 'purple',
-                'notes': 'Hospital clinical rotation early shift schedule.'
-            },
-            {
-                'id': 'NST-25-10488',
-                'student_name': 'Rohan Sharma',
-                'student_id': 'STU-204921',
-                'programme': 'Data Science · Year 1',
-                'first_preference': 'Maple Court',
-                'second_preference': 'Cedar House',
-                'room_type': 'Ensuite room',
-                'quota': 'First-Year Freshers',
-                'status': 'Verified',
-                'submitted_at': '9 Oct 2025, 08:40',
-                'avatar_initials': 'RS',
-                'avatar_color': 'blue',
-                'notes': 'Guaranteed freshers quota accommodation applicant.'
-            },
-            {
-                'id': 'NST-25-10489',
-                'student_name': 'Elena Rostova',
-                'student_id': 'STU-204935',
-                'programme': 'Biomedical Sciences (MSc) · Year 1',
-                'first_preference': 'Oak Residence',
-                'second_preference': 'Maple Court',
-                'room_type': 'Studio room',
-                'quota': 'Postgraduates',
-                'status': 'Under Review',
-                'submitted_at': '9 Oct 2025, 16:22',
-                'avatar_initials': 'ER',
-                'avatar_color': 'peach',
-                'notes': 'Postgraduate research scholar requiring year-round tenancy.'
-            },
-            {
-                'id': 'NST-25-10490',
-                'student_name': 'Kwame Mensah',
-                'student_id': 'STU-204950',
-                'programme': 'Civil Engineering · Year 1',
-                'first_preference': 'Willow Hall',
-                'second_preference': 'Pine Lodge',
-                'room_type': 'Twin room',
-                'quota': 'International',
-                'status': 'Action Required',
-                'submitted_at': '10 Oct 2025, 13:10',
-                'avatar_initials': 'KM',
-                'avatar_color': 'green',
-                'notes': 'International scholarship passport / visa verification documents pending review.'
-            },
-            {
-                'id': 'NST-25-10491',
-                'student_name': 'Sophie Dubois',
-                'student_id': 'STU-204962',
-                'programme': 'International Relations · Year 1',
-                'first_preference': 'Cedar House',
-                'second_preference': 'Willow Hall',
-                'room_type': 'Twin room',
-                'quota': 'First-Year Freshers',
-                'status': 'Verified',
-                'submitted_at': '10 Oct 2025, 15:50',
-                'avatar_initials': 'SD',
-                'avatar_color': 'purple',
-                'notes': 'Standard first-year undergraduate allocation.'
-            }
-        ]
+    cohort_mocks = [
+        {
+            'id': 'NST-25-10482',
+            'student_name': 'Amara Mensah',
+            'student_id': 'STU-204810',
+            'programme': 'Computer Science & AI · Year 2',
+            'first_preference': 'Boys Hostel 1',
+            'second_preference': 'Boys Hostel 2',
+            'room_type': 'Single room',
+            'quota': 'Continuing Students',
+            'status': 'Verified',
+            'submitted_at': '6 Oct 2025, 14:20',
+            'avatar_initials': 'AM',
+            'avatar_color': 'green',
+            'notes': 'Requested quiet study environment near Computer Science faculty.'
+        },
+        {
+            'id': 'NST-25-10483',
+            'student_name': 'Maya Okafor',
+            'student_id': 'STU-204746',
+            'programme': 'Architecture · Year 2',
+            'first_preference': 'Boys Hostel 2',
+            'second_preference': 'Boys Hostel 1',
+            'room_type': 'Ensuite room',
+            'quota': 'Continuing Students',
+            'status': 'Verified',
+            'submitted_at': '6 Oct 2025, 15:45',
+            'avatar_initials': 'MO',
+            'avatar_color': 'peach',
+            'notes': 'Proximity to Architecture design studio drafting workshops required.'
+        },
+        {
+            'id': 'NST-25-10484',
+            'student_name': 'Daniel Kim',
+            'student_id': 'STU-204612',
+            'programme': 'Mechanical Engineering · Year 1',
+            'first_preference': 'Boys Hostel 3',
+            'second_preference': 'Boys Hostel 1',
+            'room_type': 'Ground floor accessible',
+            'quota': 'Special Accommodations',
+            'status': 'Under Review',
+            'submitted_at': '7 Oct 2025, 09:12',
+            'avatar_initials': 'DK',
+            'avatar_color': 'green',
+            'notes': 'Medical ground-floor mobility accommodation with step-free bathroom access.'
+        },
+        {
+            'id': 'NST-25-10485',
+            'student_name': 'Leila Chen',
+            'student_id': 'STU-204588',
+            'programme': 'Economics · Year 3',
+            'first_preference': 'Boys Hostel 1',
+            'second_preference': 'Boys Hostel 4',
+            'room_type': 'Single room',
+            'quota': 'Continuing Students',
+            'status': 'Allocated',
+            'submitted_at': '5 Oct 2025, 18:30',
+            'avatar_initials': 'LC',
+            'avatar_color': 'blue',
+            'notes': 'Final-year research scholar dissertation quiet period requested.'
+        },
+        {
+            'id': 'NST-25-10486',
+            'student_name': 'Jon Bell',
+            'student_id': 'STU-204490',
+            'programme': 'Business Analytics · Year 2',
+            'first_preference': 'Boys Hostel 5',
+            'second_preference': 'Boys Hostel 3',
+            'room_type': 'Twin room',
+            'quota': 'Continuing Students',
+            'status': 'Waitlisted',
+            'submitted_at': '8 Oct 2025, 11:05',
+            'avatar_initials': 'JB',
+            'avatar_color': 'gray',
+            'notes': 'Applied for general undergraduate ballot. Currently queued in waitlist Tier 2.'
+        },
+        {
+            'id': 'NST-25-10487',
+            'student_name': 'Zara Bello',
+            'student_id': 'STU-204512',
+            'programme': 'Medicine · Year 2',
+            'first_preference': 'Boys Hostel 5',
+            'second_preference': 'Boys Hostel 1',
+            'room_type': 'Single room',
+            'quota': 'Continuing Students',
+            'status': 'Verified',
+            'submitted_at': '6 Oct 2025, 12:15',
+            'avatar_initials': 'ZB',
+            'avatar_color': 'purple',
+            'notes': 'Hospital clinical rotation early shift schedule.'
+        },
+        {
+            'id': 'NST-25-10488',
+            'student_name': 'Rohan Sharma',
+            'student_id': 'STU-204921',
+            'programme': 'Data Science · Year 1',
+            'first_preference': 'Boys Hostel 2',
+            'second_preference': 'Boys Hostel 1',
+            'room_type': 'Ensuite room',
+            'quota': 'First-Year Freshers',
+            'status': 'Verified',
+            'submitted_at': '9 Oct 2025, 08:40',
+            'avatar_initials': 'RS',
+            'avatar_color': 'blue',
+            'notes': 'Guaranteed freshers quota accommodation applicant.'
+        },
+        {
+            'id': 'NST-25-10489',
+            'student_name': 'Elena Rostova',
+            'student_id': 'STU-204935',
+            'programme': 'Biomedical Sciences (MSc) · Year 1',
+            'first_preference': 'Boys Hostel 4',
+            'second_preference': 'Boys Hostel 2',
+            'room_type': 'Studio room',
+            'quota': 'Postgraduates',
+            'status': 'Under Review',
+            'submitted_at': '9 Oct 2025, 16:22',
+            'avatar_initials': 'ER',
+            'avatar_color': 'peach',
+            'notes': 'Postgraduate research scholar requiring year-round tenancy.'
+        },
+        {
+            'id': 'NST-25-10490',
+            'student_name': 'Kwame Mensah',
+            'student_id': 'STU-204950',
+            'programme': 'Civil Engineering · Year 1',
+            'first_preference': 'Boys Hostel 3',
+            'second_preference': 'Boys Hostel 5',
+            'room_type': 'Twin room',
+            'quota': 'International',
+            'status': 'Action Required',
+            'submitted_at': '10 Oct 2025, 13:10',
+            'avatar_initials': 'KM',
+            'avatar_color': 'green',
+            'notes': 'International scholarship passport / visa verification documents pending review.'
+        },
+        {
+            'id': 'NST-25-10491',
+            'student_name': 'Sophie Dubois',
+            'student_id': 'STU-204962',
+            'programme': 'International Relations · Year 1',
+            'first_preference': 'Boys Hostel 1',
+            'second_preference': 'Boys Hostel 3',
+            'room_type': 'Twin room',
+            'quota': 'First-Year Freshers',
+            'status': 'Verified',
+            'submitted_at': '10 Oct 2025, 15:50',
+            'avatar_initials': 'SD',
+            'avatar_color': 'purple',
+            'notes': 'Standard first-year undergraduate allocation.'
+        }
+    ]
+
+    for m in cohort_mocks:
+        if m['student_id'] not in db_student_ids:
+            items.append(m)
 
     if filter_val == 'under_review':
         items = [i for i in items if i['status'] in ('Under Review', 'Action Required')]

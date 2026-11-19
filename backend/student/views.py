@@ -10,7 +10,7 @@ from django.contrib import messages
 from django.core.cache import cache
 
 from housing.models import (
-    Hostel, Student, Application,
+    Hostel, Student, Application, ApplicationPreference, AllocationCycle,
     RoommateSuggestion, Notification,
     AllocationLetter, RoomChangeRequest, AllocationRun, AuditLog
 )
@@ -20,14 +20,26 @@ from housing.views import get_base_context, invalidate_student_caches
 @student_required
 def overview(request):
     ctx = get_base_context(request, 'overview', is_admin=False)
-    overview_data = cache.get('student_overview_data')
-    if not overview_data:
-        overview_data = {
-            'hostels': list(Hostel.objects.all()[:2]),
-            'application': Application.objects.first(),
-            'notifications': ctx.get('notifications', [])[:3],
-        }
-        cache.set('student_overview_data', overview_data, 1800)
+    profile = getattr(request.user, 'profile', None)
+    student = profile.student_profile if (profile and profile.student_profile) else Student.objects.filter(student_id='STU-204810').first()
+
+    app = Application.objects.filter(student=student).first() if student else None
+    preferences = list(app.preferences.all().select_related('hostel').order_by('rank')) if app else []
+    top_pref = preferences[0].hostel.name if preferences else 'Boys Hostel 1'
+    top_pref_room = app.room_type_preference if app else 'Single room'
+    is_submitted = app and app.status in ('submitted', 'under_review', 'allocated')
+
+    overview_data = {
+        'student': student,
+        'application': app,
+        'is_submitted': is_submitted,
+        'hostels': list(Hostel.objects.all()[:2]),
+        'preferences': preferences,
+        'top_preference': top_pref,
+        'top_preference_room': top_pref_room,
+        'preferences_count': len(preferences) if preferences else 3,
+        'notifications': ctx.get('notifications', [])[:3],
+    }
 
     ctx.update(overview_data)
     return render(request, 'student/overview.html', ctx)
@@ -83,11 +95,20 @@ def application_view(request):
         if not student:
             student = Student.objects.filter(student_id='STU-204810').first()
         app = Application.objects.filter(student=student).first() if student else None
-        preferences = list(app.preferences.all().select_related('hostel')) if app else []
-        hostels = list(Hostel.objects.all())
+        preferences = list(app.preferences.all().select_related('hostel').order_by('rank')) if app else []
+        hostels = list(Hostel.objects.all().order_by('name'))
+        
+        name_parts = (student.name or '').split() if student else []
+        first_name = name_parts[0] if name_parts else 'Amara'
+        last_name = ' '.join(name_parts[1:]) if len(name_parts) > 1 else 'Mensah'
+        is_submitted = app is not None and app.status in ('submitted', 'under_review', 'allocated')
+
         app_data = {
             'student': student,
+            'first_name': first_name,
+            'last_name': last_name,
             'application': app,
+            'is_submitted': is_submitted,
             'preferences': preferences,
             'hostels': hostels,
         }
@@ -98,6 +119,147 @@ def application_view(request):
     return render(request, 'student/application.html', ctx)
 
 @student_required
+@require_POST
+def submit_application_view(request):
+    profile = getattr(request.user, 'profile', None)
+    student = profile.student_profile if (profile and profile.student_profile) else None
+    if not student:
+        student = Student.objects.filter(student_id='STU-204810').first()
+
+    first_name = request.POST.get('first_name', '').strip()
+    last_name = request.POST.get('last_name', '').strip()
+    programme = request.POST.get('programme', '').strip()
+    study_mode = request.POST.get('study_mode', 'Full-time student').strip()
+    special_reqs = request.POST.get('special_requirements', '').strip()
+    additional_info = request.POST.get('additional_info', '').strip()
+    room_pref = request.POST.get('room_pref', 'Single room').strip()
+    bathroom_pref = request.POST.get('bathroom_pref', 'Private Ensuite').strip()
+    floor_pref = request.POST.get('preferred_floor', 'No preference').strip()
+    accessibility_reqs = request.POST.get('accessibility_reqs', '').strip()
+
+    raw_prefs = request.POST.get('hostel_preferences', '')
+    ranked_hostel_names = []
+    if raw_prefs:
+        try:
+            parsed = json.loads(raw_prefs)
+            if isinstance(parsed, list):
+                ranked_hostel_names = parsed
+        except Exception:
+            ranked_hostel_names = [p.strip() for p in raw_prefs.split(',') if p.strip()]
+
+    if not ranked_hostel_names:
+        ranked_hostel_names = request.POST.getlist('preferences[]') or request.POST.getlist('preferences')
+
+    if not ranked_hostel_names:
+        ranked_hostel_names = ['Boys Hostel 1', 'Boys Hostel 2', 'Boys Hostel 3']
+
+    if student:
+        full_name = f"{first_name} {last_name}".strip()
+        if full_name:
+            student.name = full_name
+            parts = full_name.split()
+            student.avatar_initials = ''.join(p[0].upper() for p in parts[:2])
+            if request.user:
+                request.user.first_name = first_name
+                request.user.last_name = last_name
+                try:
+                    request.user.save(update_fields=['first_name', 'last_name'])
+                except Exception:
+                    pass
+        if programme:
+            student.programme = programme
+        student.save()
+
+    cycle = AllocationCycle.objects.filter(is_active=True).first()
+
+    notes_parts = []
+    if additional_info:
+        notes_parts.append(f"Notes: {additional_info}")
+    if special_reqs:
+        notes_parts.append(f"Special: {special_reqs}")
+    if accessibility_reqs:
+        notes_parts.append(f"Access: {accessibility_reqs}")
+    if bathroom_pref:
+        notes_parts.append(f"Bath: {bathroom_pref}")
+    if floor_pref and floor_pref != 'No preference':
+        notes_parts.append(f"Floor: {floor_pref}")
+    notes_combined = " · ".join(notes_parts)
+
+    app, created = Application.objects.get_or_create(
+        student=student,
+        defaults={
+            'application_id': f"NST-25-{random.randint(10000, 99999)}",
+            'cycle': cycle,
+            'academic_year': '2025/26',
+            'quota': 'Continuing Students',
+            'status': 'submitted',
+            'progress_percentage': 100,
+            'current_step': 5,
+            'room_type_preference': room_pref,
+            'additional_notes': notes_combined,
+            'submitted_at': timezone.now()
+        }
+    )
+
+    if not created:
+        app.status = 'submitted'
+        app.progress_percentage = 100
+        app.current_step = 5
+        app.room_type_preference = room_pref
+        app.additional_notes = notes_combined
+        app.submitted_at = timezone.now()
+        if cycle and not app.cycle:
+            app.cycle = cycle
+        app.save()
+
+    ApplicationPreference.objects.filter(application=app).delete()
+
+    saved_prefs = []
+    for rank_idx, h_name in enumerate(ranked_hostel_names, start=1):
+        clean_name = str(h_name).strip()
+        hostel = Hostel.objects.filter(name__iexact=clean_name).first()
+        if not hostel:
+            hostel = Hostel.objects.filter(name__icontains=clean_name).first()
+        if hostel:
+            ApplicationPreference.objects.create(
+                application=app,
+                hostel=hostel,
+                rank=rank_idx
+            )
+            saved_prefs.append({
+                'rank': rank_idx,
+                'hostel': hostel.name
+            })
+
+    actor_name = request.user.get_full_name() or (student.name if student else 'Student')
+    AuditLog.objects.create(
+        action=f"Application {app.application_id} submitted by {student.name} ({student.student_id}) with {len(saved_prefs)} ranked preferences ({room_pref})",
+        actor=actor_name
+    )
+
+    invalidate_student_caches()
+
+    try:
+        from housing.sockets import sio
+        sio.emit('new_activity', {
+            'action': f"New Application {app.application_id} submitted",
+            'actor': student.name if student else 'Student',
+            'time': 'Just now'
+        })
+    except Exception:
+        pass
+
+    return JsonResponse({
+        'status': 'success',
+        'application_id': app.application_id,
+        'student_name': student.name if student else 'Student',
+        'top_preference': saved_prefs[0]['hostel'] if saved_prefs else 'Boys Hostel 1',
+        'room_preference': room_pref,
+        'preferences': saved_prefs,
+        'message': 'Your application has been successfully saved to the database.'
+    })
+
+@student_required
 def status_view(request):
     profile = getattr(request.user, 'profile', None)
     student = profile.student_profile if (profile and profile.student_profile) else Student.objects.filter(student_id='STU-204810').first()
@@ -106,6 +268,7 @@ def status_view(request):
     status_data = cache.get(cache_key)
     if not status_data:
         app = Application.objects.filter(student=student).first() if student else None
+        preferences = list(app.preferences.all().select_related('hostel').order_by('rank')) if app else []
         letter = AllocationLetter.objects.filter(student=student).order_by('-generated_at').first() if student else None
         published_run = AllocationRun.objects.filter(status='published').order_by('-created_at').first()
         
@@ -127,6 +290,7 @@ def status_view(request):
         status_data = {
             'student': student,
             'application': app,
+            'preferences': preferences,
             'letter': letter,
             'is_allocated': is_allocated,
         }
