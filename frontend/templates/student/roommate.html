@@ -7,6 +7,15 @@
 {% block content %}
 <!-- Mode 1: Intro -->
 <div id="roommate-intro" class="page narrow">
+    {% if is_required_for_app and not is_completed %}
+    <div class="required-app-banner" style="margin-bottom: 24px; background: #fffbeb; border: 1.5px solid #f59e0b; border-radius: 16px; padding: 18px 22px; display: flex; align-items: center; gap: 14px; text-align: left; box-shadow: 0 4px 18px rgba(245,158,11,0.12);">
+        <span style="display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #fde68a; color: #b45309; flex-shrink: 0;">{% icon 'spark' 22 %}</span>
+        <div>
+            <strong style="display: block; font-size: 15px; color: #92400e; margin-bottom: 3px;">Roommate Matching Required to Start Application</strong>
+            <span style="font-size: 13px; color: #78350f; line-height: 1.45;">Please answer these 3 lifestyle questions first. Once answered, you will be taken directly to your hostel application.</span>
+        </div>
+    </div>
+    {% endif %}
     <div class="match-hero">
         <span class="hero-icon">{% icon 'spark' 28 %}</span>
         <span class="tag tag-info">PRIVATE BY DESIGN</span>
@@ -56,6 +65,11 @@
         <span id="quiz-progress-bar" style="width: 33.33%;"></span>
     </div>
     <section class="quiz-card">
+        {% if is_required_for_app and not is_completed %}
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px; color: #d97706; font-size: 12px; font-weight: 750; text-transform: uppercase; letter-spacing: 0.06em; background: #fffbeb; padding: 6px 12px; border-radius: 8px; border: 1px solid #fde68a; width: fit-content;">
+            {% icon 'spark' 14 %} Prerequisite to start hostel application
+        </div>
+        {% endif %}
         <span class="eyebrow">YOUR LIFESTYLE</span>
         <h1 id="quiz-question-text">When do you usually go to sleep?</h1>
         <p id="quiz-hint-text">Choose the option closest to your typical weekday.</p>
@@ -96,7 +110,7 @@
             </p>
         </div>
         <a href="{{ next_url|default:'/hostels/' }}" class="btn btn-primary" style="background: var(--lime); color: var(--forest); font-weight: 700; white-space: nowrap; padding: 10px 18px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
-            Proceed to Find a Hostel {% icon 'arrow' 17 %}
+            {% if 'application' in next_url %}Proceed to Application{% else %}Proceed to Find a Hostel{% endif %} {% icon 'arrow' 17 %}
         </a>
     </div>
 
@@ -233,15 +247,22 @@
         formData.append('sleep_schedule', sleepMap[selectedAnswers[0]] || '10 PM – 12 AM');
         formData.append('cleanliness', cleanMap[selectedAnswers[1]] || 'Generally tidy');
         formData.append('noise_level', noiseMap[selectedAnswers[2]] || 'Low background noise');
+        formData.append('next_url', '{{ next_url|escapejs }}');
 
         try {
-            await fetch("{% url 'submit-roommate-quiz' %}", {
+            const resp = await fetch("{% url 'submit-roommate-quiz' %}", {
                 method: 'POST',
                 body: formData,
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             });
+            const data = await resp.json();
+            const target = (data && data.redirect_url) || "{{ next_url|escapejs }}";
+            if (target && ('{{ is_required_for_app }}' === 'True' || target.indexOf('application') !== -1)) {
+                window.location.href = target;
+                return;
+            }
         } catch (e) {
             console.error('Quiz submission error:', e);
         } finally {
@@ -271,9 +292,14 @@
             currentStep--;
             renderQuestion();
         } else {
+            {% if is_required_for_app %}
+            window.location.href = "{% url 'overview' %}";
+            {% else %}
             document.getElementById('roommate-quiz').style.display = 'none';
             document.getElementById('roommate-intro').style.display = 'block';
+            {% endif %}
         }
+    }
     }
 
     function toggleSaveMatch(btn, matchId) {

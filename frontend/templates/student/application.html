@@ -58,6 +58,31 @@
     </div>
 </div>
 
+{% if needs_roommate_quiz %}
+<!-- Roommate Matching Gate Modal -->
+<div id="roommate-required-modal" class="modal-layer" style="display: flex; position: fixed; inset: 0; z-index: 2500; background: rgba(11,29,23,0.8); backdrop-filter: blur(6px); justify-content: center; align-items: center; padding: 20px;">
+    <div class="modal" style="max-width: 520px; width: 100%; border-radius: 24px; background: #ffffff; box-shadow: 0 35px 90px rgba(11,29,23,.4); padding: 40px 32px; text-align: center; border: 1px solid var(--line); animation: card-rise 0.25s ease;">
+        <span style="width: 64px; height: 64px; border-radius: 50%; background: var(--lime-soft); color: var(--forest); display: inline-grid; place-items: center; margin-bottom: 20px;">
+            {% icon 'users' 32 %}
+        </span>
+        <span class="eyebrow" style="color: var(--forest); font-weight: 750; font-size: 11px; letter-spacing: 0.08em; display: block; margin-bottom: 8px;">PREREQUISITE REQUIRED</span>
+        <h2 style="font-size: 24px; color: var(--forest); margin: 0 0 12px 0; font-weight: 750;">Answer Roommate Matching first</h2>
+        <p style="font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0 0 28px 0;">
+            Before you can access the hostel application, please answer your 3-question roommate matching questionnaire. This ensures your hostel rankings and room occupancy choices match compatible roommates.
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <a href="{% url 'roommate' %}?start=1&next={% url 'application' %}&required=1" class="btn btn-primary" style="justify-content: center; height: 50px; font-size: 14px; font-weight: 700; background: var(--lime); color: var(--forest); border: none; border-radius: 12px; text-decoration: none; display: flex; align-items: center; gap: 8px;">
+                {% icon 'spark' 16 %} Answer Roommate Matching (3 questions)
+            </a>
+            <a href="{% url 'overview' %}" class="btn btn-secondary" style="justify-content: center; height: 44px; font-size: 13px; color: var(--muted); border-color: var(--line); border-radius: 12px; text-decoration: none; display: flex; align-items: center;">
+                Back to Student Overview
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- Main Wizard Screen -->
 <div id="application-wizard" class="page wizard-page" style="display: {% if is_submitted and not request.GET.edit %}none{% else %}block{% endif %};">
     <div class="page-heading compact">

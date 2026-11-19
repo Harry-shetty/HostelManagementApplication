@@ -192,10 +192,13 @@ def roommate_view(request):
 
     ctx = get_base_context(request, 'roommate', is_admin=False)
     ctx.update(roommate_data)
+    next_dest = request.GET.get('next', reverse('hostels'))
+    is_required = request.GET.get('required') == '1' or 'application' in next_dest
     ctx.update({
         'is_completed': is_completed,
         'auto_start': request.GET.get('start') == '1' or request.GET.get('prompt') == '1',
-        'next_url': request.GET.get('next', reverse('hostels')),
+        'next_url': next_dest,
+        'is_required_for_app': is_required,
     })
     return render(request, 'student/roommate.html', ctx)
 
@@ -209,6 +212,7 @@ def submit_roommate_quiz_view(request):
     cleanliness = request.POST.get('cleanliness', 'Generally tidy').strip()
     noise_level = request.POST.get('noise_level', 'Low background noise').strip()
     interests = request.POST.get('interests', 'Computer Science · Web Design · Reading').strip()
+    next_url = request.POST.get('next_url') or reverse('hostels')
 
     if student:
         rp, created = RoommateProfile.objects.get_or_create(
@@ -240,18 +244,33 @@ def submit_roommate_quiz_view(request):
     return JsonResponse({
         'status': 'success',
         'message': 'Roommate matching questionnaire completed successfully.',
-        'redirect_url': reverse('hostels')
+        'redirect_url': next_url
     })
 
 @student_required
 def application_view(request):
     profile = getattr(request.user, 'profile', None)
     student = profile.student_profile if (profile and profile.student_profile) else None
+    if not student:
+        student = Student.objects.filter(student_id='STU-204810').first()
+
+    # Check if student completed roommate matching quiz
+    is_roommate_completed = request.session.get('roommate_quiz_completed', False)
+    if not is_roommate_completed and student:
+        is_roommate_completed = AuditLog.objects.filter(
+            actor=student.name, action__icontains="Roommate matching quiz completed"
+        ).exists() or RoommateProfile.objects.filter(student=student, is_active=True).exists()
+        if is_roommate_completed:
+            request.session['roommate_quiz_completed'] = True
+
+    # Do not let student access hostel application unless roommate matching is completed
+    if not is_roommate_completed:
+        messages.info(request, "Please answer the roommate matching questions first to start your hostel application.")
+        return redirect(f"{reverse('roommate')}?start=1&next={reverse('application')}&required=1")
+
     cache_key = f"student_application_data_{student.student_id if student else 'default'}"
     app_data = cache.get(cache_key)
     if not app_data:
-        if not student:
-            student = Student.objects.filter(student_id='STU-204810').first()
         app = Application.objects.filter(student=student).first() if student else None
         preferences = list(app.preferences.all().select_related('hostel').order_by('rank')) if app else []
         hostels = list(Hostel.objects.all().order_by('name'))
@@ -269,6 +288,7 @@ def application_view(request):
             'is_submitted': is_submitted,
             'preferences': preferences,
             'hostels': hostels,
+            'needs_roommate_quiz': False,
         }
         cache.set(cache_key, app_data, 1800)
 
@@ -283,6 +303,22 @@ def submit_application_view(request):
     student = profile.student_profile if (profile and profile.student_profile) else None
     if not student:
         student = Student.objects.filter(student_id='STU-204810').first()
+
+    # Verify roommate matching completed before allowing submission
+    is_roommate_completed = request.session.get('roommate_quiz_completed', False)
+    if not is_roommate_completed and student:
+        is_roommate_completed = AuditLog.objects.filter(
+            actor=student.name, action__icontains="Roommate matching quiz completed"
+        ).exists() or RoommateProfile.objects.filter(student=student, is_active=True).exists()
+        if is_roommate_completed:
+            request.session['roommate_quiz_completed'] = True
+
+    if not is_roommate_completed:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Please answer the roommate matching questions first to start and submit your hostel application.',
+            'redirect_url': f"{reverse('roommate')}?start=1&next={reverse('application')}&required=1"
+        }, status=403)
 
     first_name = request.POST.get('first_name', '').strip()
     last_name = request.POST.get('last_name', '').strip()
