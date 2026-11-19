@@ -453,9 +453,10 @@ def hostel_change_view(request):
 
     hostel_options = [
         {'id': 'bs11', 'name': 'Boys Studios 11', 'is_default': True, 'type': 'Studio Apartment'},
-        {'id': 'cedar_b', 'name': 'Cedar House - Wing B', 'is_default': False, 'type': 'Standard AC'},
-        {'id': 'maple_court', 'name': 'Maple Court Studios', 'is_default': False, 'type': 'Studio Apartment'},
-        {'id': 'willow_res', 'name': 'Willow Hall Residence', 'is_default': False, 'type': 'Ensuite AC'},
+        {'id': 'bh1', 'name': 'Boys Hostel 1 - Wing B', 'is_default': False, 'type': 'Standard AC'},
+        {'id': 'bh2', 'name': 'Boys Hostel 2 (BH-02)', 'is_default': False, 'type': 'Studio Apartment'},
+        {'id': 'bh3', 'name': 'Boys Hostel 3 (BH-03)', 'is_default': False, 'type': 'Ensuite AC'},
+        {'id': 'bh4', 'name': 'Boys Hostel 4 (BH-04)', 'is_default': False, 'type': 'Standard Air Cooled'},
     ]
 
     # Pre-filled contact info

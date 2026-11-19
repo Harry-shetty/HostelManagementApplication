@@ -55,7 +55,7 @@ def bedmap_view(request):
     cedar_data = cache.get('cedar_house_full_inventory')
 
     if not cedar_data:
-        cedar = Hostel.objects.filter(name='Cedar House').first()
+        cedar = Hostel.objects.filter(name='Boys Hostel 1').first() or Hostel.objects.first()
         all_rooms = list(Room.objects.filter(hostel=cedar).prefetch_related('beds__assigned_student').order_by('floor', 'room_number')) if cedar else []
 
         rooms_by_floor = {'Floor 1': [], 'Floor 2': [], 'Floor 3': []}
@@ -441,11 +441,14 @@ def reports_view(request):
     ctx = get_base_context(request, 'reports', is_admin=True)
 
     hostels_data = [
-        {'name': 'Cedar House', 'type': 'Undergraduate', 'total': 480, 'occupied': 432, 'avail': 48, 'pct': 90.0, 'accessible': 12},
-        {'name': 'Maple Court', 'type': 'Postgraduate Ensuite', 'total': 620, 'occupied': 580, 'avail': 40, 'pct': 93.5, 'accessible': 16},
-        {'name': 'Willow Hall', 'type': 'Mixed / Accessible Hub', 'total': 510, 'occupied': 475, 'avail': 35, 'pct': 93.1, 'accessible': 22},
-        {'name': 'Oak Residence', 'type': 'Undergraduate Quiet Zone', 'total': 450, 'occupied': 410, 'avail': 40, 'pct': 91.1, 'accessible': 8},
-        {'name': 'Pine Lodge', 'type': 'Senior Scholar Shared', 'total': 420, 'occupied': 385, 'avail': 35, 'pct': 91.7, 'accessible': 6},
+        {'name': 'Boys Hostel 1', 'type': 'Standard 4 Seater', 'total': 480, 'occupied': 432, 'avail': 48, 'pct': 90.0, 'accessible': 12},
+        {'name': 'Boys Hostel 2', 'type': 'Air Conditioned 2 Seater', 'total': 620, 'occupied': 580, 'avail': 40, 'pct': 93.5, 'accessible': 16},
+        {'name': 'Boys Hostel 3', 'type': 'Standard 3 Seater', 'total': 510, 'occupied': 475, 'avail': 35, 'pct': 93.1, 'accessible': 22},
+        {'name': 'Boys Hostel 4', 'type': 'Studio Apartment', 'total': 450, 'occupied': 410, 'avail': 40, 'pct': 91.1, 'accessible': 8},
+        {'name': 'Boys Hostel 5', 'type': 'Air Cooled 3 Seater', 'total': 420, 'occupied': 385, 'avail': 35, 'pct': 91.7, 'accessible': 6},
+        {'name': 'Boys Hostel 6', 'type': 'Deluxe AC Rooms', 'total': 380, 'occupied': 350, 'avail': 30, 'pct': 92.1, 'accessible': 10},
+        {'name': 'Boys Hostel 7', 'type': 'Postgrad Single Suites', 'total': 340, 'occupied': 315, 'avail': 25, 'pct': 92.6, 'accessible': 8},
+        {'name': 'Boys Hostel 8', 'type': 'Sports Complex Shared', 'total': 300, 'occupied': 270, 'avail': 30, 'pct': 90.0, 'accessible': 6},
     ]
 
     total_cap = sum(h['total'] for h in hostels_data)
@@ -894,7 +897,7 @@ def api_get_vacant_beds(request):
                         draft_assigned_codes.add(f"{room_no}{letter}")
 
             if not cedar:
-                cedar = Hostel.objects.filter(name='Cedar House').first()
+                cedar = Hostel.objects.filter(name='Boys Hostel 1').first() or Hostel.objects.first()
 
             vacant_beds_qs = (
                 Bed.objects.filter(status='available', assigned_student__isnull=True)

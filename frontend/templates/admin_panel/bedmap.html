@@ -2,13 +2,13 @@
 {% load housing_tags %}
 
 {% block title %}Interactive Bed Map | Nestora Admin{% endblock %}
-{% block topbar_title %}Interactive Bed Map · Cedar House{% endblock %}
+{% block topbar_title %}Interactive Bed Map · {{ cedar.name|default:'Boys Hostel 1' }}{% endblock %}
 
 {% block content %}
 <div class="page bed-page">
     <div class="page-heading compact">
         <div>
-            <span class="eyebrow">INVENTORY · CEDAR HOUSE</span>
+            <span class="eyebrow">INVENTORY · {{ cedar.name|default:'BOYS HOSTEL 1'|upper }}</span>
             <h1>Interactive bed map</h1>
             <p>View live room inventory and manage draft assignments.</p>
         </div>
@@ -39,7 +39,7 @@
         <section class="floor-panel">
             <div class="floor-header">
                 <div>
-                    <h2>Cedar House · <span id="floor-title">{{ floor }}</span></h2>
+                    <h2>{{ cedar.name|default:'Boys Hostel 1' }} · <span id="floor-title">{{ floor }}</span></h2>
                     <p>North wing</p>
                 </div>
                 <span>Updated live · Live Sync</span>

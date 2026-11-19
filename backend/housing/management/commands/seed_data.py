@@ -132,8 +132,8 @@ class Command(BaseCommand):
 
         # 3. Hostels (M1)
         cedar = Hostel.objects.create(
-            name='Cedar House',
-            slug='cedar-house',
+            name='Boys Hostel 1',
+            slug='boys-hostel-1',
             location='North Campus · 4 min walk',
             price_per_semester=18500,
             beds_available=18,
@@ -144,8 +144,8 @@ class Command(BaseCommand):
             tags=['Wi-Fi', 'Study rooms', 'Laundry']
         )
         maple = Hostel.objects.create(
-            name='Maple Court',
-            slug='maple-court',
+            name='Boys Hostel 2',
+            slug='boys-hostel-2',
             location='Central Campus · 2 min walk',
             price_per_semester=20500,
             beds_available=11,
@@ -156,8 +156,8 @@ class Command(BaseCommand):
             tags=['Gym', 'Courtyard', 'Kitchen']
         )
         willow = Hostel.objects.create(
-            name='Willow Hall',
-            slug='willow-hall',
+            name='Boys Hostel 3',
+            slug='boys-hostel-3',
             location='East Campus · 5 min walk',
             price_per_semester=16500,
             beds_available=26,
@@ -168,8 +168,8 @@ class Command(BaseCommand):
             tags=['Accessible', 'Library', 'Café']
         )
         oak = Hostel.objects.create(
-            name='Oak Residence',
-            slug='oak-residence',
+            name='Boys Hostel 4',
+            slug='boys-hostel-4',
             location='West Campus · 8 min walk',
             price_per_semester=17500,
             beds_available=15,
@@ -180,8 +180,8 @@ class Command(BaseCommand):
             tags=['Quiet zone', 'Bicycle storage', 'Balcony']
         )
         pine = Hostel.objects.create(
-            name='Pine Lodge',
-            slug='pine-lodge',
+            name='Boys Hostel 5',
+            slug='boys-hostel-5',
             location='South Campus · 10 min walk',
             price_per_semester=15500,
             beds_available=20,
@@ -190,6 +190,42 @@ class Command(BaseCommand):
             image_url=PHOTOS['pine'],
             room_summary='Shared apartments',
             tags=['Garden', 'Games room', 'Dining hall']
+        )
+        bh6 = Hostel.objects.create(
+            name='Boys Hostel 6',
+            slug='boys-hostel-6',
+            location='North-West Campus · 6 min walk',
+            price_per_semester=19500,
+            beds_available=16,
+            total_beds=60,
+            occupancy_percent=80,
+            image_url=PHOTOS['cedar'],
+            room_summary='Deluxe AC rooms',
+            tags=['Wi-Fi', 'Study rooms', 'AC']
+        )
+        bh7 = Hostel.objects.create(
+            name='Boys Hostel 7',
+            slug='boys-hostel-7',
+            location='Science Quad · 3 min walk',
+            price_per_semester=21500,
+            beds_available=12,
+            total_beds=55,
+            occupancy_percent=85,
+            image_url=PHOTOS['maple'],
+            room_summary='Postgraduate single suites',
+            tags=['Gym', 'Café', 'Library']
+        )
+        bh8 = Hostel.objects.create(
+            name='Boys Hostel 8',
+            slug='boys-hostel-8',
+            location='Sports Complex · 7 min walk',
+            price_per_semester=16000,
+            beds_available=22,
+            total_beds=65,
+            occupancy_percent=72,
+            image_url=PHOTOS['pine'],
+            room_summary='Multi-sharing standard rooms',
+            tags=['Garden', 'Bicycle storage', 'Dining hall']
         )
 
         # 4. Students
