@@ -30,15 +30,19 @@
                 <span class="eyebrow">YOUR APPLICATION</span>
                 <h2>Application progress</h2>
             </div>
-            <strong>{% if is_submitted %}100% complete{% else %}{{ application.progress_percentage|default:60 }}% complete{% endif %}</strong>
+            <strong>{% if is_submitted %}100% complete{% elif application %}{{ application.progress_percentage }}% complete{% else %}0% complete{% endif %}</strong>
         </div>
         <div class="step-track">
-            <div class="step done"><span>{% icon 'check' 15 %}</span><b>Profile</b></div>
-            <div class="step done"><span>{% icon 'check' 15 %}</span><b>Preferences</b></div>
-            <div class="step {% if is_submitted %}done{% else %}current{% endif %}">
-                <span>{% if is_submitted %}{% icon 'check' 15 %}{% else %}3{% endif %}</span><b>Review</b>
+            <div class="step {% if is_submitted %}done{% elif application and application.current_step > 1 %}done{% elif application %}current{% else %}current{% endif %}">
+                <span>{% if is_submitted or application and application.current_step > 1 %}{% icon 'check' 15 %}{% else %}1{% endif %}</span><b>Profile</b>
             </div>
-            <div class="step {% if is_submitted %}done{% endif %}">
+            <div class="step {% if is_submitted %}done{% elif application and application.current_step > 2 %}done{% elif application and application.current_step == 2 %}current{% endif %}">
+                <span>{% if is_submitted or application and application.current_step > 2 %}{% icon 'check' 15 %}{% else %}2{% endif %}</span><b>Preferences</b>
+            </div>
+            <div class="step {% if is_submitted %}done{% elif application and application.current_step > 3 %}done{% elif application and application.current_step == 3 %}current{% endif %}">
+                <span>{% if is_submitted or application and application.current_step > 3 %}{% icon 'check' 15 %}{% else %}3{% endif %}</span><b>Review</b>
+            </div>
+            <div class="step {% if is_submitted %}done{% elif application and application.current_step == 4 %}current{% endif %}">
                 <span>{% if is_submitted %}{% icon 'check' 15 %}{% else %}4{% endif %}</span><b>Submitted</b>
             </div>
             <div class="step {% if application.status == 'allocated' %}done{% endif %}">
