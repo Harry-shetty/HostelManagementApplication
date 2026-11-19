@@ -1310,7 +1310,6 @@ body.drawer-open { overflow: hidden; touch-action: none; }
 
 .hcr-allocation-table {
   width: 100%;
-  min-width: 820px;
   border-collapse: collapse;
   text-align: left;
 }
