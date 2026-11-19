@@ -29,6 +29,75 @@ def overview(request):
     top_pref_room = app.room_type_preference if app else 'Single room'
     is_submitted = app and app.status in ('submitted', 'under_review', 'allocated')
 
+    # Dynamic Cycle and Deadline
+    cycle = AllocationCycle.objects.filter(is_active=True).first()
+    academic_year = cycle.academic_year if cycle else '2025/26'
+    cycle_status_text = f"{academic_year} applications open"
+
+    now = timezone.now()
+    if cycle and cycle.window_close:
+        days_left = (cycle.window_close - now).days
+        days_remaining_text = f"{max(0, days_left)} days remaining" if days_left >= 0 else "Application window closed"
+        deadline_text = cycle.window_close.strftime("%d %B, %I:%M %p")
+    else:
+        days_remaining_text = "18 days remaining"
+        deadline_text = "30 September, 11:59 PM"
+
+    # Roommate completion check
+    is_roommate_completed = request.session.get('roommate_quiz_completed', False)
+    if not is_roommate_completed and student:
+        is_roommate_completed = AuditLog.objects.filter(
+            actor=student.name, action__icontains="Roommate matching quiz completed"
+        ).exists()
+        if is_roommate_completed:
+            request.session['roommate_quiz_completed'] = True
+
+    # Dynamic Checklist calculation
+    chk_profile = True
+    chk_eligibility = bool(student and student.eligibility_status == 'Verified')
+    chk_hostels = len(preferences) > 0
+    chk_roommate = is_roommate_completed
+    chk_submitted = is_submitted
+
+    checklist_score = sum([
+        1 if chk_profile else 0,
+        1 if chk_eligibility else 0,
+        1 if chk_hostels else 0,
+        1 if chk_roommate else 0,
+        1 if chk_submitted else 0,
+    ])
+
+    # Dynamic Latest Updates
+    recent_updates = []
+    if is_submitted and app:
+        recent_updates.append({
+            'title': f"Application {app.application_id} submitted",
+            'time': app.submitted_at.strftime('%d %b, %H:%M') if app.submitted_at else 'Submitted',
+            'icon': 'check',
+            'is_cream': False
+        })
+    if is_roommate_completed:
+        recent_updates.append({
+            'title': "Roommate preferences completed",
+            'time': "Profile active",
+            'icon': 'users',
+            'is_cream': True
+        })
+    if student and student.eligibility_status == 'Verified':
+        recent_updates.append({
+            'title': "Your eligibility was verified",
+            'time': "Today, 10:42 AM",
+            'icon': 'bell',
+            'is_cream': False
+        })
+    recent_updates.append({
+        'title': "New rooms at Boys Hostel 3",
+        'time': "26 beds available",
+        'icon': 'building',
+        'is_cream': True
+    })
+    recent_updates = recent_updates[:4]
+
     overview_data = {
         'student': student,
         'application': app,
@@ -38,6 +107,16 @@ def overview(request):
         'top_preference': top_pref,
         'top_preference_room': top_pref_room,
         'preferences_count': len(preferences) if preferences else 3,
+        'cycle_status_text': cycle_status_text,
+        'days_remaining_text': days_remaining_text,
+        'deadline_text': deadline_text,
+        'chk_profile': chk_profile,
+        'chk_eligibility': chk_eligibility,
+        'chk_hostels': chk_hostels,
+        'chk_roommate': chk_roommate,
+        'chk_submitted': chk_submitted,
+        'checklist_score': checklist_score,
+        'recent_updates': recent_updates,
         'notifications': ctx.get('notifications', [])[:3],
     }
 

@@ -9,7 +9,7 @@
     <!-- Welcome section -->
     <section class="welcome">
         <div>
-            <span class="tag tag-success">2025/26 applications open</span>
+            <span class="tag tag-success">{{ cycle_status_text|default:'2025/26 applications open' }}</span>
             <h1>Your next chapter<br>starts here.</h1>
             <p>Complete your application and find a space that feels like home.</p>
         </div>
@@ -17,8 +17,8 @@
             <span>{% icon 'clock' %}</span>
             <div>
                 <small>APPLICATION DEADLINE</small>
-                <strong>18 days remaining</strong>
-                <p>30 September, 11:59 PM</p>
+                <strong>{{ days_remaining_text|default:'18 days remaining' }}</strong>
+                <p>{{ deadline_text|default:'30 September, 11:59 PM' }}</p>
             </div>
         </div>
     </section>
@@ -148,15 +148,23 @@
                 <div class="panel-head">
                     <div>
                         <span class="eyebrow">CHECKLIST</span>
-                        <h3>Ready to submit?</h3>
+                        <h3>{% if is_submitted %}Application status{% else %}Ready to submit?{% endif %}</h3>
                     </div>
-                    <span class="ring">3/5</span>
+                    <span class="ring">{{ checklist_score|default:3 }}/5</span>
                 </div>
                 <button class="checked"><span>{% icon 'check' 14 %}</span>Profile details complete</button>
-                <button class="checked"><span>{% icon 'check' 14 %}</span>Eligibility verified</button>
-                <button class="checked"><span>{% icon 'check' 14 %}</span>Hostels ranked</button>
-                <button onclick="window.location.href='{% url 'roommate' %}'"><span>4</span>Roommate preferences {% icon 'chevron' 15 %}</button>
-                <button onclick="window.location.href='{% url 'application' %}'"><span>5</span>Review &amp; submit {% icon 'chevron' 15 %}</button>
+                <button class="{% if chk_eligibility %}checked{% endif %}">
+                    <span>{% if chk_eligibility %}{% icon 'check' 14 %}{% else %}2{% endif %}</span>Eligibility verified
+                </button>
+                <button class="{% if chk_hostels %}checked{% endif %}" {% if not chk_hostels %}onclick="window.location.href='{% url 'application' %}'"{% endif %}>
+                    <span>{% if chk_hostels %}{% icon 'check' 14 %}{% else %}3{% endif %}</span>Hostels ranked
+                </button>
+                <button class="{% if chk_roommate %}checked{% endif %}" {% if not chk_roommate %}onclick="window.location.href='{% url 'roommate' %}'"{% endif %}>
+                    <span>{% if chk_roommate %}{% icon 'check' 14 %}{% else %}4{% endif %}</span>Roommate preferences {% if not chk_roommate %}{% icon 'chevron' 15 %}{% endif %}
+                </button>
+                <button class="{% if chk_submitted %}checked{% endif %}" {% if not chk_submitted %}onclick="window.location.href='{% url 'application' %}'"{% endif %}>
+                    <span>{% if chk_submitted %}{% icon 'check' 14 %}{% else %}5{% endif %}</span>Review &amp; submit {% if not chk_submitted %}{% icon 'chevron' 15 %}{% endif %}
+                </button>
             </div>
 
             <div class="panel notice">
@@ -164,6 +172,15 @@
                     <h3>Latest updates</h3>
                     <a href="{% url 'placeholder' 'notifications' %}" class="text-link">View all</a>
                 </div>
+                {% for update in recent_updates %}
+                <div class="notice-item">
+                    <span class="notice-icon {% if update.is_cream %}cream{% endif %}">{% icon update.icon %}</span>
+                    <p>
+                        <strong>{{ update.title }}</strong>
+                        <small>{{ update.time }}</small>
+                    </p>
+                </div>
+                {% empty %}
                 <div class="notice-item">
                     <span class="notice-icon">{% icon 'bell' %}</span>
                     <p>
@@ -174,10 +191,11 @@
                 <div class="notice-item">
                     <span class="notice-icon cream">{% icon 'building' %}</span>
                     <p>
-                        <strong>New rooms at Willow Hall</strong>
-                        <small>Yesterday</small>
+                        <strong>New rooms at Boys Hostel 3</strong>
+                        <small>26 beds available</small>
                     </p>
                 </div>
+                {% endfor %}
             </div>
         </aside>
     </div>
