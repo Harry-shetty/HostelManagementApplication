@@ -58,9 +58,9 @@
                 <a href="{% url 'student-letter' %}" class="btn btn-primary" target="_blank" style="padding: 0 20px;">
                     {% icon 'download' 16 %} View Official Allocation Letter
                 </a>
-                <button type="button" class="btn btn-secondary" onclick="openRoomChangeModal()">
-                    Request Room Change
-                </button>
+                <a href="{% url 'hostel-change' %}" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 8px;">
+                    {% icon 'arrow' 14 %} Hostel Change Request (Session 2026-2027)
+                </a>
             </div>
         </div>
 

@@ -1,5 +1,9 @@
+import json
+import random
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
+from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.contrib.auth import update_session_auth_hash
 from django.contrib import messages
@@ -301,6 +305,245 @@ def profile_view(request):
         'error_msg': error_msg,
     })
     return render(request, 'student/profile.html', ctx)
+
+@student_required
+def hostel_change_view(request):
+    """
+    Hostel Change Request & Residential Booking Change Workflow (Session 2026-2027)
+    Allows allocated students to select Room Types, Seater Categories, and Hostels
+    with live difference pricing, contact verification, and direct undertaking settlement.
+    """
+    profile = getattr(request.user, 'profile', None)
+    student = profile.student_profile if (profile and profile.student_profile) else None
+    if not student:
+        student = Student.objects.filter(student_id='STU-204810').first()
+
+    letter = AllocationLetter.objects.filter(student=student).order_by('-generated_at').first() if student else None
+
+    current_allocation = {
+        'hostel': 'Boys Hostel-01',
+        'seater': 'Standard Air Conditioned 4 Seater',
+        'room_no': f"{letter.room_number if letter else 'A914'}-Bed {letter.bed_letter if letter else 'D'}",
+        'availing_food': 'Yes',
+        'meal_type': 'Standard Mess Two Meals',
+        'food_type': 'Combo North-South',
+        'mess_name': 'Same Hostel Mess 1(BH-01)',
+        'availing_laundry': 'No',
+        'availing_gym': 'No',
+        'current_credit': 119450,  # Fee baseline for difference calculation
+    }
+
+    room_types = [
+        {
+            'id': 'studio_ac',
+            'name': 'Studio Apartment Air Conditioned',
+            'washroom': 'Attached Washroom',
+            'is_default': True,
+        },
+        {
+            'id': 'standard_ac',
+            'name': 'Standard Air Conditioned',
+            'washroom': 'Attached Washroom',
+            'is_default': False,
+        },
+        {
+            'id': 'standard_cooler',
+            'name': 'Standard Air Cooled',
+            'washroom': 'Attached Washroom',
+            'is_default': False,
+        },
+    ]
+
+    seater_packages = {
+        'studio_ac': [
+            {
+                'id': 'studio_2_pantry',
+                'name': 'Studio Apartment Air Conditioned 2 Seater (With Pantry)',
+                'badge': 'Limited Seats Left',
+                'price': 150000,
+                'is_default': True,
+                'available_seats': 4,
+            },
+            {
+                'id': 'studio_3_pantry',
+                'name': 'Studio Apartment Air Conditioned 3 Seater (With Pantry)',
+                'badge': 'Limited Seats Left',
+                'price': 130000,
+                'is_default': False,
+                'available_seats': 7,
+            },
+            {
+                'id': 'studio_4_seater',
+                'name': 'Studio Apartment Air Conditioned 4 Seater',
+                'badge': 'Available',
+                'price': 105000,
+                'is_default': False,
+                'available_seats': 12,
+            },
+            {
+                'id': 'studio_3_seater',
+                'name': 'Studio Apartment Air Conditioned 3 Seater',
+                'badge': 'Available',
+                'price': 120000,
+                'is_default': False,
+                'available_seats': 9,
+            },
+        ],
+        'standard_ac': [
+            {
+                'id': 'std_ac_1',
+                'name': 'Standard Air Conditioned 1 Seater (Attached Washroom)',
+                'badge': 'Few Remaining',
+                'price': 160000,
+                'is_default': False,
+                'available_seats': 2,
+            },
+            {
+                'id': 'std_ac_2',
+                'name': 'Standard Air Conditioned 2 Seater (Attached Washroom)',
+                'badge': 'Available',
+                'price': 125000,
+                'is_default': False,
+                'available_seats': 15,
+            },
+            {
+                'id': 'std_ac_3',
+                'name': 'Standard Air Conditioned 3 Seater (Attached Washroom)',
+                'badge': 'Available',
+                'price': 105000,
+                'is_default': False,
+                'available_seats': 21,
+            },
+            {
+                'id': 'std_ac_4',
+                'name': 'Standard Air Conditioned 4 Seater (Attached Washroom)',
+                'badge': 'High Availability',
+                'price': 90000,
+                'is_default': False,
+                'available_seats': 34,
+            },
+        ],
+        'standard_cooler': [
+            {
+                'id': 'std_cooler_2',
+                'name': 'Standard Air Cooled 2 Seater (Attached Washroom)',
+                'badge': 'Available',
+                'price': 95000,
+                'is_default': False,
+                'available_seats': 8,
+            },
+            {
+                'id': 'std_cooler_3',
+                'name': 'Standard Air Cooled 3 Seater (Attached Washroom)',
+                'badge': 'Available',
+                'price': 82000,
+                'is_default': False,
+                'available_seats': 18,
+            },
+            {
+                'id': 'std_cooler_4',
+                'name': 'Standard Air Cooled 4 Seater (Attached Washroom)',
+                'badge': 'High Availability',
+                'price': 72000,
+                'is_default': False,
+                'available_seats': 45,
+            },
+        ]
+    }
+
+    hostel_options = [
+        {'id': 'bs11', 'name': 'Boys Studios 11', 'is_default': True, 'type': 'Studio Apartment'},
+        {'id': 'cedar_b', 'name': 'Cedar House - Wing B', 'is_default': False, 'type': 'Standard AC'},
+        {'id': 'maple_court', 'name': 'Maple Court Studios', 'is_default': False, 'type': 'Studio Apartment'},
+        {'id': 'willow_res', 'name': 'Willow Hall Residence', 'is_default': False, 'type': 'Ensuite AC'},
+    ]
+
+    # Pre-filled contact info
+    student_phone = student.phone if (student and student.phone) else '9141773450'
+    student_email = student.email if (student and student.email) else (request.user.email or 'harsha.bk23@lpu.in')
+
+    ctx = get_base_context(request, 'hostel-change', is_admin=False)
+    ctx.update({
+        'student': student,
+        'current_allocation': current_allocation,
+        'room_types': room_types,
+        'seater_packages': seater_packages,
+        'seater_packages_json': json.dumps(seater_packages),
+        'hostel_options': hostel_options,
+        'student_mobile': student_phone,
+        'student_email': student_email,
+        'initial_net_payable': 30550,
+    })
+    return render(request, 'student/hostel_change.html', ctx)
+
+@student_required
+@require_POST
+def submit_hostel_change_request(request):
+    """
+    Handles payment undertaking & booking change submission.
+    Creates RoomChangeRequest, immutable AuditLog, and triggers real-time notice.
+    """
+    profile = getattr(request.user, 'profile', None)
+    student = profile.student_profile if (profile and profile.student_profile) else Student.objects.filter(student_id='STU-204810').first()
+
+    room_type = request.POST.get('room_type', 'Studio Apartment Air Conditioned')
+    seater_name = request.POST.get('seater_name', 'Studio Apartment Air Conditioned 2 Seater (With Pantry)')
+    seater_price = request.POST.get('seater_price', '150000.00')
+    hostel_name = request.POST.get('hostel_name', 'Boys Studios 11')
+    net_payable = request.POST.get('net_payable', '30550')
+    mobile = request.POST.get('mobile', student.phone if student else '9141773450')
+    email = request.POST.get('email', student.email if student else 'harsha.bk23@lpu.in')
+    current_bed = request.POST.get('current_bed', 'Boys Hostel-01 · A914-Bed D')
+
+    ref_code = f"HCR-2026-{random.randint(1000, 9999)}"
+
+    details_payload = json.dumps({
+        'reference_code': ref_code,
+        'session': '2026-2027',
+        'room_type': room_type,
+        'seater_category': seater_name,
+        'package_price': seater_price,
+        'net_payable_amount': net_payable,
+        'student_mobile': mobile,
+        'student_email': email,
+        'undertaking_confirmed': True,
+        'submitted_at': timezone.now().strftime('%d %b %Y, %H:%M:%S UTC'),
+    })
+
+    if student:
+        req_obj = RoomChangeRequest.objects.create(
+            student=student,
+            current_bed_label=current_bed,
+            preferred_hostel=hostel_name,
+            reason_category='financial',
+            details=details_payload,
+            status='pending'
+        )
+
+        AuditLog.objects.create(
+            action=f"Hostel Change Request {ref_code} confirmed by {student.name} ({student.student_id}) for {hostel_name} · {seater_name} (Net Payable: ₹{net_payable})",
+            actor=student.name,
+        )
+
+        try:
+            from housing.sockets import sio
+            sio.emit('new_activity', {
+                'action': f"New Hostel Change Request {ref_code}",
+                'actor': student.name,
+                'time': 'Just now'
+            })
+        except Exception:
+            pass
+
+    return JsonResponse({
+        'status': 'success',
+        'message': 'Hostel Change Request & Residential Booking submitted successfully.',
+        'reference_code': ref_code,
+        'net_payable': net_payable,
+        'seater_name': seater_name,
+        'hostel_name': hostel_name,
+        'redirect_url': reverse('status'),
+    })
 
 # ==================== AJAX APIs ====================
 

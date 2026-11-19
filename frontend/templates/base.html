@@ -235,7 +235,7 @@
 
                     <!-- Application Dropdown -->
                     <div class="nav-dropdown">
-                        <a href="{% url 'application' %}" class="nav-item has-dropdown {% if active_view in 'application status' %}active{% endif %}">
+                        <a href="{% url 'application' %}" class="nav-item has-dropdown {% if active_view in 'application status hostel-change' %}active{% endif %}">
                             {% icon 'file' %}<span>My Housing</span>
                             <span class="dropdown-chevron">{% icon 'chevron-down' 12 %}</span>
                         </a>
@@ -252,6 +252,13 @@
                                 <div>
                                     <strong>Allocation Status</strong>
                                     <small>Track timeline &amp; authorised publication</small>
+                                </div>
+                            </a>
+                            <a href="{% url 'hostel-change' %}" class="dropdown-link {% if active_view == 'hostel-change' %}active{% endif %}">
+                                <span class="dropdown-icon">{% icon 'bed' 16 %}</span>
+                                <div>
+                                    <strong>Hostel Change Request</strong>
+                                    <small>Session 2026-2027 room &amp; seater transfer</small>
                                 </div>
                             </a>
                         </div>

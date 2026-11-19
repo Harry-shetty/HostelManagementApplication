@@ -1,0 +1,622 @@
+{% extends 'base.html' %}
+{% load housing_tags %}
+
+{% block title %}Hostel Change Request | Session 2026-2027 | Nestora{% endblock %}
+{% block topbar_title %}Hostel Change Request (Session 2026-2027){% endblock %}
+
+{% block content %}
+<div class="page" style="max-width: 1340px; margin: 0 auto;">
+    
+    <!-- Header Section with University Title, Session, Demos & Guidelines -->
+    <div class="hcr-header-panel">
+        <div class="hcr-title-group">
+            <div class="hcr-brand-crest">
+                {% icon 'building' 28 %}
+            </div>
+            <div>
+                <h1 class="hcr-main-title">Hostel Change Request</h1>
+                <span class="hcr-session-subtitle">Session 2026-2027</span>
+            </div>
+        </div>
+
+        <div class="hcr-top-actions">
+            <div class="hcr-action-buttons">
+                <button type="button" class="hcr-demo-btn" onclick="openDemoModal()">
+                    <span class="hcr-play-icon">▶</span> Booking Process Demo
+                </button>
+                <button type="button" class="hcr-demo-btn" onclick="openFacilitiesModal()">
+                    <span class="hcr-play-icon">▶</span> Watch Residential Facilities 🏠
+                </button>
+            </div>
+
+            <div class="hcr-guidelines-links">
+                <a href="#facilities" onclick="openInfoModal('Facilities in Hostel/Apartment Rooms')">Facilities in Hostel/Apartment Rooms</a>
+                <span class="hcr-pipe">|</span>
+                <a href="#charges" onclick="openInfoModal('Residential Charges & Tiers')">Residential Charges</a>
+                <span class="hcr-pipe">|</span>
+                <a href="#refund" onclick="openInfoModal('Refund & Adjustment Guidelines')">Refund Guidelines</a>
+            </div>
+
+            <div class="hcr-legend-indicator">
+                <span class="hcr-legend-item">
+                    <span class="hcr-box-inactive"></span> Active
+                </span>
+                <span class="hcr-legend-item">
+                    <span class="hcr-box-selected"></span> Selected
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Allocation Table (Top Table) -->
+    <div class="hcr-table-card">
+        <div class="hcr-table-wrap">
+            <table class="hcr-allocation-table">
+                <thead>
+                    <tr>
+                        <th>Hostel</th>
+                        <th>Seater</th>
+                        <th>Room No</th>
+                        <th>Availing Food</th>
+                        <th>Meal Type</th>
+                        <th>Food Type</th>
+                        <th>Mess Name</th>
+                        <th>Availing Laundry</th>
+                        <th>Availing Gym</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>{{ current_allocation.hostel }}</strong></td>
+                        <td>{{ current_allocation.seater }}</td>
+                        <td><span class="hcr-room-tag">{{ current_allocation.room_no }}</span></td>
+                        <td>{{ current_allocation.availing_food }}</td>
+                        <td>{{ current_allocation.meal_type }}</td>
+                        <td>{{ current_allocation.food_type }}</td>
+                        <td>{{ current_allocation.mess_name }}</td>
+                        <td>{{ current_allocation.availing_laundry }}</td>
+                        <td>{{ current_allocation.availing_gym }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Main Two-Column Workflow -->
+    <div class="hcr-workflow-grid">
+        
+        <!-- Left Column: Selection Controls -->
+        <div class="hcr-left-column">
+            
+            <!-- Step 1: Select Room Type -->
+            <section class="hcr-section">
+                <h2 class="hcr-section-heading">Select Room Type</h2>
+                <div class="hcr-room-types-grid">
+                    {% for rt in room_types %}
+                    <div class="hcr-select-card room-type-card {% if rt.is_default %}active selected{% endif %}" 
+                         data-room-type-id="{{ rt.id }}" 
+                         data-room-type-name="{{ rt.name }}" 
+                         onclick="selectRoomType('{{ rt.id }}', '{{ rt.name }}')">
+                        <div class="hcr-card-content">
+                            <strong>{{ rt.name }}</strong>
+                            <small>({{ rt.washroom }})</small>
+                        </div>
+                        <span class="hcr-radio-indicator"></span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <!-- Step 2: Select Seater Category -->
+            <section class="hcr-section">
+                <h2 class="hcr-section-heading">Select Seater Category</h2>
+                <div id="seater-packages-container" class="hcr-seater-grid">
+                    <!-- Populated dynamically via JavaScript based on selected Room Type -->
+                </div>
+            </section>
+
+            <!-- Step 3: Select Hostel -->
+            <section class="hcr-section">
+                <h2 class="hcr-section-heading">Select Hostel</h2>
+                <div class="hcr-hostels-grid">
+                    {% for h in hostel_options %}
+                    <div class="hcr-select-card hostel-card {% if h.is_default %}active selected{% endif %}" 
+                         data-hostel-id="{{ h.id }}" 
+                         data-hostel-name="{{ h.name }}"
+                         onclick="selectHostel('{{ h.id }}', '{{ h.name }}')">
+                        <div class="hcr-card-content">
+                            <strong>{{ h.name }}</strong>
+                            <small>{{ h.type }}</small>
+                        </div>
+                        <span class="hcr-radio-indicator"></span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <!-- Step 4: Optional Meal & Amenity Upgrades -->
+            <section class="hcr-section">
+                <h2 class="hcr-section-heading" style="color: var(--forest);">Optional Amenities &amp; Boarding</h2>
+                <div class="hcr-amenities-row">
+                    <label class="hcr-amenity-checkbox">
+                        <input type="checkbox" id="chk-meal-upgrade" onchange="recalculateCart()">
+                        <span>
+                            <strong>Full Board 4-Meal Plan Upgrade</strong>
+                            <small>Breakfast, Lunch, Evening Snacks &amp; Dinner (+₹12,000 / sem)</small>
+                        </span>
+                    </label>
+
+                    <label class="hcr-amenity-checkbox">
+                        <input type="checkbox" id="chk-laundry-plan" onchange="recalculateCart()">
+                        <span>
+                            <strong>Hostel Laundry Valet Service</strong>
+                            <small>Twice weekly wash &amp; steam fold (+₹4,500 / sem)</small>
+                        </span>
+                    </label>
+
+                    <label class="hcr-amenity-checkbox">
+                        <input type="checkbox" id="chk-gym-access" onchange="recalculateCart()">
+                        <span>
+                            <strong>Campus Fitness &amp; Gym Membership</strong>
+                            <small>All-access pass to student sports pavilion (+₹3,000 / sem)</small>
+                        </span>
+                    </label>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Right Column: Sticky Residential Cart -->
+        <aside class="hcr-right-column">
+            <div class="hcr-cart-card">
+                <div class="hcr-cart-header">
+                    <span>RESIDENTIAL CART</span>
+                </div>
+
+                <div class="hcr-cart-body">
+                    <!-- Selected Package Line Item -->
+                    <div class="hcr-cart-item">
+                        <div class="hcr-item-info">
+                            <strong id="cart-item-title">Studio Apartment Air Conditioned 2 Seater (With Pantry)</strong>
+                            <span class="hcr-item-hostel" id="cart-item-hostel">Hostel: Boys Studios 11</span>
+                        </div>
+                        <div class="hcr-item-price-col">
+                            <span class="hcr-item-price" id="cart-item-price">150000.00</span>
+                            <button type="button" class="hcr-cart-delete-btn" onclick="resetCartSelection()" title="Reset Selection">
+                                {% icon 'trash' 16 %}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Contact Verification Inputs -->
+                    <div class="hcr-cart-fields">
+                        <div class="hcr-input-group">
+                            <label for="cart-mobile">Mobile</label>
+                            <input type="tel" id="cart-mobile" value="{{ student_mobile }}" required>
+                        </div>
+
+                        <div class="hcr-input-group">
+                            <label for="cart-email">Email</label>
+                            <input type="email" id="cart-email" value="{{ student_email }}" required>
+                        </div>
+                    </div>
+
+                    <!-- Financial Balance Breakdown -->
+                    <div class="hcr-breakdown">
+                        <div class="hcr-breakdown-row">
+                            <span>New Room Fee:</span>
+                            <strong id="breakdown-new-price">₹150,000.00</strong>
+                        </div>
+                        <div class="hcr-breakdown-row" style="color: var(--muted);">
+                            <span>Current Allocation Credit:</span>
+                            <strong>-₹119,450.00</strong>
+                        </div>
+                        <div id="breakdown-addons-row" class="hcr-breakdown-row" style="display: none; color: var(--forest);">
+                            <span>Selected Amenities:</span>
+                            <strong id="breakdown-addons-price">+₹0.00</strong>
+                        </div>
+                        <div class="hcr-net-payable-row">
+                            <span class="hcr-net-label">Net Payable Amount</span>
+                            <span class="hcr-net-value" id="cart-net-payable">30550</span>
+                        </div>
+                    </div>
+
+                    <!-- Legal Undertaking Agreement -->
+                    <div class="hcr-undertaking-box">
+                        <label class="hcr-undertaking-label">
+                            <input type="checkbox" id="undertaking-check" checked required>
+                            <span>
+                                <strong>*</strong> I hereby undertake to pay the difference in amount, if any, due to the seater change requested by me.
+                            </span>
+                        </label>
+                    </div>
+
+                    <!-- Primary Action Button -->
+                    <button type="button" id="btn-pay-and-book" class="hcr-pay-btn" onclick="submitHostelChange()">
+                        PAY &amp; BOOK
+                    </button>
+
+                    <div class="hcr-cart-guarantee">
+                        {% icon 'shield' 14 %}
+                        <span>Secure university bursary gateway. Allocation subject to warden vacancy sign-off.</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- Booking Confirmation Receipt Modal -->
+    <div id="hcr-receipt-modal" class="modal-layer" style="display: none; z-index: 2500;">
+        <div class="modal" style="max-width: 580px; width: 100%; border-radius: 18px; background: white; overflow: hidden; box-shadow: 0 25px 80px rgba(0,0,0,0.3);">
+            <div style="background: var(--forest); color: white; padding: 24px; text-align: center; position: relative;">
+                <div style="width: 54px; height: 54px; border-radius: 50%; background: #2f855a; color: white; display: grid; place-items: center; margin: 0 auto 12px; font-size: 26px;">
+                    ✓
+                </div>
+                <h2 style="margin: 0 0 4px; font-size: 22px; color: white;">Booking Request Confirmed!</h2>
+                <p style="margin: 0; font-size: 13px; color: #d7e6df;">Session 2026-2027 Hostel Change Lodged</p>
+            </div>
+
+            <div style="padding: 24px;">
+                <div style="background: #fafbf9; border: 1px dashed var(--line); border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="color: var(--muted); font-size: 12px;">Reference Code:</span>
+                        <strong id="receipt-ref" style="font-family: monospace; color: var(--forest); font-size: 14px;">HCR-2026-7841</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="color: var(--muted); font-size: 12px;">Selected Seater:</span>
+                        <strong id="receipt-seater" style="font-size: 13px;">Studio 2 Seater</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="color: var(--muted); font-size: 12px;">Assigned Residence:</span>
+                        <strong id="receipt-hostel" style="font-size: 13px;">Boys Studios 11</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="color: var(--muted); font-size: 12px;">Net Difference Amount:</span>
+                        <strong id="receipt-amount" style="color: #2f855a; font-size: 15px;">INR 30,550.00</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--muted); font-size: 12px;">Review Status:</span>
+                        <span class="tag tag-warning" style="font-size: 11px;">Pending Warden Endorsement</span>
+                    </div>
+                </div>
+
+                <p style="font-size: 12px; color: var(--muted); margin: 0 0 20px; line-height: 1.5;">
+                    Your request has been dispatched to the Warden Administration Workspace and financial ledger. An updated room keycard pass will be generated upon warden approval.
+                </p>
+
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="window.print()">
+                        {% icon 'download' 14 %} Print Receipt
+                    </button>
+                    <a href="{% url 'status' %}" class="btn btn-primary" style="background: var(--forest); color: white;">
+                        View in Allocation Status {% icon 'arrow' 14 %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Process Demo Modal -->
+    <div id="hcr-demo-modal" class="modal-layer" style="display: none; z-index: 2500;">
+        <div class="modal" style="max-width: 620px; width: 100%; border-radius: 18px; background: white; overflow: hidden; box-shadow: 0 25px 80px rgba(0,0,0,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid var(--line);">
+                <h3 style="margin: 0; font-size: 18px; color: var(--forest);">▶ Residential Booking Change Demo</h3>
+                <button type="button" onclick="closeDemoModal()" style="border: none; background: transparent; cursor: pointer; color: var(--muted);">{% icon 'close' 18 %}</button>
+            </div>
+            <div style="padding: 24px;">
+                <div style="display: flex; flex-direction: column; gap: 16px; font-size: 13px; line-height: 1.6;">
+                    <div style="display: flex; gap: 14px; align-items: flex-start;">
+                        <span style="width: 28px; height: 28px; border-radius: 50%; background: #ea580c; color: white; display: grid; place-items: center; font-weight: 700; flex-shrink: 0;">1</span>
+                        <div>
+                            <strong>Choose Room Type &amp; Air Conditioning:</strong>
+                            <p style="margin: 4px 0 0; color: var(--muted);">Select between Studio Apartments, Standard AC, or Air Cooled options based on your preference and budget.</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 14px; align-items: flex-start;">
+                        <span style="width: 28px; height: 28px; border-radius: 50%; background: #ea580c; color: white; display: grid; place-items: center; font-weight: 700; flex-shrink: 0;">2</span>
+                        <div>
+                            <strong>Pick Seater &amp; Live Vacancies:</strong>
+                            <p style="margin: 4px 0 0; color: var(--muted);">Review real-time seat availability tags (Limited Seats Left, Available) and select single, 2-seater, 3-seater, or 4-seater layouts.</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 14px; align-items: flex-start;">
+                        <span style="width: 28px; height: 28px; border-radius: 50%; background: #ea580c; color: white; display: grid; place-items: center; font-weight: 700; flex-shrink: 0;">3</span>
+                        <div>
+                            <strong>Automatic Net Difference Settlement:</strong>
+                            <p style="margin: 4px 0 0; color: var(--muted);">Your existing allocation fee (₹119,450.00) is credited automatically in the Residential Cart. You only pay or balance the net difference.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="padding: 16px 24px; border-top: 1px solid var(--line); background: #fafbf9; text-align: right;">
+                <button type="button" class="btn btn-primary" onclick="closeDemoModal()" style="background: #ea580c; color: white;">Got It</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generic Information Modal -->
+    <div id="hcr-info-modal" class="modal-layer" style="display: none; z-index: 2500;">
+        <div class="modal" style="max-width: 580px; width: 100%; border-radius: 18px; background: white; overflow: hidden;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid var(--line);">
+                <h3 id="info-modal-title" style="margin: 0; font-size: 18px; color: var(--forest);">Guidelines</h3>
+                <button type="button" onclick="closeInfoModal()" style="border: none; background: transparent; cursor: pointer; color: var(--muted);">{% icon 'close' 18 %}</button>
+            </div>
+            <div id="info-modal-body" style="padding: 24px; font-size: 13px; line-height: 1.6; color: var(--muted);">
+                <!-- Dynamic text populated by openInfoModal -->
+            </div>
+            <div style="padding: 16px 24px; border-top: 1px solid var(--line); background: #fafbf9; text-align: right;">
+                <button type="button" class="btn btn-secondary" onclick="closeInfoModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Interactive Client-side Script -->
+<script>
+    // State management
+    const SEATER_DATA = {{ seater_packages_json|safe }};
+    const BASE_CREDIT = {{ current_allocation.current_credit|default:119450 }};
+
+    let selectedRoomTypeId = 'studio_ac';
+    let selectedRoomTypeName = 'Studio Apartment Air Conditioned';
+    let selectedSeaterId = 'studio_2_pantry';
+    let selectedSeaterName = 'Studio Apartment Air Conditioned 2 Seater (With Pantry)';
+    let selectedSeaterPrice = 150000;
+    let selectedHostelId = 'bs11';
+    let selectedHostelName = 'Boys Studios 11';
+
+    // Initialize seater grid on load
+    document.addEventListener('DOMContentLoaded', () => {
+        renderSeaterPackages(selectedRoomTypeId);
+        recalculateCart();
+    });
+
+    function selectRoomType(typeId, typeName) {
+        selectedRoomTypeId = typeId;
+        selectedRoomTypeName = typeName;
+
+        document.querySelectorAll('.room-type-card').forEach(card => {
+            if (card.getAttribute('data-room-type-id') === typeId) {
+                card.classList.add('active', 'selected');
+            } else {
+                card.classList.remove('active', 'selected');
+            }
+        });
+
+        renderSeaterPackages(typeId);
+        recalculateCart();
+    }
+
+    function renderSeaterPackages(typeId) {
+        const container = document.getElementById('seater-packages-container');
+        if (!container) return;
+
+        const packages = SEATER_DATA[typeId] || [];
+        container.innerHTML = '';
+
+        if (packages.length === 0) {
+            container.innerHTML = '<div style="grid-column: 1 / -1; padding: 20px; color: var(--muted);">No seater configurations currently available for this room type.</div>';
+            return;
+        }
+
+        // Auto select first package in the newly chosen room type
+        const firstPkg = packages[0];
+        selectedSeaterId = firstPkg.id;
+        selectedSeaterName = firstPkg.name;
+        selectedSeaterPrice = firstPkg.price;
+
+        packages.forEach((pkg, index) => {
+            const card = document.createElement('div');
+            card.className = `hcr-select-card seater-card ${index === 0 ? 'active selected' : ''}`;
+            card.setAttribute('data-seater-id', pkg.id);
+            card.setAttribute('data-seater-name', pkg.name);
+            card.setAttribute('data-seater-price', pkg.price);
+
+            const badgeHtml = pkg.badge ? `<span class="hcr-card-badge">${pkg.badge}</span>` : '';
+
+            card.innerHTML = `
+                <div class="hcr-card-content">
+                    <strong>${pkg.name} ${badgeHtml}</strong>
+                    <span class="hcr-card-price">INR : ${pkg.price.toFixed(2)}</span>
+                </div>
+                <span class="hcr-radio-indicator"></span>
+            `;
+
+            card.addEventListener('click', () => {
+                selectSeater(pkg.id, pkg.name, pkg.price);
+            });
+
+            container.appendChild(card);
+        });
+    }
+
+    function selectSeater(id, name, price) {
+        selectedSeaterId = id;
+        selectedSeaterName = name;
+        selectedSeaterPrice = price;
+
+        document.querySelectorAll('.seater-card').forEach(card => {
+            if (card.getAttribute('data-seater-id') === id) {
+                card.classList.add('active', 'selected');
+            } else {
+                card.classList.remove('active', 'selected');
+            }
+        });
+
+        recalculateCart();
+    }
+
+    function selectHostel(id, name) {
+        selectedHostelId = id;
+        selectedHostelName = name;
+
+        document.querySelectorAll('.hostel-card').forEach(card => {
+            if (card.getAttribute('data-hostel-id') === id) {
+                card.classList.add('active', 'selected');
+            } else {
+                card.classList.remove('active', 'selected');
+            }
+        });
+
+        const hostelEl = document.getElementById('cart-item-hostel');
+        if (hostelEl) {
+            hostelEl.textContent = `Hostel: ${name}`;
+        }
+    }
+
+    function recalculateCart() {
+        let addonTotal = 0;
+        const chkMeal = document.getElementById('chk-meal-upgrade');
+        const chkLaundry = document.getElementById('chk-laundry-plan');
+        const chkGym = document.getElementById('chk-gym-access');
+
+        if (chkMeal && chkMeal.checked) addonTotal += 12000;
+        if (chkLaundry && chkLaundry.checked) addonTotal += 4500;
+        if (chkGym && chkGym.checked) addonTotal += 3000;
+
+        const grossTotal = selectedSeaterPrice + addonTotal;
+        const netDifference = Math.max(0, grossTotal - BASE_CREDIT);
+
+        // Update Cart Header & Items
+        const titleEl = document.getElementById('cart-item-title');
+        const priceEl = document.getElementById('cart-item-price');
+        const breakdownNewPriceEl = document.getElementById('breakdown-new-price');
+        const netEl = document.getElementById('cart-net-payable');
+        const addonsRow = document.getElementById('breakdown-addons-row');
+        const addonsPriceEl = document.getElementById('breakdown-addons-price');
+
+        if (titleEl) titleEl.textContent = selectedSeaterName;
+        if (priceEl) priceEl.textContent = selectedSeaterPrice.toFixed(2);
+        if (breakdownNewPriceEl) breakdownNewPriceEl.textContent = `₹${grossTotal.toLocaleString('en-IN')}.00`;
+        if (netEl) netEl.textContent = netDifference.toLocaleString('en-IN');
+
+        if (addonsRow && addonsPriceEl) {
+            if (addonTotal > 0) {
+                addonsRow.style.display = 'flex';
+                addonsPriceEl.textContent = `+₹${addonTotal.toLocaleString('en-IN')}.00`;
+            } else {
+                addonsRow.style.display = 'none';
+            }
+        }
+    }
+
+    function resetCartSelection() {
+        selectRoomType('studio_ac', 'Studio Apartment Air Conditioned');
+        const chkMeal = document.getElementById('chk-meal-upgrade');
+        const chkLaundry = document.getElementById('chk-laundry-plan');
+        const chkGym = document.getElementById('chk-gym-access');
+        if (chkMeal) chkMeal.checked = false;
+        if (chkLaundry) chkLaundry.checked = false;
+        if (chkGym) chkGym.checked = false;
+        recalculateCart();
+    }
+
+    function submitHostelChange() {
+        const undertaking = document.getElementById('undertaking-check');
+        if (!undertaking || !undertaking.checked) {
+            alert('Please check the undertaking declaration to confirm acceptance of the seater difference payment.');
+            undertaking.focus();
+            return;
+        }
+
+        const mobile = document.getElementById('cart-mobile').value.trim();
+        const email = document.getElementById('cart-email').value.trim();
+
+        if (!mobile || !email) {
+            alert('Please provide your valid mobile number and student university email.');
+            return;
+        }
+
+        const netPayable = document.getElementById('cart-net-payable').textContent.replace(/,/g, '');
+        const btn = document.getElementById('btn-pay-and-book');
+        btn.disabled = true;
+        btn.innerHTML = 'Processing Booking...';
+
+        const formData = new FormData();
+        formData.append('room_type', selectedRoomTypeName);
+        formData.append('seater_name', selectedSeaterName);
+        formData.append('seater_price', selectedSeaterPrice);
+        formData.append('hostel_name', selectedHostelName);
+        formData.append('net_payable', netPayable);
+        formData.append('mobile', mobile);
+        formData.append('email', email);
+        formData.append('current_bed', '{{ current_allocation.hostel }} · {{ current_allocation.room_no }}');
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        fetch("{% url 'submit-hostel-change' %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.innerHTML = 'PAY &amp; BOOK';
+
+            if (data.status === 'success') {
+                document.getElementById('receipt-ref').textContent = data.reference_code;
+                document.getElementById('receipt-seater').textContent = data.seater_name;
+                document.getElementById('receipt-hostel').textContent = data.hostel_name;
+                document.getElementById('receipt-amount').textContent = `INR ${Number(data.net_payable).toLocaleString('en-IN')}.00`;
+                document.getElementById('hcr-receipt-modal').style.display = 'grid';
+            } else {
+                alert(data.message || 'Error lodging change request.');
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.innerHTML = 'PAY &amp; BOOK';
+            console.error('Submission error:', err);
+            alert('An error occurred while confirming the booking. Please try again.');
+        });
+    }
+
+    // Modal controls
+    function openDemoModal() {
+        document.getElementById('hcr-demo-modal').style.display = 'grid';
+    }
+    function closeDemoModal() {
+        document.getElementById('hcr-demo-modal').style.display = 'none';
+    }
+
+    function openFacilitiesModal() {
+        const body = `
+            <div style="background: #0f2b21; border-radius: 12px; padding: 24px; text-align: center; color: white; margin-bottom: 16px;">
+                <div style="font-size: 40px; margin-bottom: 8px;">🏢</div>
+                <h4 style="margin: 0 0 6px; color: var(--lime);">Interactive 360° Virtual Residence Tour</h4>
+                <p style="margin: 0; font-size: 12px; color: #a9cfc1;">Explore Studio Apartments, attached washroom configurations, quiet study halls, and dining commons.</p>
+            </div>
+            <ul style="padding-left: 20px; margin: 0; display: flex; flex-direction: column; gap: 8px;">
+                <li><strong>Studio 2-Seater with Pantry:</strong> Equipped with individual refrigerator, study nook, high-speed Wi-Fi 6, and ensuite washroom.</li>
+                <li><strong>Standard AC Rooms:</strong> Twin/multi-occupancy with climate control, acoustic baffling, and biometric door access.</li>
+                <li><strong>Dining &amp; Recreation:</strong> 7-day multi-cuisine mess halls, indoor sports arena, and 24/7 emergency medical triage.</li>
+            </ul>
+        `;
+        document.getElementById('info-modal-title').textContent = 'Residential Facilities Tour & Overview';
+        document.getElementById('info-modal-body').innerHTML = body;
+        document.getElementById('hcr-info-modal').style.display = 'grid';
+    }
+
+    function openInfoModal(type) {
+        let content = '';
+        if (type.includes('Facilities')) {
+            content = '<p>Hostel accommodations are provisioned with 24/7 power backup, RO-filtered purified drinking water, centralized laundry hubs, and high-speed campus fiber networking. Students requesting studio apartments receive private pantries and attached bathrooms.</p>';
+        } else if (type.includes('Charges')) {
+            content = '<p>Residential fees are semester-based and cover maintenance, security, basic utilities, and housekeeping. Any upgrade in seater tier requires clearing the net difference before room key issuance. Reductions are credited toward subsequent academic cycle dues.</p>';
+        } else {
+            content = '<p>Refund and change requests are governed by the University Residential Policy. Cancellations within 7 days of allotment receive full adjustments minus administrative handling charges. Medical transfers receive expedited zero-penalty processing.</p>';
+        }
+        document.getElementById('info-modal-title').textContent = type;
+        document.getElementById('info-modal-body').innerHTML = content;
+        document.getElementById('hcr-info-modal').style.display = 'grid';
+    }
+
+    function closeInfoModal() {
+        document.getElementById('hcr-info-modal').style.display = 'none';
+    }
+</script>
+{% endblock %}
