@@ -87,12 +87,17 @@
         </button>
     </div>
 
-    <div class="match-summary">
-        <span>{% icon 'spark' %}</span>
-        <p>
-            <strong>Great news—there are 12 strong matches for you.</strong><br>
-            Your top matches share your quiet study style and approach to shared spaces.
-        </p>
+    <div class="match-summary" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <span>{% icon 'spark' %}</span>
+            <p>
+                <strong>Great news—there are 12 strong matches for you.</strong><br>
+                Your top matches share your quiet study style and approach to shared spaces.
+            </p>
+        </div>
+        <a href="{{ next_url|default:'/hostels/' }}" class="btn btn-primary" style="background: var(--lime); color: var(--forest); font-weight: 700; white-space: nowrap; padding: 10px 18px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+            Proceed to Find a Hostel {% icon 'arrow' 17 %}
+        </a>
     </div>
 
     <div class="match-grid">
@@ -213,14 +218,53 @@
         });
     }
 
+    async function finishQuizAndSave() {
+        const nextBtn = document.getElementById('quiz-next-btn');
+        const origText = nextBtn.innerHTML;
+        nextBtn.disabled = true;
+        nextBtn.innerHTML = 'Saving answers...';
+
+        const sleepMap = ['Before 10 PM', '10 PM – 12 AM', '12 AM – 2 AM', 'After 2 AM'];
+        const cleanMap = ['Very tidy', 'Generally tidy', 'Relaxed', 'Flexible'];
+        const noiseMap = ['Very quiet', 'Low background noise', 'Music is okay', 'Flexible'];
+
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        formData.append('sleep_schedule', sleepMap[selectedAnswers[0]] || '10 PM – 12 AM');
+        formData.append('cleanliness', cleanMap[selectedAnswers[1]] || 'Generally tidy');
+        formData.append('noise_level', noiseMap[selectedAnswers[2]] || 'Low background noise');
+
+        try {
+            await fetch("{% url 'submit-roommate-quiz' %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+        } catch (e) {
+            console.error('Quiz submission error:', e);
+        } finally {
+            nextBtn.disabled = false;
+            nextBtn.innerHTML = origText;
+            showMatches();
+        }
+    }
+
     function quizNext() {
         if (currentStep < quizQuestions.length - 1) {
             currentStep++;
             renderQuestion();
         } else {
-            showMatches();
+            finishQuizAndSave();
         }
     }
+
+    {% if auto_start %}
+    document.addEventListener('DOMContentLoaded', function() {
+        startQuiz();
+    });
+    {% endif %}
 
     function quizBack() {
         if (currentStep > 0) {

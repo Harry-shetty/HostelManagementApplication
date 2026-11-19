@@ -5,6 +5,31 @@
 {% block topbar_title %}Hostel Discovery{% endblock %}
 
 {% block content %}
+{% if needs_roommate_quiz %}
+<!-- Roommate Matching Prompt Modal -->
+<div id="roommate-prompt-modal" class="modal-layer" style="display: flex; position: fixed; inset: 0; z-index: 2500; background: rgba(11,29,23,0.72); backdrop-filter: blur(5px); justify-content: center; align-items: center; padding: 20px;">
+    <div class="modal" style="max-width: 500px; width: 100%; border-radius: 24px; background: #ffffff; box-shadow: 0 35px 90px rgba(11,29,23,.4); padding: 36px 30px; text-align: center; border: 1px solid var(--line); animation: card-rise 0.25s ease;">
+        <span style="width: 60px; height: 60px; border-radius: 50%; background: var(--lime-soft); color: var(--forest); display: inline-grid; place-items: center; margin-bottom: 18px;">
+            {% icon 'users' 30 %}
+        </span>
+        <span class="eyebrow" style="color: var(--forest); font-weight: 750; font-size: 11px; letter-spacing: 0.08em; display: block; margin-bottom: 8px;">RECOMMENDED FIRST STEP</span>
+        <h2 style="font-size: 23px; color: var(--forest); margin: 0 0 12px 0; font-weight: 750;">Answer Roommate Matching first</h2>
+        <p style="font-size: 14px; color: var(--muted); line-height: 1.55; margin: 0 0 26px 0;">
+            Before choosing your hostel, please complete your quick 3-question lifestyle questionnaire. This ensures your hostel recommendations and room occupancy selections match compatible roommates.
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <a href="{% url 'roommate' %}?next={% url 'hostels' %}&start=1" class="btn btn-primary" style="justify-content: center; height: 48px; font-size: 14px; font-weight: 700; background: var(--lime); color: var(--forest); border: none; border-radius: 12px; text-decoration: none; display: flex; align-items: center; gap: 8px;">
+                {% icon 'spark' 16 %} Answer Roommate Matching (4 min)
+            </a>
+            <button type="button" class="btn btn-secondary" onclick="dismissRoommatePrompt()" style="justify-content: center; height: 42px; font-size: 13px; color: var(--muted); border-color: var(--line); border-radius: 12px; background: transparent;">
+                Proceed with Find a Hostel anyway
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="page">
     <div class="page-heading">
         <div>
@@ -150,6 +175,17 @@
             input.value = '';
             filterHostelsClient('');
         }
+    }
+    function dismissRoommatePrompt() {
+        const modal = document.getElementById('roommate-prompt-modal');
+        if (modal) modal.style.display = 'none';
+        fetch("{% url 'dismiss-roommate-prompt' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        }).catch(err => console.log(err));
     }
 </script>
 {% endblock %}

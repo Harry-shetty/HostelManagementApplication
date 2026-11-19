@@ -11,7 +11,7 @@ from django.core.cache import cache
 
 from housing.models import (
     Hostel, Student, Application, ApplicationPreference, AllocationCycle,
-    RoommateSuggestion, Notification,
+    RoommateProfile, RoommateSuggestion, Notification,
     AllocationLetter, RoomChangeRequest, AllocationRun, AuditLog
 )
 from housing.decorators import student_required
@@ -46,6 +46,21 @@ def overview(request):
 
 @student_required
 def hostels_view(request):
+    profile = getattr(request.user, 'profile', None)
+    student = profile.student_profile if (profile and profile.student_profile) else Student.objects.filter(student_id='STU-204810').first()
+
+    # Check if student completed roommate matching quiz
+    is_completed = request.session.get('roommate_quiz_completed', False)
+    if not is_completed and student:
+        is_completed = AuditLog.objects.filter(
+            actor=student.name, action__icontains="Roommate matching quiz completed"
+        ).exists()
+        if is_completed:
+            request.session['roommate_quiz_completed'] = True
+
+    proceed_override = request.GET.get('proceed') == '1' or request.session.get('roommate_prompt_dismissed', False)
+    needs_roommate_quiz = (not is_completed) and (not proceed_override)
+
     query = request.GET.get('q', '').strip()
     all_hostels = cache.get('all_hostels_list')
     if not all_hostels:
@@ -62,18 +77,33 @@ def hostels_view(request):
         'hostels': hostels_qs,
         'search_query': query,
         'total_available': sum(h.beds_available for h in hostels_qs),
+        'needs_roommate_quiz': needs_roommate_quiz,
+        'is_roommate_completed': is_completed,
     })
     return render(request, 'student/hostels.html', ctx)
 
 @student_required
+@require_POST
+def api_dismiss_roommate_prompt(request):
+    request.session['roommate_prompt_dismissed'] = True
+    return JsonResponse({'status': 'ok'})
+
+@student_required
 def roommate_view(request):
     profile = getattr(request.user, 'profile', None)
-    student = profile.student_profile if (profile and profile.student_profile) else None
+    student = profile.student_profile if (profile and profile.student_profile) else Student.objects.filter(student_id='STU-204810').first()
+
+    is_completed = request.session.get('roommate_quiz_completed', False)
+    if not is_completed and student:
+        is_completed = AuditLog.objects.filter(
+            actor=student.name, action__icontains="Roommate matching quiz completed"
+        ).exists()
+        if is_completed:
+            request.session['roommate_quiz_completed'] = True
+
     cache_key = f"student_roommate_data_{student.student_id if student else 'default'}"
     roommate_data = cache.get(cache_key)
     if not roommate_data:
-        if not student:
-            student = Student.objects.filter(student_id='STU-204810').first()
         matches = list(RoommateSuggestion.objects.filter(target_student=student).select_related('suggested_student', 'target_student')) if student else []
         roommate_data = {
             'matches': matches,
@@ -83,7 +113,56 @@ def roommate_view(request):
 
     ctx = get_base_context(request, 'roommate', is_admin=False)
     ctx.update(roommate_data)
+    ctx.update({
+        'is_completed': is_completed,
+        'auto_start': request.GET.get('start') == '1' or request.GET.get('prompt') == '1',
+        'next_url': request.GET.get('next', reverse('hostels')),
+    })
     return render(request, 'student/roommate.html', ctx)
+
+@student_required
+@require_POST
+def submit_roommate_quiz_view(request):
+    profile = getattr(request.user, 'profile', None)
+    student = profile.student_profile if (profile and profile.student_profile) else Student.objects.filter(student_id='STU-204810').first()
+
+    sleep_schedule = request.POST.get('sleep_schedule', '10 PM – 12 AM').strip()
+    cleanliness = request.POST.get('cleanliness', 'Generally tidy').strip()
+    noise_level = request.POST.get('noise_level', 'Low background noise').strip()
+    interests = request.POST.get('interests', 'Computer Science · Web Design · Reading').strip()
+
+    if student:
+        rp, created = RoommateProfile.objects.get_or_create(
+            student=student,
+            defaults={
+                'sleep_schedule': sleep_schedule,
+                'cleanliness': cleanliness,
+                'noise_level': noise_level,
+                'interests': interests,
+                'is_active': True
+            }
+        )
+        if not created:
+            rp.sleep_schedule = sleep_schedule
+            rp.cleanliness = cleanliness
+            rp.noise_level = noise_level
+            rp.is_active = True
+            rp.save()
+
+        actor_name = request.user.get_full_name() or student.name
+        AuditLog.objects.create(
+            action=f"Roommate matching quiz completed by {student.name} ({student.student_id})",
+            actor=actor_name
+        )
+
+    request.session['roommate_quiz_completed'] = True
+    invalidate_student_caches()
+
+    return JsonResponse({
+        'status': 'success',
+        'message': 'Roommate matching questionnaire completed successfully.',
+        'redirect_url': reverse('hostels')
+    })
 
 @student_required
 def application_view(request):

@@ -211,23 +211,23 @@
 
                     <!-- Hostels & Roommates Dropdown -->
                     <div class="nav-dropdown">
-                        <a href="{% url 'hostels' %}" class="nav-item has-dropdown {% if active_view in 'hostels roommate' %}active{% endif %}">
-                            {% icon 'building' %}<span>Explore</span>
+                        <a href="{% url 'roommate' %}" class="nav-item has-dropdown {% if active_view in 'hostels roommate' %}active{% endif %}">
+                            {% icon 'users' %}<span>Explore</span>
                             <span class="dropdown-chevron">{% icon 'chevron-down' 12 %}</span>
                         </a>
                         <div class="nav-dropdown-menu">
-                            <a href="{% url 'hostels' %}" class="dropdown-link {% if active_view == 'hostels' %}active{% endif %}">
-                                <span class="dropdown-icon">{% icon 'building' 16 %}</span>
-                                <div>
-                                    <strong>Find a Hostel</strong>
-                                    <small>Explore campus residences, rooms &amp; fees</small>
-                                </div>
-                            </a>
                             <a href="{% url 'roommate' %}" class="dropdown-link {% if active_view == 'roommate' %}active{% endif %}">
                                 <span class="dropdown-icon">{% icon 'users' 16 %}</span>
                                 <div>
                                     <strong>Roommate Matching</strong>
                                     <small>Compatibility quiz &amp; match profiles</small>
+                                </div>
+                            </a>
+                            <a href="{% url 'hostels' %}" class="dropdown-link {% if active_view == 'hostels' %}active{% endif %}">
+                                <span class="dropdown-icon">{% icon 'building' 16 %}</span>
+                                <div>
+                                    <strong>Find a Hostel</strong>
+                                    <small>Explore campus residences, rooms &amp; fees</small>
                                 </div>
                             </a>
                         </div>
