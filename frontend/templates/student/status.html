@@ -19,18 +19,36 @@
 
     <div class="page-heading">
         <div>
-            <span class="eyebrow">APPLICATION {{ application.application_id|default:'NST-25-10482' }}</span>
+            <span class="eyebrow">{% if application %}APPLICATION {{ application.application_id }}{% else %}2025/26 HOUSING CYCLE{% endif %}</span>
             <h1>Allocation status</h1>
             <p>Track your housing application through algorithmic review, authorized approval, and letter release.</p>
         </div>
         {% if is_allocated or letter %}
             <span class="tag tag-success" style="font-size: 12px; font-weight: 700; padding: 6px 12px;">Allocated &amp; Published</span>
+        {% elif application %}
+            <span class="tag tag-warning" style="font-size: 12px; font-weight: 700; padding: 6px 12px;">{{ application.get_status_display|default:'Under review' }}</span>
         {% else %}
-            <span class="tag tag-warning" style="font-size: 12px; font-weight: 700; padding: 6px 12px;">Under review</span>
+            <span class="tag tag-neutral" style="font-size: 12px; font-weight: 700; padding: 6px 12px;">Not submitted</span>
         {% endif %}
     </div>
 
-    {% if is_allocated or letter %}
+    {% if not application and not is_allocated and not letter %}
+    <!-- No Active Application Banner -->
+    <div class="status-banner" style="background: #fafbf9; border: 1px dashed var(--line); color: var(--ink);">
+        <span>{% icon 'file' 28 %}</span>
+        <div>
+            <span class="tag tag-neutral">NO SUBMITTED APPLICATION</span>
+            <h2>No active application found</h2>
+            <p>You have not submitted a hostel application for the 2025/26 housing cycle yet. Submit your application to participate in algorithmic allocation and letter release.</p>
+        </div>
+        <div>
+            <a href="{% url 'application' %}" class="btn btn-primary" style="background: var(--lime); color: var(--forest); font-weight: 700; white-space: nowrap; padding: 10px 18px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                Start application {% icon 'arrow' 16 %}
+            </a>
+        </div>
+    </div>
+
+    {% elif is_allocated or letter %}
     <!-- Allocated Confirmed Banner -->
     <div class="status-banner" style="background: linear-gradient(105deg, var(--forest) 0%, #174c3c 100%); color: white; border: 1px solid #236450;">
         <span style="background: var(--lime); color: var(--forest); border-radius: 50%; width: 56px; height: 56px; display: grid; place-items: center;">

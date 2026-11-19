@@ -56,11 +56,11 @@
             </a>
             {% else %}
             <p>
-                <strong>Next: Review your application</strong><br>
-                <span>Check your details before submitting.</span>
+                <strong>Next: {% if application %}Review your application{% else %}Start your application{% endif %}</strong><br>
+                <span>{% if application %}Check your details before submitting.{% else %}Rank your hostel and room preferences.{% endif %}</span>
             </p>
             <a href="{% url 'application' %}" class="btn btn-primary" style="color: var(--forest); background: var(--lime);">
-                Continue application {% icon 'arrow' 17 %}
+                {% if application %}Continue application{% else %}Start application{% endif %} {% icon 'arrow' 17 %}
             </a>
             {% endif %}
         </div>
@@ -72,24 +72,24 @@
             <div class="stat-icon lime">{% icon 'file' %}</div>
             <div>
                 <span>APPLICATION STATUS</span>
-                <strong>{% if is_submitted %}{{ application.get_status_display|default:'Submitted' }}{% else %}In progress{% endif %}</strong>
-                <small>{% if is_submitted and application.submitted_at %}Submitted {{ application.submitted_at|date:"d M, H:i" }}{% else %}Last saved recently{% endif %}</small>
+                <strong>{% if is_submitted %}{{ application.get_status_display|default:'Submitted' }}{% elif application %}In progress{% else %}Not submitted{% endif %}</strong>
+                <small>{% if is_submitted and application.submitted_at %}Submitted {{ application.submitted_at|date:"d M, H:i" }}{% elif application %}Last saved recently{% else %}No active application{% endif %}</small>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon">{% icon 'building' %}</div>
             <div>
                 <span>TOP PREFERENCE</span>
-                <strong>{{ top_preference|default:'Boys Hostel 1' }}</strong>
-                <small>{{ top_preference_room|default:'Single room' }}</small>
+                <strong>{{ top_preference|default:'None selected' }}</strong>
+                <small>{{ top_preference_room|default:'Not selected' }}</small>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon">{% icon 'bed' %}</div>
             <div>
                 <span>ROOM PREFERENCE</span>
-                <strong>{{ application.room_type_preference|default:'Single room' }}</strong>
-                <small>{{ preferences_count|default:3 }} hostels ranked</small>
+                <strong>{% if application %}{{ application.room_type_preference|default:'Single room' }}{% else %}None selected{% endif %}</strong>
+                <small>{{ preferences_count|default:0 }} hostels ranked</small>
             </div>
         </div>
         <div class="stat-card">

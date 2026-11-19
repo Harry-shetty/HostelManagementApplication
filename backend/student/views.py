@@ -25,9 +25,9 @@ def overview(request):
 
     app = Application.objects.filter(student=student).first() if student else None
     preferences = list(app.preferences.all().select_related('hostel').order_by('rank')) if app else []
-    top_pref = preferences[0].hostel.name if preferences else 'Boys Hostel 1'
-    top_pref_room = app.room_type_preference if app else 'Single room'
-    is_submitted = app and app.status in ('submitted', 'under_review', 'allocated')
+    top_pref = preferences[0].hostel.name if preferences else 'None selected'
+    top_pref_room = app.room_type_preference if app else 'Not selected'
+    is_submitted = bool(app and app.status in ('submitted', 'under_review', 'allocated'))
 
     # Dynamic Cycle and Deadline
     cycle = AllocationCycle.objects.filter(is_active=True).first()
@@ -106,7 +106,7 @@ def overview(request):
         'preferences': preferences,
         'top_preference': top_pref,
         'top_preference_room': top_pref_room,
-        'preferences_count': len(preferences) if preferences else 3,
+        'preferences_count': len(preferences) if preferences else 0,
         'cycle_status_text': cycle_status_text,
         'days_remaining_text': days_remaining_text,
         'deadline_text': deadline_text,
@@ -430,14 +430,14 @@ def status_view(request):
         letter = AllocationLetter.objects.filter(student=student).order_by('-generated_at').first() if student else None
         published_run = AllocationRun.objects.filter(status='published').order_by('-created_at').first()
         
-        is_allocated = (app and app.status == 'allocated') or (letter is not None) or (published_run is not None)
+        is_allocated = bool(app and (app.status == 'allocated' or letter is not None))
 
-        if is_allocated and not letter and student:
+        if is_allocated and not letter and student and app and app.status == 'allocated':
             letter = AllocationLetter.objects.create(
                 letter_id=f"LET-2025-{student.student_id.split('-')[-1]}",
                 student=student,
                 run=published_run,
-                hostel_name="Cedar House",
+                hostel_name="Boys Hostel 1",
                 room_number="C-214",
                 bed_letter="A",
                 room_type="Single Ensuite",

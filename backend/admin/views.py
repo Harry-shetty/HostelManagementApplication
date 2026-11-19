@@ -43,9 +43,11 @@ def admin_overview(request):
         cache.set('admin_overview_metrics', overview_cache, 1800)
 
     ctx.update(overview_cache)
+    app_count = Application.objects.count()
+    pending_count = Application.objects.filter(status__in=['submitted', 'under_review']).count()
     ctx.update({
-        'applications_count': '2,104',
-        'pending_review': 36,
+        'applications_count': f"{app_count:,}",
+        'pending_review': pending_count,
     })
     return render(request, 'admin_panel/admin_overview.html', ctx)
 
@@ -396,11 +398,20 @@ def applications_view(request):
     from housing.views import get_mock_applications
     apps_list = get_mock_applications(filter_val=current_filter, search_query=search_query)
 
+    total_apps = Application.objects.count()
+    verified_count = Application.objects.filter(status='allocated').count()
+    under_review_count = Application.objects.filter(status__in=['submitted', 'under_review']).count()
+    special_count = Application.objects.filter(quota='Special Accommodations').count()
+
     ctx = get_base_context(request, 'applications', is_admin=True)
     ctx.update({
         'applications_list': apps_list,
         'current_filter': current_filter,
         'search_query': search_query,
+        'total_applications': total_apps,
+        'verified_count': verified_count,
+        'under_review_count': under_review_count,
+        'special_count': special_count,
     })
     return render(request, 'admin_panel/applications.html', ctx)
 

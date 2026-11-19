@@ -26,28 +26,28 @@
     <div class="run-metrics" style="grid-template-columns: repeat(5, 1fr); margin-bottom: 24px;">
         <div>
             <small>TOTAL APPLICATIONS</small>
-            <strong>2,104</strong>
-            <span class="success-text">↑ 14% vs previous cycle</span>
+            <strong>{{ total_applications|default:0 }}</strong>
+            <span class="success-text">Active cycle</span>
         </div>
         <div>
             <small>VERIFIED &amp; ELIGIBLE</small>
-            <strong class="success-text">1,942</strong>
-            <span>92.3% validation rate</span>
+            <strong class="success-text">{{ verified_count|default:0 }}</strong>
+            <span>Direct validation</span>
         </div>
         <div class="metric-warning">
             <small>UNDER REVIEW</small>
-            <strong class="warning-text">126</strong>
+            <strong class="warning-text">{{ under_review_count|default:0 }}</strong>
             <span>Pending warden check</span>
         </div>
         <div>
             <small>SPECIAL ACCOMMODATIONS</small>
-            <strong style="color: var(--blue, #2563eb);">36</strong>
+            <strong style="color: var(--blue, #2563eb);">{{ special_count|default:0 }}</strong>
             <span>Medical &amp; accessibility</span>
         </div>
         <div>
             <small>OVERALL QUOTA FILLED</small>
-            <strong>94.8%</strong>
-            <span>2,380 / 2,510 campus beds</span>
+            <strong>{% if total_applications %}{% widthratio total_applications 100 1 %}%{% else %}0%{% endif %}</strong>
+            <span>Campus capacity</span>
         </div>
     </div>
 
@@ -215,14 +215,12 @@
         </div>
 
         <div class="pagination" style="padding: 14px 20px;">
-            <span>Showing 1 – {{ applications_list|length }} of 2,104 student submissions</span>
+            <span>Showing {{ applications_list|length }} of {{ total_applications|default:applications_list|length }} student submissions</span>
+            {% if applications_list|length > 0 %}
             <div style="display: flex; gap: 4px;">
                 <button type="button" class="current">1</button>
-                <button type="button">2</button>
-                <button type="button">3</button>
-                <button type="button">…</button>
-                <button type="button">211</button>
             </div>
+            {% endif %}
         </div>
     </section>
 </div>
