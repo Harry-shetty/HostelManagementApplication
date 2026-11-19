@@ -58,50 +58,170 @@
     </div>
 </div>
 
+{% if is_locked %}
+<style>
+.lock-opt-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #e4f3ec;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+.lock-opt-label:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(200,241,105,0.4);
+}
+.lock-opt-label:has(input:checked) {
+    background: rgba(200,241,105,0.14);
+    border-color: var(--lime);
+    color: var(--lime);
+    font-weight: 700;
+}
+.lock-opt-label input {
+    accent-color: var(--lime);
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+@media (max-width: 600px) {
+    .lock-options {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+
+<!-- Complete Full-Page Lockdown Barrier -->
+<div class="application-lock-takeover" style="position: fixed; inset: 0; z-index: 9999; background: #0c1a14; display: flex; align-items: center; justify-content: center; padding: 24px; overflow-y: auto;">
+    <!-- Background aura -->
+    <div style="position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(200,241,105,0.08) 0%, rgba(12,26,20,0) 70%); top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none;"></div>
+
+    <div class="lock-card" style="position: relative; max-width: 640px; width: 100%; background: #13241c; border: 1.5px solid rgba(200,241,105,0.25); border-radius: 24px; padding: 38px 34px; box-shadow: 0 30px 80px rgba(0,0,0,0.6); color: #ffffff;">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <div style="width: 72px; height: 72px; margin: 0 auto 16px; border-radius: 50%; background: rgba(245,158,11,0.15); border: 2px solid #f59e0b; color: #fbbf24; display: grid; place-items: center; box-shadow: 0 0 30px rgba(245,158,11,0.25);">
+                {% icon 'lock' 36 %}
+            </div>
+            <span class="eyebrow" style="color: #fbbf24; font-weight: 800; font-size: 11px; letter-spacing: 0.1em; display: inline-block; margin-bottom: 6px;">ACCESS LOCKED · MANDATORY PREREQUISITE</span>
+            <h1 style="font-size: 26px; font-weight: 800; margin: 0 0 10px 0; color: #ffffff;">Hostel Application is Locked</h1>
+            <p style="font-size: 14px; color: #a3c2b5; margin: 0; line-height: 1.55;">
+                You cannot access or submit this application yet. University policy requires answering your <strong>Roommate Matching</strong> questions first to ensure compatible living habits.
+            </p>
+        </div>
+
+        <form id="inline-unlock-quiz-form" onsubmit="event.preventDefault(); submitUnlockQuiz();" style="display: flex; flex-direction: column; gap: 18px;">
+            {% csrf_token %}
+            <input type="hidden" name="next_url" value="{% url 'application' %}">
+
+            <!-- Question 1 -->
+            <div class="lock-quiz-q" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 18px;">
+                <label style="display: block; font-size: 14px; font-weight: 700; color: #e4f3ec; margin-bottom: 4px;">
+                    1. When do you usually go to sleep on weekdays?
+                </label>
+                <span style="font-size: 12px; color: #8faea2; display: block; margin-bottom: 12px;">Used to match night owls or early risers.</span>
+                <div class="lock-options" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                    <label class="lock-opt-label">
+                        <input type="radio" name="sleep_schedule" value="Before 10 PM" required>
+                        <span>Before 10 PM</span>
+                    </label>
+                    <label class="lock-opt-label">
+                        <input type="radio" name="sleep_schedule" value="10 PM – 12 AM" checked required>
+                        <span>10 PM – 12 AM</span>
+                    </label>
+                    <label class="lock-opt-label">
+                        <input type="radio" name="sleep_schedule" value="12 AM – 2 AM" required>
+                        <span>12 AM – 2 AM</span>
+                    </label>
+                    <label class="lock-opt-label">
+                        <input type="radio" name="sleep_schedule" value="After 2 AM" required>
+                        <span>After 2 AM</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="lock-quiz-q" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 18px;">
+                <label style="display: block; font-size: 14px; font-weight: 700; color: #e4f3ec; margin-bottom: 4px;">
+                    2. How would you describe your cleanliness &amp; tidiness?
+                </label>
+                <span style="font-size: 12px; color: #8faea2; display: block; margin-bottom: 12px;">Used for roommate cleaning alignment.</span>
+                <div class="lock-options" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                    <label class="lock-opt-label">
+                        <input type="radio" name="cleanliness" value="Very tidy" required>
+                        <span>Very tidy</span>
+                    </label>
+                    <label class="lock-opt-label">
+                        <input type="radio" name="cleanliness" value="Generally tidy" checked required>
+                        <span>Generally tidy</span>
+                    </label>
+                    <label class="lock-opt-label">
+                        <input type="radio" name="cleanliness" value="Relaxed" required>
+                        <span>Relaxed</span>
+                    </label>
+                    <label class="lock-opt-label">
+                        <input type="radio" name="cleanliness" value="Flexible" required>
+                        <span>Flexible</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="lock-quiz-q" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 18px;">
+                <label style="display: block; font-size: 14px; font-weight: 700; color: #e4f3ec; margin-bottom: 4px;">
+                    3. What study &amp; room noise level do you prefer?
+                </label>
+                <span style="font-size: 12px; color: #8faea2; display: block; margin-bottom: 12px;">Determines quiet hours and study preferences.</span>
+                <div class="lock-options" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                    <label class="lock-opt-label">
+                        <input type="radio" name="noise_level" value="Very quiet" required>
+                        <span>Very quiet</span>
+                    </label>
+                    <label class="lock-opt-label">
+                        <input type="radio" name="noise_level" value="Low background noise" checked required>
+                        <span>Low background noise</span>
+                    </label>
+                    <label class="lock-opt-label">
+                        <input type="radio" name="noise_level" value="Music is okay" required>
+                        <span>Music is okay</span>
+                    </label>
+                    <label class="lock-opt-label">
+                        <input type="radio" name="noise_level" value="Flexible" required>
+                        <span>Flexible</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 6px;">
+                <button type="submit" id="unlock-submit-btn" class="btn btn-primary" style="height: 52px; font-size: 15px; font-weight: 750; background: var(--lime); color: var(--forest); border: none; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; box-shadow: 0 6px 20px rgba(200,241,105,0.35);">
+                    {% icon 'lock' 18 %} Answer Questions &amp; Unlock Application {% icon 'arrow' 18 %}
+                </button>
+                <a href="{% url 'overview' %}" style="text-align: center; color: #8faea2; font-size: 13px; text-decoration: none; padding: 6px;">
+                    &larr; Return to Student Overview
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
 <!-- Main Wizard Screen -->
-<div id="application-wizard" class="page wizard-page" style="display: {% if is_submitted and not request.GET.edit %}none{% else %}block{% endif %};">
+<div id="application-wizard" class="page wizard-page" style="display: {% if is_locked %}none{% elif is_submitted and not request.GET.edit %}none{% else %}block{% endif %};">
     <div class="page-heading compact">
         <div>
             <span class="eyebrow">2025/26 HOSTEL APPLICATION</span>
-            <h1>{% if is_locked %}Hostel Application (Locked){% else %}Complete your application{% endif %}</h1>
+            <h1>Complete your application</h1>
         </div>
-        {% if is_locked %}
-        <span class="autosave" style="color: #b45309; background: #fef3c7; border: 1.5px solid #fde68a; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
-            {% icon 'lock' 14 %} Application Locked
-        </span>
-        {% else %}
         <span class="autosave"><i></i> Saved in database</span>
-        {% endif %}
     </div>
 
     <div class="wizard-layout">
         <aside class="wizard-steps">
-            {% if is_locked %}
-            <button type="button" class="disabled" style="cursor: not-allowed; opacity: 0.65;" onclick="alert('Application is locked! Please answer the Roommate Matching questionnaire to unlock.')">
-                <span>{% icon 'lock' 14 %}</span>
-                <p><small>STEP 1</small><strong>Profile</strong></p>
-            </button>
-            <button type="button" class="disabled" style="cursor: not-allowed; opacity: 0.65;" onclick="alert('Application is locked! Please answer the Roommate Matching questionnaire to unlock.')">
-                <span>{% icon 'lock' 14 %}</span>
-                <p><small>STEP 2</small><strong>Eligibility</strong></p>
-            </button>
-            <button type="button" class="disabled" style="cursor: not-allowed; opacity: 0.65;" onclick="alert('Application is locked! Please answer the Roommate Matching questionnaire to unlock.')">
-                <span>{% icon 'lock' 14 %}</span>
-                <p><small>STEP 3</small><strong>Preferences</strong></p>
-            </button>
-            <button type="button" class="disabled" style="cursor: not-allowed; opacity: 0.65;" onclick="alert('Application is locked! Please answer the Roommate Matching questionnaire to unlock.')">
-                <span>{% icon 'lock' 14 %}</span>
-                <p><small>STEP 4</small><strong>Room type</strong></p>
-            </button>
-            <button type="button" class="disabled" style="cursor: not-allowed; opacity: 0.65;" onclick="alert('Application is locked! Please answer the Roommate Matching questionnaire to unlock.')">
-                <span>{% icon 'lock' 14 %}</span>
-                <p><small>STEP 5</small><strong>Documents</strong></p>
-            </button>
-            <button type="button" class="disabled" style="cursor: not-allowed; opacity: 0.65;" onclick="alert('Application is locked! Please answer the Roommate Matching questionnaire to unlock.')">
-                <span>{% icon 'lock' 14 %}</span>
-                <p><small>STEP 6</small><strong>Review</strong></p>
-            </button>
-            {% else %}
             <button type="button" class="active" id="step-tab-0" onclick="goToStep(0)">
                 <span id="step-num-0">1</span>
                 <p><small>STEP 1</small><strong>Profile</strong></p>
@@ -126,7 +246,6 @@
                 <span id="step-num-5">6</span>
                 <p><small>STEP 6</small><strong>Review</strong></p>
             </button>
-            {% endif %}
 
             <div class="help-card">
                 {% icon 'help' %}
@@ -138,48 +257,6 @@
 
         <!-- Form Card -->
         <section class="form-card">
-            {% if is_locked %}
-            <div class="locked-card-container" style="text-align: center; padding: 48px 28px; background: #ffffff; border-radius: 20px; border: 1.5px dashed #f59e0b; box-shadow: 0 12px 35px rgba(245,158,11,0.08); animation: card-rise 0.3s ease;">
-                <div style="width: 76px; height: 76px; border-radius: 50%; background: #fef3c7; color: #b45309; display: grid; place-items: center; margin: 0 auto 20px; box-shadow: 0 0 0 8px rgba(254,243,199,0.5);">
-                    {% icon 'lock' 38 %}
-                </div>
-                <span class="eyebrow" style="color: #d97706; font-weight: 800; font-size: 11px; letter-spacing: 0.08em; display: inline-block; margin-bottom: 8px;">PREREQUISITE REQUIRED</span>
-                <h2 style="font-size: 26px; color: var(--forest); font-weight: 800; margin: 0 0 12px 0;">Hostel Application is Locked</h2>
-                <p style="font-size: 15px; color: var(--muted); max-width: 520px; margin: 0 auto 28px; line-height: 1.6;">
-                    Before unlocking your hostel application, you must complete the <strong>Roommate Matching Questionnaire</strong>. Your living preferences ensure compatible assignments across university residences.
-                </p>
-
-                <div style="max-width: 440px; margin: 0 auto 30px; background: #fdfaf3; border: 1px solid #fde68a; border-radius: 14px; padding: 18px 20px; text-align: left;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 13px;">
-                        <span style="display: flex; align-items: center; gap: 8px; color: #15803d; font-weight: 600;">
-                            {% icon 'check' 16 %} 1. Student Record &amp; Eligibility
-                        </span>
-                        <span style="color: #15803d; font-size: 11px; font-weight: 700; background: #dcfce7; padding: 2px 8px; border-radius: 10px;">VERIFIED</span>
-                    </div>
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 13px;">
-                        <span style="display: flex; align-items: center; gap: 8px; color: #b45309; font-weight: 700;">
-                            {% icon 'spark' 16 %} 2. Roommate Lifestyle Questionnaire
-                        </span>
-                        <span style="color: #b45309; font-size: 11px; font-weight: 700; background: #fef3c7; padding: 2px 8px; border-radius: 10px;">ANSWER FIRST</span>
-                    </div>
-                    <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px; opacity: 0.65;">
-                        <span style="display: flex; align-items: center; gap: 8px; color: var(--forest); font-weight: 500;">
-                            {% icon 'lock' 16 %} 3. Hostel Application Wizard
-                        </span>
-                        <span style="color: #6b7280; font-size: 11px; font-weight: 700; background: #f3f4f6; padding: 2px 8px; border-radius: 10px;">LOCKED</span>
-                    </div>
-                </div>
-
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
-                    <a href="{% url 'roommate' %}?start=1&next={% url 'application' %}&required=1" class="btn btn-primary" style="height: 52px; padding: 0 32px; font-size: 15px; font-weight: 750; background: var(--lime); color: var(--forest); border: none; border-radius: 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 20px rgba(200,241,105,0.4);">
-                        {% icon 'lock' 18 %} Answer Roommate Matching to Unlock {% icon 'arrow' 18 %}
-                    </a>
-                    <a href="{% url 'overview' %}" class="text-link" style="color: var(--muted); font-size: 13px; text-decoration: none; margin-top: 4px;">
-                        &larr; Return to Student Overview
-                    </a>
-                </div>
-            </div>
-            {% else %}
             <form id="housing-application-form" onsubmit="event.preventDefault(); submitApplication();">
                 {% csrf_token %}
 
@@ -490,7 +567,6 @@
                     </button>
                 </div>
             </form>
-            {% endif %}
         </section>
     </div>
 </div>
@@ -498,6 +574,38 @@
 
 {% block extra_scripts %}
 <script>
+    async function submitUnlockQuiz() {
+        const btn = document.getElementById('unlock-submit-btn');
+        if (!btn) return;
+        const origText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = 'Saving answers & Unlocking...';
+
+        const form = document.getElementById('inline-unlock-quiz-form');
+        const formData = new FormData(form);
+
+        try {
+            const resp = await fetch("{% url 'submit-roommate-quiz' %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const data = await resp.json();
+            if (data && data.status === 'success') {
+                window.location.reload();
+            } else {
+                alert(data.message || 'Error saving answers. Please try again.');
+                btn.disabled = false;
+                btn.innerHTML = origText;
+            }
+        } catch (e) {
+            console.error(e);
+            window.location.reload();
+        }
+    }
+
     let activeStep = 0;
     const totalSteps = 6;
 
