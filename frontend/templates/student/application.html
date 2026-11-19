@@ -70,28 +70,28 @@
 
     <div class="wizard-layout">
         <aside class="wizard-steps">
-            <button type="button" class="done" onclick="goToStep(0)">
-                <span>{% icon 'check' 14 %}</span>
+            <button type="button" class="active" id="step-tab-0" onclick="goToStep(0)">
+                <span id="step-num-0">1</span>
                 <p><small>STEP 1</small><strong>Profile</strong></p>
             </button>
-            <button type="button" class="done" onclick="goToStep(1)">
-                <span>{% icon 'check' 14 %}</span>
+            <button type="button" id="step-tab-1" onclick="goToStep(1)">
+                <span id="step-num-1">2</span>
                 <p><small>STEP 2</small><strong>Eligibility</strong></p>
             </button>
-            <button type="button" class="active" id="step-tab-2" onclick="goToStep(2)">
-                <span>3</span>
+            <button type="button" id="step-tab-2" onclick="goToStep(2)">
+                <span id="step-num-2">3</span>
                 <p><small>STEP 3</small><strong>Preferences</strong></p>
             </button>
             <button type="button" id="step-tab-3" onclick="goToStep(3)">
-                <span>4</span>
+                <span id="step-num-3">4</span>
                 <p><small>STEP 4</small><strong>Room type</strong></p>
             </button>
             <button type="button" id="step-tab-4" onclick="goToStep(4)">
-                <span>5</span>
+                <span id="step-num-4">5</span>
                 <p><small>STEP 5</small><strong>Documents</strong></p>
             </button>
             <button type="button" id="step-tab-5" onclick="goToStep(5)">
-                <span>6</span>
+                <span id="step-num-5">6</span>
                 <p><small>STEP 6</small><strong>Review</strong></p>
             </button>
 
@@ -109,7 +109,7 @@
                 {% csrf_token %}
 
                 <!-- Step 0: Profile -->
-                <div class="wizard-form-step" id="form-step-0" style="display: none;">
+                <div class="wizard-form-step" id="form-step-0" style="display: block;">
                     <div class="form-heading">
                         <span class="eyebrow">STEP 1 OF 6</span>
                         <h2>Student profile</h2>
@@ -175,7 +175,7 @@
                 </div>
 
                 <!-- Step 2: Preferences -->
-                <div class="wizard-form-step" id="form-step-2">
+                <div class="wizard-form-step" id="form-step-2" style="display: none;">
                     <div class="form-heading">
                         <span class="eyebrow">STEP 3 OF 6</span>
                         <h2>Rank your hostel preferences</h2>
@@ -408,8 +408,8 @@
 
                 <!-- Form Footer -->
                 <div class="form-footer">
-                    <button class="btn btn-secondary" id="form-back-btn" type="button" onclick="prevStep()">Back</button>
-                    <span id="form-step-indicator">Step 3 of 6</span>
+                    <button class="btn btn-secondary" id="form-back-btn" type="button" onclick="prevStep()" style="visibility: hidden;">Back</button>
+                    <span id="form-step-indicator">Step 1 of 6</span>
                     <button class="btn btn-primary" id="form-next-btn" type="button" onclick="nextStep()">
                         Save &amp; continue {% icon 'arrow' 17 %}
                     </button>
@@ -422,18 +422,19 @@
 
 {% block extra_scripts %}
 <script>
-    let activeStep = 2;
+    let activeStep = 0;
     const totalSteps = 6;
 
     function goToStep(step) {
         activeStep = step;
         renderWizard();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function editExistingApplication() {
         document.getElementById('application-confirmation').style.display = 'none';
         document.getElementById('application-wizard').style.display = 'block';
-        goToStep(2);
+        goToStep(0);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -441,6 +442,7 @@
         if (activeStep < totalSteps - 1) {
             activeStep++;
             renderWizard();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
             submitApplication();
         }
@@ -450,6 +452,7 @@
         if (activeStep > 0) {
             activeStep--;
             renderWizard();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
 
@@ -459,9 +462,25 @@
             if (el) el.style.display = (i === activeStep) ? 'block' : 'none';
 
             const tab = document.getElementById(`step-tab-${i}`);
+            const numSpan = document.getElementById(`step-num-${i}`);
             if (tab) {
-                tab.className = (i === activeStep) ? 'active' : (i < activeStep ? 'done' : '');
+                if (i === activeStep) {
+                    tab.className = 'active';
+                    if (numSpan) numSpan.textContent = i + 1;
+                } else if (i < activeStep) {
+                    tab.className = 'done';
+                    if (numSpan) numSpan.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
+                } else {
+                    tab.className = '';
+                    if (numSpan) numSpan.textContent = i + 1;
+                }
             }
+        }
+
+        const backBtn = document.getElementById('form-back-btn');
+        if (backBtn) {
+            backBtn.style.visibility = (activeStep === 0) ? 'hidden' : 'visible';
+            backBtn.disabled = (activeStep === 0);
         }
 
         // Update live review labels if stepping to Step 5
@@ -477,6 +496,10 @@
             nextBtn.innerHTML = `Save & continue <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14m-5-5 5 5-5 5"/></svg>`;
         }
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        renderWizard();
+    });
 
     function updateReviewSummaries() {
         const fn = document.getElementById('app-first-name')?.value || '';
