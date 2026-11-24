@@ -94,15 +94,21 @@
     .lock-options {
         grid-template-columns: 1fr !important;
     }
+    .lock-card {
+        padding: 24px 18px !important;
+    }
+    .application-lock-takeover {
+        padding: 24px 12px 60px !important;
+    }
 }
 </style>
 
-<!-- Complete Full-Page Lockdown Barrier -->
-<div class="application-lock-takeover" style="position: fixed; inset: 0; z-index: 9999; background: #0c1a14; display: flex; align-items: center; justify-content: center; padding: 24px; overflow-y: auto;">
+<!-- Complete Page Lockdown Barrier -->
+<div class="application-lock-takeover" style="position: relative; width: 100%; min-height: calc(100vh - 84px); background: #0c1a14; display: flex; align-items: flex-start; justify-content: center; padding: 40px 20px 80px; box-sizing: border-box; overflow: hidden;">
     <!-- Background aura -->
     <div style="position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(200,241,105,0.08) 0%, rgba(12,26,20,0) 70%); top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none;"></div>
 
-    <div class="lock-card" style="position: relative; max-width: 640px; width: 100%; background: #13241c; border: 1.5px solid rgba(200,241,105,0.25); border-radius: 24px; padding: 38px 34px; box-shadow: 0 30px 80px rgba(0,0,0,0.6); color: #ffffff;">
+    <div class="lock-card" style="position: relative; max-width: 660px; width: 100%; background: #13241c; border: 1.5px solid rgba(200,241,105,0.25); border-radius: 24px; padding: 38px 34px; box-shadow: 0 30px 80px rgba(0,0,0,0.6); color: #ffffff;">
         <div style="text-align: center; margin-bottom: 24px;">
             <div style="width: 72px; height: 72px; margin: 0 auto 16px; border-radius: 50%; background: rgba(245,158,11,0.15); border: 2px solid #f59e0b; color: #fbbf24; display: grid; place-items: center; box-shadow: 0 0 30px rgba(245,158,11,0.25);">
                 {% icon 'lock' 36 %}
@@ -201,7 +207,10 @@
                 <button type="submit" id="unlock-submit-btn" class="btn btn-primary" style="height: 52px; font-size: 15px; font-weight: 750; background: var(--lime); color: var(--forest); border: none; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; box-shadow: 0 6px 20px rgba(200,241,105,0.35);">
                     {% icon 'lock' 18 %} Answer Questions &amp; Unlock Application {% icon 'arrow' 18 %}
                 </button>
-                <a href="{% url 'overview' %}" style="text-align: center; color: #8faea2; font-size: 13px; text-decoration: none; padding: 6px;">
+                <a href="{% url 'roommate' %}?start=1&next={% url 'application' %}&required=1" style="text-align: center; color: var(--lime); font-size: 13px; text-decoration: underline; padding: 4px;">
+                    Or open full Roommate Matching Quiz &rarr;
+                </a>
+                <a href="{% url 'overview' %}" style="text-align: center; color: #8faea2; font-size: 13px; text-decoration: none; padding: 4px;">
                     &larr; Return to Student Overview
                 </a>
             </div>
