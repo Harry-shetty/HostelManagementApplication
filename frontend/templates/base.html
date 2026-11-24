@@ -12,7 +12,330 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20261119_v1">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20261125_theme_v3">
+    <script>
+        (function() {
+            function getPreferredTheme() {
+                try {
+                    var saved = localStorage.getItem('nestora-theme');
+                    if (saved === 'dark' || saved === 'light') return saved;
+                } catch (e) {}
+                return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+            }
+
+            var theme = getPreferredTheme();
+            document.documentElement.setAttribute('data-theme', theme);
+
+            function updateToggleButtons(themeName) {
+                var isDark = themeName === 'dark';
+                var btns = document.querySelectorAll('.theme-toggle-btn');
+                btns.forEach(function(btn) {
+                    btn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+                    btn.setAttribute('title', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+                });
+            }
+
+            window.setTheme = function(newTheme, save) {
+                if (save === undefined) save = true;
+                document.documentElement.classList.add('theme-transitioning');
+                document.documentElement.setAttribute('data-theme', newTheme);
+                if (save) {
+                    try { localStorage.setItem('nestora-theme', newTheme); } catch (e) {}
+                }
+                updateToggleButtons(newTheme);
+                setTimeout(function() {
+                    document.documentElement.classList.remove('theme-transitioning');
+                }, 320);
+            };
+
+            window.toggleTheme = function() {
+                var current = document.documentElement.getAttribute('data-theme') || 'light';
+                var next = current === 'dark' ? 'light' : 'dark';
+                window.setTheme(next, true);
+            };
+
+            document.addEventListener('DOMContentLoaded', function() {
+                updateToggleButtons(document.documentElement.getAttribute('data-theme'));
+            });
+
+            if (window.matchMedia) {
+                var mq = window.matchMedia('(prefers-color-scheme: dark)');
+                if (mq.addEventListener) {
+                    mq.addEventListener('change', function(e) {
+                        try {
+                            if (!localStorage.getItem('nestora-theme')) {
+                                window.setTheme(e.matches ? 'dark' : 'light', false);
+                            }
+                        } catch (err) {}
+                    });
+                }
+            }
+        })();
+    </script>
+    <style id="nestora-theme-engine-css">
+        /* Theme button layout & icon switching */
+        .theme-toggle-btn {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 10px !important;
+            border: 1px solid rgba(255, 255, 255, 0.22) !important;
+            background: rgba(255, 255, 255, 0.09) !important;
+            color: #ffffff !important;
+            cursor: pointer !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            flex-shrink: 0 !important;
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+        }
+        .theme-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.18) !important;
+            border-color: rgba(200, 241, 105, 0.6) !important;
+            transform: scale(1.08) !important;
+        }
+        .topbar .theme-toggle-btn {
+            border: 1px solid var(--line) !important;
+            background: var(--white) !important;
+            color: var(--charcoal) !important;
+        }
+        html:not([data-theme="dark"]) .theme-icon-light { display: none !important; }
+        html:not([data-theme="dark"]) .theme-icon-dark { display: flex !important; color: #f59e0b !important; }
+        html[data-theme="dark"] .theme-icon-dark { display: none !important; }
+        html[data-theme="dark"] .theme-icon-light { display: flex !important; color: #fbbf24 !important; }
+
+        /* Smooth Theme Switch */
+        html.theme-transitioning,
+        html.theme-transitioning *,
+        html.theme-transitioning *:before,
+        html.theme-transitioning *:after {
+            transition: background-color 0.28s ease, border-color 0.28s ease, color 0.28s ease, box-shadow 0.28s ease !important;
+            transition-delay: 0s !important;
+        }
+
+        /* Comprehensive Dark Mode Palette & Structural Overrides */
+        [data-theme="dark"] {
+            --forest: #226b55;
+            --forest-dark: #091510;
+            --lime: #c8f169;
+            --lime-soft: #172d1f;
+            --ivory: #0b1511;
+            --white: #12221b;
+            --charcoal: #e6f0eb;
+            --muted: #8ea296;
+            --line: #1e352a;
+            --soft: #162820;
+            --warning: #f59e0b;
+            --warning-soft: #2e220e;
+            --danger: #ef4444;
+            --danger-soft: #301313;
+            --blue-soft: #132832;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            color-scheme: dark;
+        }
+        [data-theme="dark"] body {
+            background: #0b1511 !important;
+            color: #e6f0eb !important;
+        }
+        [data-theme="dark"] .sidebar {
+            background: rgba(9, 21, 16, 0.98) !important;
+            border-bottom: 1px solid #1c3328 !important;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45) !important;
+        }
+        [data-theme="dark"] .topbar {
+            background: #12221b !important;
+            border-bottom: 1px solid #1e352a !important;
+        }
+        [data-theme="dark"] .topbar .theme-toggle-btn {
+            background: #162820 !important;
+            border-color: #1e352a !important;
+            color: #e6f0eb !important;
+        }
+        [data-theme="dark"] .nav-dropdown-menu {
+            background: #12221b !important;
+            border: 1px solid #1e352a !important;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6) !important;
+        }
+        [data-theme="dark"] .dropdown-link:hover {
+            background: #162820 !important;
+        }
+        [data-theme="dark"] .dropdown-link strong {
+            color: #e6f0eb !important;
+        }
+        [data-theme="dark"] .dropdown-link small {
+            color: #8ea296 !important;
+        }
+        [data-theme="dark"] .panel,
+        [data-theme="dark"] .card,
+        [data-theme="dark"] .hostel-card,
+        [data-theme="dark"] .stat-card,
+        [data-theme="dark"] .dash-card,
+        [data-theme="dark"] .detail-card,
+        [data-theme="dark"] .match-card,
+        [data-theme="dark"] .form-card,
+        [data-theme="dark"] .discover-card,
+        [data-theme="dark"] .bedmap-panel,
+        [data-theme="dark"] .confirmation,
+        [data-theme="dark"] .help-card,
+        [data-theme="dark"] .filter-bar,
+        [data-theme="dark"] .filter-card,
+        [data-theme="dark"] .deadline,
+        [data-theme="dark"] .quiz-card,
+        [data-theme="dark"] .next-steps,
+        [data-theme="dark"] .application-id,
+        [data-theme="dark"] .kpi-metric-card,
+        [data-theme="dark"] .run-metrics,
+        [data-theme="dark"] .floor-panel,
+        [data-theme="dark"] .room-panel,
+        [data-theme="dark"] .workflow,
+        [data-theme="dark"] .hcr-nav-bar,
+        [data-theme="dark"] .hcr-section-card,
+        [data-theme="dark"] .hcr-cart-card {
+            background: #12221b !important;
+            border-color: #1e352a !important;
+            color: #e6f0eb !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+        }
+        [data-theme="dark"] .hostel-card:hover,
+        [data-theme="dark"] .hcr-option-card:hover {
+            border-color: var(--lime) !important;
+        }
+        [data-theme="dark"] .hcr-item-banner,
+        [data-theme="dark"] .hcr-spec-tile,
+        [data-theme="dark"] .hcr-cart-header,
+        [data-theme="dark"] .hcr-option-card {
+            background: #162820 !important;
+            border-color: #1e352a !important;
+        }
+        [data-theme="dark"] .icon-btn,
+        [data-theme="dark"] .mobile-menu {
+            background: #162820 !important;
+            border-color: #1e352a !important;
+            color: #e6f0eb !important;
+        }
+        [data-theme="dark"] input:not([type="radio"]):not([type="checkbox"]),
+        [data-theme="dark"] select,
+        [data-theme="dark"] textarea {
+            background: #162820 !important;
+            border: 1px solid #1e352a !important;
+            color: #e6f0eb !important;
+        }
+        [data-theme="dark"] input:focus,
+        [data-theme="dark"] select:focus,
+        [data-theme="dark"] textarea:focus {
+            border-color: var(--lime) !important;
+            background: #1a3026 !important;
+            outline: none !important;
+        }
+        [data-theme="dark"] .search-field {
+            background: #162820 !important;
+            border-color: #1e352a !important;
+        }
+        [data-theme="dark"] .search-field input {
+            background: transparent !important;
+            color: #e6f0eb !important;
+        }
+        [data-theme="dark"] table {
+            background: #12221b !important;
+        }
+        [data-theme="dark"] table th {
+            background: #162820 !important;
+            border-color: #1e352a !important;
+            color: #a4bea4 !important;
+        }
+        [data-theme="dark"] table td {
+            border-color: #1e352a !important;
+            color: #dce7e1 !important;
+        }
+        [data-theme="dark"] table tr:hover td {
+            background: #182e23 !important;
+        }
+        [data-theme="dark"] .btn-secondary {
+            background: #162820 !important;
+            border-color: #1e352a !important;
+            color: #e6f0eb !important;
+        }
+        [data-theme="dark"] .btn-secondary:hover {
+            background: #1c3528 !important;
+            border-color: var(--lime) !important;
+            color: var(--lime) !important;
+        }
+        [data-theme="dark"] .modal {
+            background: #12221b !important;
+            border: 1px solid #1e352a !important;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65) !important;
+        }
+        [data-theme="dark"] .modal-foot {
+            background: #162820 !important;
+            border-top: 1px solid #1e352a !important;
+        }
+        [data-theme="dark"] .wizard-steps button {
+            background: #162820 !important;
+            border-color: #1e352a !important;
+        }
+        [data-theme="dark"] .wizard-steps button.active {
+            background: #12221b !important;
+            border-color: var(--lime) !important;
+        }
+        [data-theme="dark"] .tag {
+            background: #1a3026 !important;
+            color: #b7cebe !important;
+        }
+        [data-theme="dark"] p,
+        [data-theme="dark"] span {
+            color: inherit;
+        }
+        [data-theme="dark"] h1,
+        [data-theme="dark"] h2,
+        [data-theme="dark"] h3,
+        [data-theme="dark"] h4,
+        [data-theme="dark"] strong,
+        [data-theme="dark"] b {
+            color: #f1f7f4 !important;
+        }
+        [data-theme="dark"] .status-banner {
+            background: #241c0e !important;
+            border-color: #3d2f16 !important;
+        }
+        [data-theme="dark"] .status-banner > span {
+            background: #1c150b !important;
+        }
+        [data-theme="dark"] .room-grid button {
+            background: #162820 !important;
+            border-color: #1e352a !important;
+            color: #e6f0eb !important;
+        }
+        [data-theme="dark"] .room-grid button:hover {
+            border-color: var(--lime) !important;
+            background: #1c3528 !important;
+        }
+        [data-theme="dark"] .bed-summary {
+            background: #162820 !important;
+            border-color: #1e352a !important;
+            color: #e6f0eb !important;
+        }
+        [data-theme="dark"] .option-list button {
+            background: #162820 !important;
+            border-color: #1e352a !important;
+            color: #e6f0eb !important;
+        }
+        [data-theme="dark"] .option-list button:hover {
+            border-color: var(--lime) !important;
+            background: #1c3528 !important;
+        }
+        [data-theme="dark"] .auth-note,
+        [data-theme="dark"] .warning-box {
+            background: #271d0e !important;
+            border-color: #d97706 !important;
+            color: #fef3c7 !important;
+        }
+        [data-theme="dark"] .immutable-note {
+            background: #162820 !important;
+            border-color: #1e352a !important;
+            color: #9cb3a8 !important;
+        }
+    </style>
     <style>
         /* Mobile Navigation Dropdown Collapsing & Compact Display */
         @media (max-width: 900px) {
@@ -299,6 +622,10 @@
             </nav>
 
             <div class="sidebar-bottom">
+                <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle dark/light mode" title="Toggle dark/light mode">
+                    <span class="theme-icon-light">{% icon 'sun' 18 %}</span>
+                    <span class="theme-icon-dark">{% icon 'moon' 18 %}</span>
+                </button>
                 <div class="profile-row" style="cursor: pointer;" onclick="window.location.href='{% if is_admin %}{% url 'admin-profile' %}{% else %}{% url 'student-profile' %}{% endif %}';" title="My Profile & Settings">
                     <span class="avatar {% if is_admin %}avatar-green{% endif %}">
                         {{ avatar }}
@@ -322,6 +649,10 @@
                     <span>{% block topbar_title %}Nestora Portal{% endblock %}</span>
                 </div>
                 <div class="top-actions">
+                    <button type="button" class="icon-btn theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle dark/light mode" title="Toggle dark/light mode">
+                        <span class="theme-icon-light">{% icon 'sun' 17 %}</span>
+                        <span class="theme-icon-dark">{% icon 'moon' 17 %}</span>
+                    </button>
                     <a href="{% if is_admin %}{% url 'draft' %}{% else %}{% url 'hostels' %}{% endif %}" class="icon-btn search-toggle" aria-label="Search">{% icon 'search' %}</a>
                     <a href="{% if is_admin %}{% url 'placeholder' 'audit' %}{% else %}{% url 'placeholder' 'notifications' %}{% endif %}" class="icon-btn has-dot" aria-label="Notifications">
                         {% icon 'bell' %}
@@ -399,7 +730,7 @@
         });
     </script>
     <script src="{% static 'js/socket.io.min.js' %}"></script>
-    <script src="{% static 'js/main.js' %}?v=20261119_v1"></script>
+    <script src="{% static 'js/main.js' %}?v=20261125_theme_v3"></script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

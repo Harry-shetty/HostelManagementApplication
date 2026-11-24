@@ -41,6 +41,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavDropdowns();
 
     // -------------------------------------------------------------
+    // Theme Engine (Light / Dark Mode)
+    // -------------------------------------------------------------
+    initTheme();
+
+    // -------------------------------------------------------------
     // Real-Time Socket.IO Client
     // -------------------------------------------------------------
     initSocketIO();
@@ -308,3 +313,80 @@ function initSocketIO() {
         console.error('Socket.IO initialization error:', err);
     }
 }
+
+// =============================================================================
+// Theme Switcher Engine (Light / Dark Mode)
+// =============================================================================
+
+function getPreferredTheme() {
+    try {
+        const storedTheme = localStorage.getItem('nestora-theme');
+        if (storedTheme === 'dark' || storedTheme === 'light') {
+            return storedTheme;
+        }
+    } catch (e) {}
+
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light';
+}
+
+function setTheme(theme, save = true) {
+    const root = document.documentElement;
+    root.classList.add('theme-transitioning');
+    root.setAttribute('data-theme', theme);
+
+    if (save) {
+        try {
+            localStorage.setItem('nestora-theme', theme);
+        } catch (e) {}
+    }
+
+    updateThemeToggleUI(theme);
+
+    setTimeout(() => {
+        root.classList.remove('theme-transitioning');
+    }, 320);
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || getPreferredTheme();
+    const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme, true);
+}
+
+function updateThemeToggleUI(theme) {
+    const isDark = theme === 'dark';
+    document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+        btn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+        btn.setAttribute('title', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+    });
+}
+
+function initTheme() {
+    const theme = getPreferredTheme();
+    // Attribute might already have been set by the head script to prevent flash
+    if (!document.documentElement.getAttribute('data-theme')) {
+        document.documentElement.setAttribute('data-theme', theme);
+    }
+    updateThemeToggleUI(document.documentElement.getAttribute('data-theme'));
+
+    // Listen for OS system theme changes if user hasn't explicitly overridden
+    if (window.matchMedia) {
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        if (mediaQuery.addEventListener) {
+            mediaQuery.addEventListener('change', (e) => {
+                try {
+                    if (!localStorage.getItem('nestora-theme')) {
+                        setTheme(e.matches ? 'dark' : 'light', false);
+                    }
+                } catch (err) {}
+            });
+        }
+    }
+}
+
+// Global exposure
+window.toggleTheme = toggleTheme;
+window.setTheme = setTheme;
+window.initTheme = initTheme;

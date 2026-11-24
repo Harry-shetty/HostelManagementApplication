@@ -162,7 +162,8 @@ def bedmap_view(request):
     other_hostels = [b for b in all_vacant if b.room.hostel != cedar]
     available_target_beds = same_hostel_same_floor + same_hostel_other_floor + other_hostels
 
-    initial_room = rooms_for_floor[0] if rooms_for_floor else (cedar_data.get('all_rooms', [None])[0])
+    all_r = cedar_data.get('all_rooms', [])
+    initial_room = rooms_for_floor[0] if rooms_for_floor else (all_r[0] if all_r else None)
 
     ctx = get_base_context(request, 'bedmap', is_admin=True)
     ctx.update({

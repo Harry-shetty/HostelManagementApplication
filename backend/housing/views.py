@@ -314,24 +314,39 @@ def get_mock_applications(filter_val=None, search_query=None):
     except Exception:
         pass
 
-    if filter_val == 'under_review':
-        items = [i for i in items if i['status'] in ('Under Review', 'Action Required')]
-    elif filter_val == 'verified':
-        items = [i for i in items if i['status'] in ('Verified', 'Allocated')]
-    elif filter_val == 'special':
-        items = [i for i in items if i['quota'] == 'Special Accommodations']
-
-    if search_query:
-        sq = search_query.lower()
+    if not items:
         items = [
-            i for i in items if (
-                sq in i['student_name'].lower() or
-                sq in i['student_id'].lower() or
-                sq in i['id'].lower() or
-                sq in i['programme'].lower()
-            )
+            {
+                'id': 'NST-25-10482',
+                'student_name': 'Amara Mensah',
+                'student_id': 'STU-204810',
+                'programme': 'Computer Science · Year 2',
+                'first_preference': 'Cedar House',
+                'second_preference': 'Willow Hall',
+                'room_type': 'Ensuite Single',
+                'quota': 'General Merit',
+                'status': 'Verified',
+                'submitted_at': '04 Oct 2025, 14:22',
+                'avatar_initials': 'AM',
+                'avatar_color': 'green',
+                'notes': 'Quiet floor requested'
+            },
+            {
+                'id': 'NST-25-10483',
+                'student_name': 'Marcus Vance',
+                'student_id': 'STU-204811',
+                'programme': 'Mechanical Engineering · Year 1',
+                'first_preference': 'Pine Court',
+                'second_preference': 'Cedar House',
+                'room_type': 'Standard Single',
+                'quota': 'Special Accommodations',
+                'status': 'Under Review',
+                'submitted_at': '04 Oct 2025, 15:40',
+                'avatar_initials': 'MV',
+                'avatar_color': 'gold',
+                'notes': 'Wheelchair accessible ground floor required'
+            }
         ]
-    return items
 
     if filter_val == 'under_review':
         items = [i for i in items if i['status'] in ('Under Review', 'Action Required')]

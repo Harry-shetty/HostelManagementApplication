@@ -9,7 +9,90 @@
     <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}?v=4">
     <link rel="shortcut icon" type="image/svg+xml" href="{% static 'favicon.svg' %}?v=4">
     <link rel="apple-touch-icon" href="{% static 'favicon.svg' %}?v=4">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20261125_theme_v3">
+    <script>
+        (function() {
+            function getPreferredTheme() {
+                try {
+                    var saved = localStorage.getItem('nestora-theme');
+                    if (saved === 'dark' || saved === 'light') return saved;
+                } catch (e) {}
+                return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+            }
+
+            var theme = getPreferredTheme();
+            document.documentElement.setAttribute('data-theme', theme);
+
+            window.setTheme = function(newTheme, save) {
+                if (save === undefined) save = true;
+                document.documentElement.classList.add('theme-transitioning');
+                document.documentElement.setAttribute('data-theme', newTheme);
+                if (save) {
+                    try { localStorage.setItem('nestora-theme', newTheme); } catch (e) {}
+                }
+                var btns = document.querySelectorAll('.theme-toggle-btn');
+                btns.forEach(function(btn) {
+                    btn.setAttribute('aria-label', newTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+                    btn.setAttribute('title', newTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+                });
+                setTimeout(function() {
+                    document.documentElement.classList.remove('theme-transitioning');
+                }, 320);
+            };
+
+            window.toggleTheme = function() {
+                var current = document.documentElement.getAttribute('data-theme') || 'light';
+                var next = current === 'dark' ? 'light' : 'dark';
+                window.setTheme(next, true);
+            };
+        })();
+    </script>
+    <style>
+        html:not([data-theme="dark"]) .theme-icon-light { display: none !important; }
+        html:not([data-theme="dark"]) .theme-icon-dark { display: flex !important; color: #f59e0b !important; }
+        html[data-theme="dark"] .theme-icon-dark { display: none !important; }
+        html[data-theme="dark"] .theme-icon-light { display: flex !important; color: #fbbf24 !important; }
+
+        [data-theme="dark"] {
+            --forest: #226b55;
+            --forest-dark: #091510;
+            --lime: #c8f169;
+            --ivory: #0b1511;
+            --white: #12221b;
+            --charcoal: #e6f0eb;
+            --muted: #8ea296;
+            --line: #1e352a;
+            --soft: #162820;
+        }
+        [data-theme="dark"] body {
+            background: #0b1511 !important;
+            color: #e6f0eb !important;
+        }
+        [data-theme="dark"] .signup-wrap {
+            background: radial-gradient(circle at 50% 30%, #15271f 0%, #0b1511 100%) !important;
+        }
+        [data-theme="dark"] .signup-box {
+            background: #12221b !important;
+            border-color: #1e352a !important;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5) !important;
+        }
+        [data-theme="dark"] .signup-brand strong {
+            color: #f1f7f4 !important;
+        }
+        [data-theme="dark"] input {
+            background: #162820 !important;
+            border-color: #1e352a !important;
+            color: #f1f7f4 !important;
+        }
+        [data-theme="dark"] input:focus {
+            border-color: var(--lime) !important;
+            background: #1a3026 !important;
+        }
+        [data-theme="dark"] .theme-toggle-btn {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border-color: rgba(200, 241, 105, 0.3) !important;
+        }
+    </style>
     <style>
         .signup-wrap {
             min-height: 100vh;
@@ -162,6 +245,14 @@
     </style>
 </head>
 <body>
+    <!-- Floating Dark/Light Mode Switcher -->
+    <div style="position: fixed; top: 20px; right: 24px; z-index: 100;">
+        <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle dark/light mode" title="Toggle dark/light mode" style="width: 40px; height: 40px; border-radius: 12px; background: rgba(0,0,0,0.06); border: 1px solid var(--line); box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+            <span class="theme-icon-light">{% icon 'sun' 20 %}</span>
+            <span class="theme-icon-dark">{% icon 'moon' 20 %}</span>
+        </button>
+    </div>
+
     <div class="signup-wrap">
         <div class="signup-box">
             <div class="signup-brand">
@@ -276,5 +367,6 @@
             }
         });
     </script>
+    <script src="{% static 'js/main.js' %}"></script>
 </body>
 </html>
