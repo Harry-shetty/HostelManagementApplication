@@ -5,6 +5,124 @@
 {% block topbar_title %}Roommate Matching{% endblock %}
 
 {% block content %}
+<style>
+/* Roommate Matching Quiz & Intro Dark Mode Styles */
+[data-theme="dark"] .quiz-card {
+    background: #12221b !important;
+    border: 1px solid #1e352a !important;
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.5) !important;
+    color: #e6f0eb !important;
+}
+[data-theme="dark"] .quiz-card h1 {
+    color: #f1f7f4 !important;
+}
+[data-theme="dark"] .quiz-card p {
+    color: #9cb3a8 !important;
+}
+[data-theme="dark"] .quiz-card .eyebrow {
+    color: var(--lime) !important;
+}
+[data-theme="dark"] .quiz-top .back-link,
+[data-theme="dark"] .quiz-top .text-link,
+[data-theme="dark"] .quiz-top span {
+    color: #9cb3a8 !important;
+}
+[data-theme="dark"] .quiz-top .back-link:hover,
+[data-theme="dark"] .quiz-top .text-link:hover {
+    color: var(--lime) !important;
+}
+[data-theme="dark"] .mini-progress {
+    background: #1e352a !important;
+}
+[data-theme="dark"] .mini-progress span {
+    background: var(--lime) !important;
+}
+[data-theme="dark"] .option-list button {
+    background: #162820 !important;
+    border: 1.5px solid #1e352a !important;
+    color: #e6f0eb !important;
+}
+[data-theme="dark"] .option-list button:hover {
+    background: #1c3528 !important;
+    border-color: rgba(200, 241, 105, 0.4) !important;
+}
+[data-theme="dark"] .option-list button.selected {
+    background: #183728 !important;
+    border-color: var(--lime) !important;
+    box-shadow: 0 0 0 1.5px var(--lime) !important;
+    color: #ffffff !important;
+}
+[data-theme="dark"] .option-list button > span {
+    background: #112019 !important;
+    color: #8ea296 !important;
+}
+[data-theme="dark"] .option-list button.selected > span {
+    background: var(--lime) !important;
+    color: #0c1a14 !important;
+}
+[data-theme="dark"] .quiz-actions {
+    border-top: 1px solid #1e352a !important;
+}
+[data-theme="dark"] .quiz-actions span {
+    color: #8ea296 !important;
+}
+[data-theme="dark"] #quiz-next-btn:not(:disabled) {
+    background: var(--lime) !important;
+    color: #0c1a14 !important;
+}
+[data-theme="dark"] #quiz-next-btn:not(:disabled) * {
+    color: #0c1a14 !important;
+    stroke: #0c1a14 !important;
+}
+[data-theme="dark"] #quiz-next-btn:disabled {
+    background: #193326 !important;
+    border: 1px solid #1e352a !important;
+    color: #4b6657 !important;
+    opacity: 0.7 !important;
+}
+[data-theme="dark"] .privacy-footer {
+    color: #8ea296 !important;
+}
+[data-theme="dark"] .privacy-note {
+    background: #162820 !important;
+    border-color: #1e352a !important;
+    color: #e6f0eb !important;
+}
+[data-theme="dark"] .privacy-note strong {
+    color: var(--lime) !important;
+}
+[data-theme="dark"] .privacy-note p {
+    color: #9cb3a8 !important;
+}
+[data-theme="dark"] .match-hero h1 {
+    color: #f1f7f4 !important;
+}
+[data-theme="dark"] .match-hero p {
+    color: #9cb3a8 !important;
+}
+[data-theme="dark"] .match-features {
+    border-top-color: #1e352a !important;
+}
+[data-theme="dark"] .match-features div {
+    border-right-color: #1e352a !important;
+}
+[data-theme="dark"] .match-features strong {
+    color: #f1f7f4 !important;
+}
+[data-theme="dark"] .match-features span {
+    color: #8ea296 !important;
+}
+[data-theme="dark"] .required-app-banner {
+    background: rgba(245, 158, 11, 0.12) !important;
+    border-color: rgba(245, 158, 11, 0.35) !important;
+}
+[data-theme="dark"] .required-app-banner strong {
+    color: #fbbf24 !important;
+}
+[data-theme="dark"] .required-app-banner span {
+    color: #fde68a !important;
+}
+</style>
 <!-- Mode 1: Intro -->
 <div id="roommate-intro" class="page narrow">
     {% if is_required_for_app and not is_completed %}

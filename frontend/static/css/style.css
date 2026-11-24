@@ -1889,7 +1889,8 @@ html.theme-transitioning *:after {
 [data-theme="dark"] .confirmation,
 [data-theme="dark"] .help-card,
 [data-theme="dark"] .filter-bar,
-[data-theme="dark"] .filter-card {
+[data-theme="dark"] .filter-card,
+[data-theme="dark"] .quiz-card {
   background: #13221b;
   border-color: #22372c;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);

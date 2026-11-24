@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20261125_theme_v6">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20261125_theme_v7">
     <script>
         (function() {
             function getPreferredTheme() {
@@ -220,7 +220,12 @@
         [data-theme="dark"] .run-metrics,
         [data-theme="dark"] .floor-panel,
         [data-theme="dark"] .room-panel,
-        [data-theme="dark"] .workflow,
+        [data-theme="dark"] .workflow {
+            background: #12221b !important;
+            border-color: #1e352a !important;
+            color: #e6f0eb !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+        }
         [data-theme="dark"] .hcr-header-panel {
             border-bottom: 1px solid #1e352a !important;
         }
