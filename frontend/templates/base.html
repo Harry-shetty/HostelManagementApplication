@@ -324,11 +324,92 @@
             border-color: var(--lime) !important;
             background: #1c3528 !important;
         }
-        [data-theme="dark"] .auth-note,
-        [data-theme="dark"] .warning-box {
-            background: #271d0e !important;
-            border-color: #d97706 !important;
+        /* Policy & Status Panel Elements */
+        .governance-guarantee-box {
+            margin: 16px 0;
+            padding: 14px 16px;
+            border-radius: 12px;
+            background: #f4faf6;
+            border: 1px solid #d5ebd9;
+            color: var(--charcoal);
+            font-size: 12.5px;
+            line-height: 1.55;
+        }
+        .governance-guarantee-box strong {
+            color: var(--forest);
+            display: block;
+            margin-bottom: 4px;
+            font-size: 13px;
+        }
+        .confirmed-meta-grid,
+        .ranked-pref-card {
+            background: #f8faf8;
+        }
+        .auth-note-link {
+            color: var(--forest);
+            font-weight: 600;
+            text-decoration: underline;
+        }
+
+        /* Dark Mode overrides for policy/status panels */
+        [data-theme="dark"] .governance-guarantee-box {
+            background: #15291f !important;
+            border: 1px solid #234333 !important;
+            color: #dcece3 !important;
+        }
+        [data-theme="dark"] .governance-guarantee-box strong {
+            color: var(--lime) !important;
+        }
+        [data-theme="dark"] .confirmed-meta-grid,
+        [data-theme="dark"] .ranked-pref-card {
+            background: #15291f !important;
+            border-color: #1e352a !important;
+        }
+        [data-theme="dark"] .confirmed-meta-grid strong,
+        [data-theme="dark"] .ranked-pref-card strong {
+            color: #e6f0eb !important;
+        }
+        [data-theme="dark"] .confirmed-meta-grid code {
+            color: var(--lime) !important;
+        }
+        [data-theme="dark"] .policy-icon {
+            background: rgba(200, 241, 105, 0.15) !important;
+            color: var(--lime) !important;
+            border: 1px solid rgba(200, 241, 105, 0.25) !important;
+        }
+        [data-theme="dark"] .auth-note {
+            background: rgba(245, 158, 11, 0.14) !important;
+            border-left: 3px solid #f59e0b !important;
             color: #fef3c7 !important;
+        }
+        [data-theme="dark"] .auth-note strong {
+            color: #fbbf24 !important;
+        }
+        [data-theme="dark"] .auth-note p {
+            color: #fde68a !important;
+        }
+        [data-theme="dark"] .auth-note-link,
+        [data-theme="dark"] .auth-note a {
+            color: var(--lime) !important;
+            text-decoration: underline !important;
+            font-weight: 700 !important;
+        }
+
+        /* Broad safety overrides for remaining light inline background elements */
+        [data-theme="dark"] [style*="background: #fafbf9"],
+        [data-theme="dark"] [style*="background:#fafbf9"] {
+            background: #15291f !important;
+            border-color: #1e352a !important;
+            color: #e6f0eb !important;
+        }
+        [data-theme="dark"] [style*="background: #ffffff"],
+        [data-theme="dark"] [style*="background:#ffffff"] {
+            background: #12221b !important;
+            border-color: #1e352a !important;
+            color: #e6f0eb !important;
+        }
+        [data-theme="dark"] [style*="color: var(--forest)"] {
+            color: var(--lime) !important;
         }
         [data-theme="dark"] .immutable-note {
             background: #162820 !important;
