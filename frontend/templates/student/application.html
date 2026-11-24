@@ -60,36 +60,215 @@
 
 {% if is_locked %}
 <style>
+/* Lockdown Barrier - Light Mode (Default) */
+.application-lock-takeover {
+    position: relative;
+    width: 100%;
+    min-height: calc(100vh - 84px);
+    background: var(--ivory);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 40px 20px 80px;
+    box-sizing: border-box;
+    overflow: visible;
+}
+.lock-bg-aura {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(23, 76, 60, 0.05) 0%, rgba(248, 247, 242, 0) 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+.lock-card {
+    position: relative;
+    max-width: 660px;
+    width: 100%;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 38px 34px;
+    box-shadow: 0 16px 45px rgba(23, 76, 60, 0.08);
+    color: var(--charcoal);
+}
+.lock-icon-wrap {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: #fef3c7;
+    border: 2px solid #f59e0b;
+    color: #b45309;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.18);
+}
+.lock-title {
+    font-size: 26px;
+    font-weight: 800;
+    margin: 0 0 10px 0;
+    color: var(--forest);
+}
+.lock-subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    margin: 0;
+    line-height: 1.55;
+}
+.lock-quiz-q {
+    background: #f8faf8;
+    border: 1px solid #e2ebe6;
+    border-radius: 16px;
+    padding: 18px;
+}
+.lock-quiz-q label {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--forest);
+    margin-bottom: 4px;
+}
+.lock-quiz-q span.q-desc {
+    font-size: 12px;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 12px;
+}
 .lock-opt-label {
     display: flex;
     align-items: center;
     gap: 10px;
     padding: 12px 14px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.12);
+    background: #ffffff;
+    border: 1px solid #dce5e1;
     border-radius: 12px;
     cursor: pointer;
     font-size: 13px;
-    color: #e4f3ec;
+    color: var(--charcoal);
     transition: all 0.2s ease;
     user-select: none;
 }
 .lock-opt-label:hover {
-    background: rgba(255,255,255,0.1);
-    border-color: rgba(200,241,105,0.4);
+    background: #f3f8f5;
+    border-color: var(--forest);
 }
 .lock-opt-label:has(input:checked) {
-    background: rgba(200,241,105,0.14);
-    border-color: var(--lime);
-    color: var(--lime);
+    background: #eef8d5;
+    border-color: var(--forest);
+    color: var(--forest-dark);
     font-weight: 700;
 }
 .lock-opt-label input {
-    accent-color: var(--lime);
+    accent-color: var(--forest);
     width: 16px;
     height: 16px;
     margin: 0;
 }
+.lock-submit-btn {
+    height: 52px;
+    font-size: 15px;
+    font-weight: 750;
+    background: var(--forest);
+    color: #ffffff;
+    border: none;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(23, 76, 60, 0.25);
+    transition: all 0.2s ease;
+}
+.lock-submit-btn:hover {
+    background: var(--forest-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(23, 76, 60, 0.35);
+}
+.lock-secondary-link {
+    text-align: center;
+    color: var(--forest);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: underline;
+    padding: 4px;
+}
+.lock-back-link {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    text-decoration: none;
+    padding: 4px;
+}
+.lock-back-link:hover {
+    color: var(--charcoal);
+}
+
+/* Dark Mode Overrides */
+[data-theme="dark"] .application-lock-takeover {
+    background: #0b1511;
+}
+[data-theme="dark"] .lock-bg-aura {
+    background: radial-gradient(circle, rgba(200, 241, 105, 0.08) 0%, rgba(11, 21, 17, 0) 70%);
+}
+[data-theme="dark"] .lock-card {
+    background: #12221b;
+    border-color: #1e352a;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+    color: #e6f0eb;
+}
+[data-theme="dark"] .lock-title {
+    color: #f1f7f4;
+}
+[data-theme="dark"] .lock-subtitle {
+    color: #9cb3a8;
+}
+[data-theme="dark"] .lock-quiz-q {
+    background: #162820;
+    border-color: #1e352a;
+}
+[data-theme="dark"] .lock-quiz-q label {
+    color: #e6f0eb;
+}
+[data-theme="dark"] .lock-quiz-q span.q-desc {
+    color: #8ea296;
+}
+[data-theme="dark"] .lock-opt-label {
+    background: #12221b;
+    border-color: #1e352a;
+    color: #e6f0eb;
+}
+[data-theme="dark"] .lock-opt-label:hover {
+    background: #1a3026;
+    border-color: rgba(200, 241, 105, 0.4);
+}
+[data-theme="dark"] .lock-opt-label:has(input:checked) {
+    background: rgba(200, 241, 105, 0.16);
+    border-color: var(--lime);
+    color: var(--lime);
+}
+[data-theme="dark"] .lock-opt-label input {
+    accent-color: var(--lime);
+}
+[data-theme="dark"] .lock-submit-btn {
+    background: var(--lime);
+    color: var(--forest-dark);
+    box-shadow: 0 6px 20px rgba(200, 241, 105, 0.35);
+}
+[data-theme="dark"] .lock-submit-btn:hover {
+    background: #bceb59;
+}
+[data-theme="dark"] .lock-secondary-link {
+    color: var(--lime);
+}
+[data-theme="dark"] .lock-back-link {
+    color: #8ea296;
+}
+
 @media (max-width: 600px) {
     .lock-options {
         grid-template-columns: 1fr !important;
@@ -104,18 +283,18 @@
 </style>
 
 <!-- Complete Page Lockdown Barrier -->
-<div class="application-lock-takeover" style="position: relative; width: 100%; min-height: calc(100vh - 84px); background: #0c1a14; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 40px 20px 80px; box-sizing: border-box; overflow: visible;">
+<div class="application-lock-takeover">
     <!-- Background aura -->
-    <div style="position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(200,241,105,0.08) 0%, rgba(12,26,20,0) 70%); top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none;"></div>
+    <div class="lock-bg-aura"></div>
 
-    <div class="lock-card" style="position: relative; max-width: 660px; width: 100%; background: #13241c; border: 1.5px solid rgba(200,241,105,0.25); border-radius: 24px; padding: 38px 34px; box-shadow: 0 30px 80px rgba(0,0,0,0.6); color: #ffffff;">
+    <div class="lock-card">
         <div style="text-align: center; margin-bottom: 24px;">
-            <div style="width: 72px; height: 72px; margin: 0 auto 16px; border-radius: 50%; background: rgba(245,158,11,0.15); border: 2px solid #f59e0b; color: #fbbf24; display: grid; place-items: center; box-shadow: 0 0 30px rgba(245,158,11,0.25);">
+            <div class="lock-icon-wrap">
                 {% icon 'lock' 36 %}
             </div>
-            <span class="eyebrow" style="color: #fbbf24; font-weight: 800; font-size: 11px; letter-spacing: 0.1em; display: inline-block; margin-bottom: 6px;">ACCESS LOCKED · MANDATORY PREREQUISITE</span>
-            <h1 style="font-size: 26px; font-weight: 800; margin: 0 0 10px 0; color: #ffffff;">Hostel Application is Locked</h1>
-            <p style="font-size: 14px; color: #a3c2b5; margin: 0; line-height: 1.55;">
+            <span class="eyebrow" style="color: #b45309; font-weight: 800; font-size: 11px; letter-spacing: 0.1em; display: inline-block; margin-bottom: 6px;">ACCESS LOCKED · MANDATORY PREREQUISITE</span>
+            <h1 class="lock-title">Hostel Application is Locked</h1>
+            <p class="lock-subtitle">
                 You cannot access or submit this application yet. University policy requires answering your <strong>Roommate Matching</strong> questions first to ensure compatible living habits.
             </p>
         </div>
@@ -125,11 +304,11 @@
             <input type="hidden" name="next_url" value="{% url 'application' %}">
 
             <!-- Question 1 -->
-            <div class="lock-quiz-q" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 18px;">
-                <label style="display: block; font-size: 14px; font-weight: 700; color: #e4f3ec; margin-bottom: 4px;">
+            <div class="lock-quiz-q">
+                <label>
                     1. When do you usually go to sleep on weekdays?
                 </label>
-                <span style="font-size: 12px; color: #8faea2; display: block; margin-bottom: 12px;">Used to match night owls or early risers.</span>
+                <span class="q-desc">Used to match night owls or early risers.</span>
                 <div class="lock-options" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
                     <label class="lock-opt-label">
                         <input type="radio" name="sleep_schedule" value="Before 10 PM" required>
@@ -151,11 +330,11 @@
             </div>
 
             <!-- Question 2 -->
-            <div class="lock-quiz-q" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 18px;">
-                <label style="display: block; font-size: 14px; font-weight: 700; color: #e4f3ec; margin-bottom: 4px;">
+            <div class="lock-quiz-q">
+                <label>
                     2. How would you describe your cleanliness &amp; tidiness?
                 </label>
-                <span style="font-size: 12px; color: #8faea2; display: block; margin-bottom: 12px;">Used for roommate cleaning alignment.</span>
+                <span class="q-desc">Used for roommate cleaning alignment.</span>
                 <div class="lock-options" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
                     <label class="lock-opt-label">
                         <input type="radio" name="cleanliness" value="Very tidy" required>
@@ -177,11 +356,11 @@
             </div>
 
             <!-- Question 3 -->
-            <div class="lock-quiz-q" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 18px;">
-                <label style="display: block; font-size: 14px; font-weight: 700; color: #e4f3ec; margin-bottom: 4px;">
+            <div class="lock-quiz-q">
+                <label>
                     3. What study &amp; room noise level do you prefer?
                 </label>
-                <span style="font-size: 12px; color: #8faea2; display: block; margin-bottom: 12px;">Determines quiet hours and study preferences.</span>
+                <span class="q-desc">Determines quiet hours and study preferences.</span>
                 <div class="lock-options" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
                     <label class="lock-opt-label">
                         <input type="radio" name="noise_level" value="Very quiet" required>
@@ -204,13 +383,13 @@
 
             <!-- Action buttons -->
             <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 6px;">
-                <button type="submit" id="unlock-submit-btn" class="btn btn-primary" style="height: 52px; font-size: 15px; font-weight: 750; background: var(--lime); color: var(--forest); border: none; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; box-shadow: 0 6px 20px rgba(200,241,105,0.35);">
+                <button type="submit" id="unlock-submit-btn" class="lock-submit-btn">
                     {% icon 'lock' 18 %} Answer Questions &amp; Unlock Application {% icon 'arrow' 18 %}
                 </button>
-                <a href="{% url 'roommate' %}?start=1&next={% url 'application' %}&required=1" style="text-align: center; color: var(--lime); font-size: 13px; text-decoration: underline; padding: 4px;">
+                <a href="{% url 'roommate' %}?start=1&next={% url 'application' %}&required=1" class="lock-secondary-link">
                     Or open full Roommate Matching Quiz &rarr;
                 </a>
-                <a href="{% url 'overview' %}" style="text-align: center; color: #8faea2; font-size: 13px; text-decoration: none; padding: 4px;">
+                <a href="{% url 'overview' %}" class="lock-back-link">
                     &larr; Return to Student Overview
                 </a>
             </div>
