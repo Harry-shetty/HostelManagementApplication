@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20261125_theme_v5">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20261125_theme_v6">
     <script>
         (function() {
             function getPreferredTheme() {
@@ -221,24 +221,191 @@
         [data-theme="dark"] .floor-panel,
         [data-theme="dark"] .room-panel,
         [data-theme="dark"] .workflow,
-        [data-theme="dark"] .hcr-nav-bar,
-        [data-theme="dark"] .hcr-section-card,
+        [data-theme="dark"] .hcr-header-panel {
+            border-bottom: 1px solid #1e352a !important;
+        }
+        [data-theme="dark"] .hcr-main-title {
+            color: #f1f7f4 !important;
+        }
+        [data-theme="dark"] .hcr-session-subtitle {
+            color: #9cb3a8 !important;
+        }
+        [data-theme="dark"] .hcr-brand-crest {
+            background: #162820 !important;
+            border: 1px solid #1e352a !important;
+            color: var(--lime) !important;
+        }
+        [data-theme="dark"] .hcr-guidelines-links a {
+            color: #9cb3a8 !important;
+        }
+        [data-theme="dark"] .hcr-guidelines-links a:hover {
+            color: var(--lime) !important;
+        }
+        [data-theme="dark"] .hcr-pipe {
+            color: #2e4d3d !important;
+        }
+        [data-theme="dark"] .hcr-legend-item {
+            color: #9cb3a8 !important;
+        }
+        [data-theme="dark"] .hcr-box-inactive {
+            background: #12221b !important;
+            border: 1.5px solid #2e4d3d !important;
+        }
+        [data-theme="dark"] .hcr-box-selected {
+            background: #162f22 !important;
+            border: 1.5px solid var(--lime) !important;
+        }
+        [data-theme="dark"] .hcr-table-card {
+            background: #12221b !important;
+            border: 1px solid #1e352a !important;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35) !important;
+        }
+        [data-theme="dark"] .hcr-allocation-table thead th {
+            background: #162820 !important;
+            color: #a4bea4 !important;
+            border-right: 1px solid #1e352a !important;
+        }
+        [data-theme="dark"] .hcr-allocation-table tbody td {
+            background: #12221b !important;
+            color: #e6f0eb !important;
+            border-right: 1px solid #1e352a !important;
+            border-top: 1px solid #1e352a !important;
+        }
+        [data-theme="dark"] .hcr-allocation-table tbody td strong {
+            color: #f1f7f4 !important;
+        }
+        [data-theme="dark"] .hcr-room-tag {
+            background: #182e23 !important;
+            border: 1px solid #2e4d3d !important;
+            color: var(--lime) !important;
+        }
+        [data-theme="dark"] .hcr-section-heading {
+            color: #f1f7f4 !important;
+        }
+        [data-theme="dark"] .hcr-select-card {
+            background: #12221b !important;
+            border: 1.5px solid #1e352a !important;
+            color: #e6f0eb !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+        }
+        [data-theme="dark"] .hcr-select-card:hover {
+            background: #162820 !important;
+            border-color: rgba(200, 241, 105, 0.4) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
+        }
+        [data-theme="dark"] .hcr-select-card.active,
+        [data-theme="dark"] .hcr-select-card.selected {
+            background: #162f22 !important;
+            border-color: var(--lime) !important;
+            box-shadow: 0 0 0 2px var(--lime), 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+        }
+        [data-theme="dark"] .hcr-card-content strong {
+            color: #f1f7f4 !important;
+        }
+        [data-theme="dark"] .hcr-card-content small {
+            color: #9cb3a8 !important;
+        }
+        [data-theme="dark"] .hcr-card-price {
+            color: var(--lime) !important;
+        }
+        [data-theme="dark"] .hcr-card-badge {
+            background: rgba(200, 241, 105, 0.16) !important;
+            color: var(--lime) !important;
+        }
+        [data-theme="dark"] .hcr-radio-indicator {
+            border: 2px solid #2e4d3d !important;
+            background: #12221b !important;
+        }
+        [data-theme="dark"] .hcr-select-card.active .hcr-radio-indicator,
+        [data-theme="dark"] .hcr-select-card.selected .hcr-radio-indicator {
+            border-color: var(--lime) !important;
+            background: #12221b !important;
+        }
+        [data-theme="dark"] .hcr-select-card.active .hcr-radio-indicator::after,
+        [data-theme="dark"] .hcr-select-card.selected .hcr-radio-indicator::after {
+            background: var(--lime) !important;
+        }
         [data-theme="dark"] .hcr-cart-card {
             background: #12221b !important;
-            border-color: #1e352a !important;
-            color: #e6f0eb !important;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+            border: 1px solid #1e352a !important;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45) !important;
         }
-        [data-theme="dark"] .hostel-card:hover,
-        [data-theme="dark"] .hcr-option-card:hover {
-            border-color: var(--lime) !important;
-        }
-        [data-theme="dark"] .hcr-item-banner,
-        [data-theme="dark"] .hcr-spec-tile,
-        [data-theme="dark"] .hcr-cart-header,
-        [data-theme="dark"] .hcr-option-card {
+        [data-theme="dark"] .hcr-cart-header {
             background: #162820 !important;
-            border-color: #1e352a !important;
+            color: #f1f7f4 !important;
+            border-bottom: 1px solid #1e352a !important;
+        }
+        [data-theme="dark"] .hcr-cart-item {
+            border-bottom: 1px dashed #1e352a !important;
+        }
+        [data-theme="dark"] .hcr-item-info strong {
+            color: #f1f7f4 !important;
+        }
+        [data-theme="dark"] .hcr-item-hostel {
+            color: #9cb3a8 !important;
+        }
+        [data-theme="dark"] .hcr-item-price {
+            color: var(--lime) !important;
+        }
+        [data-theme="dark"] .hcr-cart-delete-btn {
+            color: #f87171 !important;
+        }
+        [data-theme="dark"] .hcr-cart-delete-btn:hover {
+            background: rgba(239, 68, 68, 0.15) !important;
+        }
+        [data-theme="dark"] .hcr-input-group label {
+            color: #a4bea4 !important;
+        }
+        [data-theme="dark"] .hcr-input-group input {
+            background: #162820 !important;
+            border: 1.5px solid #1e352a !important;
+            color: #f1f7f4 !important;
+        }
+        [data-theme="dark"] .hcr-input-group input:focus {
+            border-color: var(--lime) !important;
+            background: #182e23 !important;
+        }
+        [data-theme="dark"] .hcr-breakdown {
+            background: #162820 !important;
+            border: 1px solid #1e352a !important;
+            color: #dcece3 !important;
+        }
+        [data-theme="dark"] .hcr-breakdown-row {
+            color: #9cb3a8 !important;
+        }
+        [data-theme="dark"] .hcr-breakdown-row strong {
+            color: #f1f7f4 !important;
+        }
+        [data-theme="dark"] .hcr-net-payable-row {
+            border-top: 1.5px solid #1e352a !important;
+        }
+        [data-theme="dark"] .hcr-net-label {
+            color: #f1f7f4 !important;
+        }
+        [data-theme="dark"] .hcr-net-value {
+            color: var(--lime) !important;
+        }
+        [data-theme="dark"] .hcr-undertaking-box {
+            background: #162820 !important;
+            border: 1px solid #1e352a !important;
+        }
+        [data-theme="dark"] .hcr-undertaking-label {
+            color: #9cb3a8 !important;
+        }
+        [data-theme="dark"] .hcr-undertaking-label span strong {
+            color: var(--lime) !important;
+        }
+        [data-theme="dark"] .hcr-pay-btn {
+            background: var(--lime) !important;
+            color: #0c1a14 !important;
+        }
+        [data-theme="dark"] .hcr-pay-btn:hover {
+            background: #d4f780 !important;
+            color: #050d0a !important;
+        }
+        [data-theme="dark"] .hcr-cart-guarantee {
+            color: #8ea296 !important;
         }
         [data-theme="dark"] .icon-btn,
         [data-theme="dark"] .mobile-menu {
