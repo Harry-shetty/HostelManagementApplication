@@ -19,7 +19,7 @@
         </p>
 
         <div style="display: flex; flex-direction: column; gap: 12px;">
-            <a href="{% url 'roommate' %}?next={% url 'hostels' %}&start=1" class="btn btn-primary" style="justify-content: center; height: 48px; font-size: 14px; font-weight: 700; background: var(--lime); color: var(--forest); border: none; border-radius: 12px; text-decoration: none; display: flex; align-items: center; gap: 8px;">
+            <a href="{% url 'roommate' %}?next={% url 'hostels' %}&start=1" class="btn btn-primary btn-lime" style="justify-content: center; height: 48px; font-size: 14px; font-weight: 700; background: var(--lime); color: #0c1a14; border: none; border-radius: 12px; text-decoration: none; display: flex; align-items: center; gap: 8px;">
                 {% icon 'spark' 16 %} Answer Roommate Matching (4 min)
             </a>
             <button type="button" class="btn btn-secondary" onclick="dismissRoommatePrompt()" style="justify-content: center; height: 42px; font-size: 13px; color: var(--muted); border-color: var(--line); border-radius: 12px; background: transparent;">

@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20261125_theme_v4">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20261125_theme_v5">
     <script>
         (function() {
             function getPreferredTheme() {
@@ -333,6 +333,24 @@
         [data-theme="dark"] .status-banner > span {
             background: #1c150b !important;
         }
+        [data-theme="dark"] .status-banner.status-banner-empty {
+            background: #12221b !important;
+            border: 1px dashed #234433 !important;
+        }
+        [data-theme="dark"] .status-banner.status-banner-empty > span {
+            background: #182e23 !important;
+            color: var(--lime) !important;
+            border: 1px solid #234433 !important;
+        }
+        [data-theme="dark"] .status-banner.status-banner-empty h2 {
+            color: #f1f7f4 !important;
+        }
+        [data-theme="dark"] .status-banner.status-banner-empty p {
+            color: #9cb3a8 !important;
+        }
+        [data-theme="dark"] .status-banner.status-banner-empty > div:last-child {
+            border-left: 1px solid #234433 !important;
+        }
         [data-theme="dark"] .room-grid button {
             background: #162820 !important;
             border-color: #1e352a !important;
@@ -440,8 +458,34 @@
             border-color: #1e352a !important;
             color: #e6f0eb !important;
         }
-        [data-theme="dark"] [style*="color: var(--forest)"] {
+        [data-theme="dark"] [style*="color: var(--forest)"]:not([style*="background: var(--lime)"]):not([style*="background:var(--lime)"]):not([style*="background: #c8f169"]):not(.btn):not([class*="btn"]):not(.tag) {
             color: var(--lime) !important;
+        }
+        /* Lime surfaces MUST always have dark forest/charcoal text & stroke across both themes */
+        .btn-lime,
+        [style*="background: var(--lime)"],
+        [style*="background:var(--lime)"],
+        [style*="background: #c8f169"],
+        [data-theme="dark"] .btn-lime,
+        [data-theme="dark"] [style*="background: var(--lime)"],
+        [data-theme="dark"] [style*="background:var(--lime)"],
+        [data-theme="dark"] [style*="background: #c8f169"],
+        [data-theme="dark"] .status-banner .btn-primary {
+            background: var(--lime) !important;
+            color: #0c1a14 !important;
+        }
+        .btn-lime *,
+        [style*="background: var(--lime)"] *,
+        [style*="background:var(--lime)"] *,
+        [style*="background: #c8f169"] *,
+        [data-theme="dark"] .btn-lime *,
+        [data-theme="dark"] [style*="background: var(--lime)"] *,
+        [data-theme="dark"] [style*="background:var(--lime)"] *,
+        [data-theme="dark"] [style*="background: #c8f169"] *,
+        [data-theme="dark"] .status-banner .btn-primary * {
+            color: #0c1a14 !important;
+            stroke: #0c1a14 !important;
+            fill: #0c1a14 !important;
         }
         [data-theme="dark"] .immutable-note {
             background: #162820 !important;

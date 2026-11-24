@@ -55,7 +55,7 @@
                 <strong>Application Submitted ({{ application.application_id|default:'NST-25-10482' }})</strong><br>
                 <span>Your preferences are locked in for the draft allocation cycle.</span>
             </p>
-            <a href="{% url 'status' %}" class="btn btn-primary" style="color: var(--forest); background: var(--lime);">
+            <a href="{% url 'status' %}" class="btn btn-primary btn-lime" style="color: #0c1a14; background: var(--lime);">
                 Track allocation status {% icon 'arrow' 17 %}
             </a>
             {% else %}
@@ -63,7 +63,7 @@
                 <strong>Next: {% if application %}Review your application{% elif not chk_roommate %}Complete Roommate Matching (Application Locked){% else %}Start your application{% endif %}</strong><br>
                 <span>{% if application %}Check your details before submitting.{% elif not chk_roommate %}Answer 3 roommate lifestyle questions to unlock your hostel application.{% else %}Rank your hostel and room preferences.{% endif %}</span>
             </p>
-            <a href="{% if not chk_roommate and not application %}{% url 'roommate' %}?start=1&next={% url 'application' %}&required=1{% else %}{% url 'application' %}{% endif %}" class="btn btn-primary" style="color: var(--forest); background: var(--lime);">
+            <a href="{% if not chk_roommate and not application %}{% url 'roommate' %}?start=1&next={% url 'application' %}&required=1{% else %}{% url 'application' %}{% endif %}" class="btn btn-primary btn-lime" style="color: #0c1a14; background: var(--lime);">
                 {% if application %}Continue application{% elif not chk_roommate %}{% icon 'lock' 15 %} Unlock application{% else %}Start application{% endif %} {% icon 'arrow' 17 %}
             </a>
             {% endif %}

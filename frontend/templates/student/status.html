@@ -46,6 +46,37 @@
     color: var(--lime) !important;
     text-decoration: underline !important;
 }
+[data-theme="dark"] .status-banner.status-banner-empty {
+    background: #12221b !important;
+    border: 1px dashed #234433 !important;
+}
+[data-theme="dark"] .status-banner.status-banner-empty > span {
+    background: #182e23 !important;
+    color: var(--lime) !important;
+    border: 1px solid #234433 !important;
+}
+[data-theme="dark"] .status-banner.status-banner-empty h2 {
+    color: #f1f7f4 !important;
+}
+[data-theme="dark"] .status-banner.status-banner-empty p {
+    color: #9cb3a8 !important;
+}
+[data-theme="dark"] .status-banner.status-banner-empty > div:last-child {
+    border-left: 1px solid #234433 !important;
+}
+.btn-lime,
+[data-theme="dark"] .btn-lime,
+[data-theme="dark"] .status-banner.status-banner-empty a.btn {
+    background: var(--lime) !important;
+    color: #0c1a14 !important;
+}
+.btn-lime *,
+[data-theme="dark"] .btn-lime *,
+[data-theme="dark"] .status-banner.status-banner-empty a.btn * {
+    color: #0c1a14 !important;
+    stroke: #0c1a14 !important;
+    fill: #0c1a14 !important;
+}
 </style>
 <div class="page">
     {% if messages %}
@@ -84,7 +115,7 @@
             <p>You have not submitted a hostel application for the 2025/26 housing cycle yet. Submit your application to participate in algorithmic allocation and letter release.</p>
         </div>
         <div>
-            <a href="{% url 'application' %}" class="btn btn-primary" style="background: var(--lime); color: var(--forest); font-weight: 700; white-space: nowrap; padding: 10px 18px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+            <a href="{% url 'application' %}" class="btn btn-primary btn-lime" style="background: var(--lime); color: #0c1a14; font-weight: 700; white-space: nowrap; padding: 10px 18px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
                 Start application {% icon 'arrow' 16 %}
             </a>
         </div>
@@ -93,11 +124,11 @@
     {% elif is_allocated or letter %}
     <!-- Allocated Confirmed Banner -->
     <div class="status-banner" style="background: linear-gradient(105deg, var(--forest) 0%, #174c3c 100%); color: white; border: 1px solid #236450;">
-        <span style="background: var(--lime); color: var(--forest); border-radius: 50%; width: 56px; height: 56px; display: grid; place-items: center;">
+        <span style="background: var(--lime); color: #0c1a14; border-radius: 50%; width: 56px; height: 56px; display: grid; place-items: center;">
             {% icon 'check' 32 %}
         </span>
         <div>
-            <span class="tag tag-success" style="background: var(--lime); color: var(--forest); font-weight: 750;">ALLOCATION CONFIRMED</span>
+            <span class="tag tag-success" style="background: var(--lime); color: #0c1a14; font-weight: 750;">ALLOCATION CONFIRMED</span>
             <h2 style="color: white; margin: 8px 0 6px 0;">Congratulations! Your room assignment is published.</h2>
             <p style="color: #b9d7cc;">Your placement has completed full constraint verification and was formally approved by the Head Warden. Your official allocation letter has been generated.</p>
         </div>
