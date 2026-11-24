@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20261125_theme_v3">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20261125_theme_v4">
     <script>
         (function() {
             function getPreferredTheme() {
@@ -157,14 +157,46 @@
             border: 1px solid #1e352a !important;
             box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6) !important;
         }
+        [data-theme="dark"] .dropdown-link {
+            color: #e6f0eb !important;
+        }
         [data-theme="dark"] .dropdown-link:hover {
             background: #162820 !important;
         }
         [data-theme="dark"] .dropdown-link strong {
             color: #e6f0eb !important;
         }
+        [data-theme="dark"] .dropdown-link:hover strong {
+            color: var(--lime) !important;
+        }
         [data-theme="dark"] .dropdown-link small {
             color: #8ea296 !important;
+        }
+        [data-theme="dark"] .dropdown-icon {
+            background: #193326 !important;
+            border: 1px solid #234433 !important;
+            color: var(--lime) !important;
+        }
+        [data-theme="dark"] .dropdown-link:hover .dropdown-icon {
+            background: var(--lime) !important;
+            border-color: var(--lime) !important;
+            color: var(--forest-dark) !important;
+            transform: scale(1.05);
+        }
+        [data-theme="dark"] .dropdown-link.active {
+            background: rgba(200, 241, 105, 0.14) !important;
+            color: var(--lime) !important;
+        }
+        [data-theme="dark"] .dropdown-link.active strong {
+            color: var(--lime) !important;
+        }
+        [data-theme="dark"] .dropdown-link.active small {
+            color: #a4bea4 !important;
+        }
+        [data-theme="dark"] .dropdown-link.active .dropdown-icon {
+            background: var(--forest) !important;
+            border-color: var(--forest) !important;
+            color: #ffffff !important;
         }
         [data-theme="dark"] .panel,
         [data-theme="dark"] .card,
